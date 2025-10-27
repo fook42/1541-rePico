@@ -1,0 +1,10 @@
+{
+    "files.associations": {
+        "display.h": "c",
+        "oled.h": "c",
+        "i2c.h": "c",
+        "lcd.h": "c",
+        "gcr.h": "c",
+        "pinout.h": "c"
+    }
+}
