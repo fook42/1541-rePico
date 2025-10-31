@@ -1272,10 +1272,6 @@
     (uuid fad3e9cc-fd83-4921-a5bf-2f35bbe02530)
   )
 
-  (text "3.3V werden vom\nSD-Modul generiert" (at 138.43 184.15 0)
-    (effects (font (size 1.524 1.524)) (justify left bottom))
-    (uuid 097839be-e230-4220-ae52-b3c5b206bd3c)
-  )
   (text "Jumper Normal offen" (at 241.3 105.41 0)
     (effects (font (size 1.524 1.524)) (justify left bottom))
     (uuid 1fedefdb-e634-4b2e-ad74-524933c80daf)
