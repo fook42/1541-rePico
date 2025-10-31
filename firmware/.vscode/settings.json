@@ -44,6 +44,5 @@
         "variant": "cpp",
         "lcd.h": "c",
         "stdlib.h": "c",
-        "blink.pio.h": "c"
     }
 }
