@@ -25,19 +25,19 @@ void oled_home( void );
 
 ////////////////////////////////////////////////////////////////////////////////
 // set cursor position
-void oled_setcursor( uint8_t spalte, uint8_t zeile );
+void oled_setcursor(const uint8_t spalte, const uint8_t zeile );
 
 ////////////////////////////////////////////////////////////////////////////////
 // write 1 character
-void oled_data( uint8_t data );
+void oled_data( const uint8_t data );
 
 ////////////////////////////////////////////////////////////////////////////////
 // write a string
-void oled_string( const char *data );
+void oled_string( char *data );
 
 ////////////////////////////////////////////////////////////////////////////////
 // write a substring of "string" starting at "start" with size "length"
-void oled_print(char *string, uint8_t start, uint8_t length);
+void oled_print( const char *string, const uint8_t start, const uint8_t length);
 
 ////////////////////////////////////////////////////////////////////////////////
 // specify user-defined characters with "data"-bitmap

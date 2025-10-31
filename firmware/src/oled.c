@@ -70,13 +70,13 @@ const uint8_t OLED_customchars[][8] = {
 ////////////////////////////////////////////////////////////////////////////////
 // lowlevel routines to access SSD1306 display controller
 
-void ssd1306_command( uint8_t data )
+void ssd1306_command( const uint8_t data )
 {
     uint8_t buffer[]={SSD1306_I2C_COMMAND, data};
     i2c_write_blocking(I2C_PORT, DEV_I2C_ADDR, buffer, count_of(buffer), false);
 }
 
-void ssd1306_data( uint8_t data )
+void ssd1306_data( const uint8_t data )
 {
     uint8_t buffer[]={SSD1306_I2C_DATA, data};
     i2c_write_blocking(I2C_PORT, DEV_I2C_ADDR, buffer, count_of(buffer), false);
@@ -136,7 +136,7 @@ void oled_home( void )
 
 ////////////////////////////////////////////////////////////////////////////////
 // set cursor position
-void oled_setcursor( uint8_t spalte, uint8_t zeile )
+void oled_setcursor( const uint8_t spalte, const uint8_t zeile )
 {
     ssd1306_command(SSD1306_PAGE_START | (7-zeile));
     ssd1306_command(SSD1306_COLUMN_START_L |  ((FONT_WIDTH*spalte)     & 0x0f));
@@ -147,7 +147,7 @@ void oled_setcursor( uint8_t spalte, uint8_t zeile )
 
 ////////////////////////////////////////////////////////////////////////////////
 // write 1 character
-void oled_data( uint8_t data )
+void oled_data( const uint8_t data )
 {
     uint8_t buffer[FONT_HEIGHT+1];
     buffer[0] = SSD1306_I2C_DATA;
@@ -164,7 +164,7 @@ void oled_data( uint8_t data )
         memcpy((void*) &buffer[1], (const void*) &FontData[data-FONT_MINCHAR][0], FONT_HEIGHT);
     }
 
-    // i2c_write_blocking(I2C_PORT, DEV_I2C_ADDR, buffer, (sizeof(buffer)/sizeof(buffer[0])), false);
+    // i2c_write_blocking(I2C_PORT, DEV_I2C_ADDR, buffer, count_of(buffer), false);
 
     ssd1306_command(SSD1306_PAGE_START | (7-oled_cursor_y-4));
     ssd1306_command(SSD1306_COLUMN_START_L |  ((FONT_WIDTH*oled_cursor_x)     & 0x0f));
@@ -178,7 +178,7 @@ void oled_data( uint8_t data )
 
 ////////////////////////////////////////////////////////////////////////////////
 // write a string
-void oled_string( const char *data )
+void oled_string( char *data )
 {
     while( *data != '\0' )
     {
@@ -188,7 +188,7 @@ void oled_string( const char *data )
 
 ////////////////////////////////////////////////////////////////////////////////
 // write a substring of "string" starting at "start" with size "length"
-void oled_print(char *string, uint8_t start, uint8_t length)
+void oled_print( const char *string, const uint8_t start, const uint8_t length)
 {
     uint8_t char_counter = 1;
     uint8_t current_char = string[start];
