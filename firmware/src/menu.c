@@ -10,7 +10,7 @@
 
 static MENU_STRUCT *current_menu;
 
-void menu_init(MENU_STRUCT* menu, MENU_ENTRY *menu_entrys, uint8_t menu_entry_count, uint8_t lcd_col_count, uint8_t lcd_row_count)
+void menu_init(MENU_STRUCT* menu, MENU_ENTRY *menu_entrys, const uint8_t menu_entry_count, const uint8_t lcd_col_count, const uint8_t lcd_row_count)
 {
     menu->entry_list = menu_entrys;
     menu->entry_count = menu_entry_count;
@@ -33,7 +33,7 @@ void menu_set_root(MENU_STRUCT *menu)
     current_menu = menu;
 }
 
-uint16_t menu_update(uint8_t key_code)
+uint16_t menu_update(const uint8_t key_code)
 {
     uint8_t command = MC_NO_COMMAND;
     uint8_t value = 0x00;
@@ -64,7 +64,8 @@ uint16_t menu_update(uint8_t key_code)
 
         case KEY1_DOWN:
             {
-                if((current_menu->lcd_cursor_pos < current_menu->lcd_row_count-1) && (current_menu->lcd_cursor_pos < current_menu->entry_count-1))
+                if(    (current_menu->lcd_cursor_pos < (current_menu->lcd_row_count-1))
+                    && (current_menu->lcd_cursor_pos < (current_menu->entry_count-1)))
                 {
                     current_menu->lcd_cursor_pos++;
                     current_menu->view_obsolete = 1;
@@ -145,7 +146,7 @@ uint16_t menu_update(uint8_t key_code)
         menu_refresh();
     }
 
-    return command << 8 | value;
+    return (((uint16_t) command) << 8 | value);
 }
 
 void menu_refresh()
@@ -153,7 +154,7 @@ void menu_refresh()
     // Menu Neu Zeichnen
     display_clear();
 
-    for(int i=0; i<current_menu->lcd_row_count && i<current_menu->entry_count; i++)
+    for(int i=0; (i<current_menu->lcd_row_count) && (i<current_menu->entry_count); i++)
     {
         display_setcursor(1,i);
         display_string(current_menu->entry_list[i+current_menu->lcd_window_pos].name);
@@ -172,7 +173,7 @@ void menu_refresh()
                 else
                     display_string(" 1");
             break;
-       case ENTRY_BOOL:
+        case ENTRY_BOOL:
                 if(current_menu->entry_list[i+current_menu->lcd_window_pos].var1)
                     display_string(" T");
                 else
@@ -198,7 +199,7 @@ void menu_refresh()
     }
 }
 
-void menu_set_entry_var1(MENU_STRUCT *menu, uint8_t id, uint8_t var1)
+void menu_set_entry_var1(MENU_STRUCT *menu, const uint8_t id, const uint8_t var1)
 {
     for(int i=0; i<menu->entry_count; i++)
     {
@@ -210,7 +211,7 @@ void menu_set_entry_var1(MENU_STRUCT *menu, uint8_t id, uint8_t var1)
     }
 }
 
-uint8_t menu_get_entry_var1(MENU_STRUCT *menu, uint8_t id)
+uint8_t menu_get_entry_var1(MENU_STRUCT *menu, const uint8_t id)
 {
     for(int i=0; i<menu->entry_count; i++)
     {

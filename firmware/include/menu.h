@@ -6,8 +6,6 @@
 
 #include <stdint.h>
 
-//#include "lcd.h"
-
 // MC_EXIT_MENU wird ausgeführt wenn ein KEY2_TIMEOUT1 kommt und das Menü schon im Hauptmenü befindet
 enum MenuCommands {MC_NO_COMMAND, MC_EXIT_MENU, MC_SELECT_ENTRY, MC_CHANGE_ENTRY};
 enum MenuTypes {ENTRY_NORMAL, ENTRY_MENU, ENTRY_TO_PARENT,ENTRY_ONOFF, ENTRY_BOOL, ENTRY_BIN, ENTRY_8BIT_DEC};
@@ -46,14 +44,14 @@ struct MENU_STRUCT
 };
 
 
-void menu_init(MENU_STRUCT* menu, MENU_ENTRY *menu_entrys, uint8_t menu_entry_count, uint8_t lcd_col_count, uint8_t lcd_row_count);
+void menu_init(MENU_STRUCT* menu, MENU_ENTRY *menu_entrys, const uint8_t menu_entry_count, const uint8_t lcd_col_count, const uint8_t lcd_row_count);
 void menu_set_root(MENU_STRUCT* menu);
 
-uint16_t menu_update(uint8_t key_code);
+uint16_t menu_update(const uint8_t key_code);
 void menu_refresh( void );
 
-void menu_set_entry_var1(MENU_STRUCT *menu, uint8_t id, uint8_t var1);
-uint8_t menu_get_entry_var1(MENU_STRUCT *menu, uint8_t id);
+void menu_set_entry_var1(MENU_STRUCT *menu, const uint8_t id, const uint8_t var1);
+uint8_t menu_get_entry_var1(MENU_STRUCT *menu, const uint8_t id);
 
 #endif // MENUE_H
 

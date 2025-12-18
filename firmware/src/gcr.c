@@ -46,7 +46,7 @@ const uint8_t GCR_DEC_TBL[256] = {
 
 //------------------------------------------
 
-void ConvertToGCR(uint8_t *source_buffer, uint8_t *destination_buffer)
+void ConvertToGCR(const uint8_t *source_buffer, uint8_t *destination_buffer)
 {
     /*
         new approach for faster conversion.. without too many rotations and shifts
@@ -88,7 +88,7 @@ void ConvertToGCR(uint8_t *source_buffer, uint8_t *destination_buffer)
 
 //------------------------------------------
 
-void ConvertFromGCR(uint8_t *source_buffer, uint8_t *destination_buffer)
+void ConvertFromGCR(const uint8_t *source_buffer, uint8_t *destination_buffer)
 {
     // 5 GCR in ... 4 Bytes (8 Nibbles A-H) out
 

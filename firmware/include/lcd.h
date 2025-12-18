@@ -91,7 +91,7 @@ void lcd_print( const char *string, const uint8_t start, const uint8_t length);
 // Definition eines benutzerdefinierten Sonderzeichens.
 // data muss auf ein Array[8] mit den Zeilencodes des zu definierenden Zeichens
 // zeigen
-void lcd_generatechar( uint8_t code, const uint8_t *data );
+void lcd_generatechar( const uint8_t code, const uint8_t *data );
 
 ////////////////////////////////////////////////////////////////////////////////
 // Ausgabe eines Kommandos an das LCD.

@@ -202,6 +202,6 @@ void oled_print( const char *string, const uint8_t start, const uint8_t length)
 
 ////////////////////////////////////////////////////////////////////////////////
 // specify user-defined characters with "data"-bitmap
-void oled_generatechar( uint8_t code, const uint8_t *data )
+void oled_generatechar( const uint8_t code, const uint8_t *data )
 {
 }

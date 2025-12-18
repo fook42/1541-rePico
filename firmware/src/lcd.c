@@ -192,7 +192,7 @@ void lcd_print( const char *string, const uint8_t start, const uint8_t length)
 ////////////////////////////////////////////////////////////////////////////////
 // Schreibt ein Zeichen in den Character Generator RAM
 
-void lcd_generatechar( uint8_t code, const uint8_t *data )
+void lcd_generatechar( const uint8_t code, const uint8_t *data )
 {
     // Startposition des Zeichens einstellen
     lcd_command( LCD_SET_CGADR | (code<<3) );

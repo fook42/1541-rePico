@@ -12,7 +12,7 @@
 #include <string.h>
 #include <stdint.h>
 
-void ConvertToGCR(uint8_t *source_buffer, uint8_t *destination_buffer);
-void ConvertFromGCR(uint8_t *source_buffer, uint8_t *destination_buffer);
+void ConvertToGCR(const uint8_t *source_buffer, uint8_t *destination_buffer);
+void ConvertFromGCR(const uint8_t *source_buffer, uint8_t *destination_buffer);
 
 #endif // _GCR_HEADER_
