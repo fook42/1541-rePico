@@ -42,12 +42,18 @@ add_executable(1541-rePico ${mysources} ${myincludes})
 pico_set_program_name(1541-rePico "1541-rePico")
 pico_set_program_version(1541-rePico "0.1")
 
-# Generate PIO header
-pico_generate_pio_header(1541-rePico ${CMAKE_CURRENT_LIST_DIR}/blink.pio)
-
 # Modify the below lines to enable/disable output over UART/USB
 pico_enable_stdio_uart(1541-rePico 0)
-pico_enable_stdio_usb(1541-rePico 0)
+pico_enable_stdio_usb(1541-rePico 1)
+
+
+pico_generate_pio_header(1541-rePico ${PROJECT_SOURCE_DIR}/src/quadrature_encoder.pio)
+
+
+# NOTE: for this to work, src\ff15\source\ffconf.h must be removed or renamed.
+# target_include_directories(no-OS-FatFS-SD-SDIO-SPI-RPi-Pico BEFORE INTERFACE
+#     ${CMAKE_CURRENT_LIST_DIR}/include
+# )
 
 add_subdirectory(no-OS-FatFS-SD-SDIO-SPI-RPi-Pico/src build)
 
@@ -61,6 +67,7 @@ target_include_directories(1541-rePico PRIVATE
 # Add any user requested libraries
 target_link_libraries(1541-rePico 
         pico_stdlib
+        pico_multicore
         hardware_spi
         hardware_i2c
         hardware_dma

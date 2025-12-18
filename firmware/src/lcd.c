@@ -114,7 +114,7 @@ void lcd_setup( void )
 
 ////////////////////////////////////////////////////////////////////////////////
 // Sendet ein Datenbyte an das LCD via pcf8574 output
-void lcd_data( uint8_t data )
+void lcd_data( const uint8_t data )
 {
     lcd_out_enable( ( data     & 0xF0) | LCD_RS | LCD_BACKLIGHT );    // zuerst die oberen, 
     lcd_out_enable( ((data<<4) & 0xF0) | LCD_RS | LCD_BACKLIGHT );    // dann die unteren 4 Bit senden
@@ -124,7 +124,7 @@ void lcd_data( uint8_t data )
 
 ////////////////////////////////////////////////////////////////////////////////
 // Sendet einen Befehl an das LCD via pcf8574 output
-void lcd_command( uint8_t data )
+void lcd_command( const uint8_t data )
 {
     lcd_out_enable( ( data     & 0xF0) | LCD_BACKLIGHT );    // zuerst die oberen, 
     lcd_out_enable( ((data<<4) & 0xF0) | LCD_BACKLIGHT );    // dann die unteren 4 Bit senden
@@ -151,7 +151,7 @@ void lcd_home( void )
 ////////////////////////////////////////////////////////////////////////////////
 // Setzt den Cursor in Spalte x (0..LCD_COLS) & Zeile y (0..LCD_ROWS)
 
-void lcd_setcursor( uint8_t x, uint8_t y )
+void lcd_setcursor( const uint8_t x, const uint8_t y )
 {
     uint8_t offset;
     if (LCD_ROWS > y)
@@ -164,7 +164,7 @@ void lcd_setcursor( uint8_t x, uint8_t y )
 ////////////////////////////////////////////////////////////////////////////////
 // Schreibt einen String auf das LCD
 
-void lcd_string( const char *data )
+void lcd_string( char *data )
 {
     while( *data != '\0' )
     {
@@ -177,7 +177,7 @@ void lcd_string( const char *data )
 // start:   Position des erstes Zeichens im String was ausgegeben werden soll
 // length:  Maximale Anzahl der Zeichen die Ausgegeben werden sollen
 
-void lcd_print(char *string, uint8_t start, uint8_t length)
+void lcd_print( const char *string, const uint8_t start, const uint8_t length)
 {
     uint8_t char_counter = 1;
     uint8_t current_char = string[start];
@@ -192,7 +192,7 @@ void lcd_print(char *string, uint8_t start, uint8_t length)
 ////////////////////////////////////////////////////////////////////////////////
 // Schreibt ein Zeichen in den Character Generator RAM
 
-void lcd_generatechar( uint8_t code, const uint8_t *data )
+void lcd_generatechar( const uint8_t code, const uint8_t *data )
 {
     // Startposition des Zeichens einstellen
     lcd_command( LCD_SET_CGADR | (code<<3) );

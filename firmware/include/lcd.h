@@ -37,9 +37,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Zeilendefinitionen des verwendeten LCD
 
-// LCD 16x2
+// LCD 16x4
 #define LCD_COLS (16)
-#define LCD_ROWS (2)
+#define LCD_ROWS (4)
 
 // LCD 20x4
 // #define LCD_COLS (20)
@@ -71,31 +71,31 @@ void lcd_home( void );
 
 ////////////////////////////////////////////////////////////////////////////////
 // Cursor an eine beliebige Position 
-void lcd_setcursor( uint8_t spalte, uint8_t zeile );
+void lcd_setcursor( const uint8_t spalte, const uint8_t zeile );
 
 ////////////////////////////////////////////////////////////////////////////////
 // Ausgabe eines einzelnen Zeichens an der aktuellen Cursorposition 
-void lcd_data( uint8_t data );
+void lcd_data( const uint8_t data );
 
 ////////////////////////////////////////////////////////////////////////////////
 // Ausgabe eines Strings an der aktuellen Cursorposition 
-void lcd_string( const char *data );
+void lcd_string( char *data );
 
 ////////////////////////////////////////////////////////////////////////////////
 // Schreibt einen String auf das LCD mit erweiterten Parametern
 // start:   Position des erstes Zeichens im String was ausgegeben werden soll
 // length:  Maximale Anzahl der Zeichen die Ausgegeben werden sollen
-void lcd_print(char *string, uint8_t start, uint8_t length);
+void lcd_print( const char *string, const uint8_t start, const uint8_t length);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Definition eines benutzerdefinierten Sonderzeichens.
 // data muss auf ein Array[8] mit den Zeilencodes des zu definierenden Zeichens
 // zeigen
-void lcd_generatechar( uint8_t code, const uint8_t *data );
+void lcd_generatechar( const uint8_t code, const uint8_t *data );
 
 ////////////////////////////////////////////////////////////////////////////////
 // Ausgabe eines Kommandos an das LCD.
-void lcd_command( uint8_t data );
+void lcd_command( const uint8_t data );
 
 ////////////////////////////////////////////////////////////////////////////////
 // LCD Befehle und Argumente.

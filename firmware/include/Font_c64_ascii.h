@@ -8,6 +8,8 @@
 #ifndef _FONTDATA_H_INCLUDE_
 #define _FONTDATA_H_INCLUDE_
 
+#include "stdint.h"
+
 #define FONT_WIDTH      (8)
 #define FONT_HEIGHT     (8)
 #define FONT_MINCHAR    (0x20)
