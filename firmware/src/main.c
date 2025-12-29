@@ -31,6 +31,12 @@
 
 #define START_MESSAGE_TIME 1500
 
+FATFS       fs;
+FRESULT     fr;
+DIR         dir_object;
+FILINFO     dir_entry;
+FILINFO     file_entry;
+FILINFO     fb_dir_entry[LCD_LINE_COUNT];
 
 uint8_t stepper_signal_puffer[0x80]; // Ringpuffer für Stepper Signale (128 Bytes)
 volatile uint8_t stepper_signal_r_pos = 0;
@@ -49,13 +55,16 @@ uint8_t key3_irq_value = NO_KEY;
 
 // -----------
 
-uint8_t current_gui_mode;
-
 void set_gui_mode(const uint8_t gui_mode);
 uint8_t get_key_from_buffer(void);
 void check_menu_events(const uint16_t menu_event);
 void update_gui();
 void show_start_message(void);
+
+void filebrowser_update(uint8_t key_code);
+void filebrowser_refresh();
+uint16_t seek_to_dir_entry(uint16_t entry_num);
+uint16_t get_dir_entry_count();
 
 
 bool repeating_timer_callback(__unused struct repeating_timer *t) {
@@ -125,13 +134,12 @@ int main()
     {
         display_clear();
         display_home();
+
     }
     
     show_start_message();
 
-    /*
-    FATFS fs;
-    FRESULT fr = f_mount(&fs, "", 1);
+    fr = f_mount(&fs, "", 1);
     uint8_t retry_count = 3;
 
     while ((FR_OK != fr) && (retry_count > 0)) {
@@ -154,45 +162,15 @@ int main()
     display_setcursor(0, 0);
     display_string("f_mount okay");
 
+    fb_dir_entry_count = get_dir_entry_count(); // open card, count entries on root level
+
     sleep_ms(3000);
 
     display_clear();
     display_home();
 
-    DIR dir_object;
-    FILINFO dir_entry;
-
     uint8_t dsp_zeile = 0;
 
-    fr = f_findfirst(&dir_object, &dir_entry, "", "*");
-
-    while ((fr == FR_OK) && (dir_entry.fname[0]!=0))
-    {
-        display_setcursor(0, dsp_zeile);
-        if (dir_entry.fattrib & AM_DIR)
-        {
-            display_data(display_dir_char);
-        } else {
-            display_data(display_disk_char);
-        }
-        display_data(' ');
-        display_print(dir_entry.fname, 0, 14);
-        dsp_zeile = (dsp_zeile+1)%4;
-        if (0 == dsp_zeile)
-        {
-            sleep_ms(2000);
-            display_clear();
-        }
-        fr = f_findnext(&dir_object, &dir_entry);
-    }
-    (void) f_closedir(&dir_object);
-
-    display_setcursor(0, dsp_zeile);
-    display_string("--END--");
-
-
-    sleep_ms(5000);
-*/
     // setup menus
     menu_init(&main_menu,     main_menu_entrys,     count_of(main_menu_entrys),     LCD_COLS, LCD_ROWS);
     menu_init(&image_menu,    image_menu_entrys,    count_of(image_menu_entrys),    LCD_COLS, LCD_ROWS);
@@ -204,46 +182,10 @@ int main()
     set_gui_mode(GUI_MENU_MODE);
 
 
-    // uint8_t stepper;
-    // stepper_signal_puffer[0]=212; // fake data 11010100
-    // stepper_signal_w_pos++;
-
-
 
     while (true) {
         update_gui();
 
-        // new_value = quadrature_encoder_get_count(pio, sm);
-        // delta = new_value - old_value;
-        // old_value = new_value;
-
-        // if (new_value != last_value || delta != last_delta ) {
-        //     display_clear();
-        //     int val = new_value;
-        //     for (int i=7; i>=0; --i)
-        //     {
-        //         display_setcursor(i, 0);
-        //         display_data((val%10)+'0');
-        //         val=(int) (val/10);
-        //     }
-
-        //     last_value = new_value;
-        //     last_delta = delta;
-        // }
-
-        //        printf("Hello, world!\n");
-        // if (stepper_signal_r_pos != stepper_signal_w_pos)
-        // {
-        //     display_clear();
-        //     display_setcursor(0, 0);
-        //     stepper = stepper_signal_puffer[stepper_signal_r_pos & 0x7F] | stepper_signal_puffer[(stepper_signal_r_pos-1) & 0x7F]<<2;
-        //     stepper_signal_r_pos++;
-
-        //     for (int i=7; i>=0; --i)
-        //     {
-        //         display_data((stepper&(1<<i))?'1':'0');
-        //     }
-        // }
         sleep_ms(100);
     }
 }
@@ -354,7 +296,7 @@ void update_gui()
         break;
 
     case GUI_FILE_BROWSER:
-//        filebrowser_update(key_code);
+        filebrowser_update(key_code);
         break;
 
     default:
@@ -477,7 +419,7 @@ void set_gui_mode(const uint8_t gui_mode)
         menu_refresh();
         break;
     case GUI_FILE_BROWSER:
-        // filebrowser_refresh();
+        filebrowser_refresh();
         break;
     default:
         break;
@@ -496,4 +438,258 @@ void show_start_message(void)
     sleep_ms(START_MESSAGE_TIME);
 
     display_clear();
+}
+
+/////////////////////////////////////////////////////////////////////
+
+void filebrowser_update(uint8_t key_code)
+{
+    switch (key_code)
+    {
+    case KEY0_DOWN:
+        if(fb_cursor_pos > 0)
+        {
+            --fb_cursor_pos;
+            filebrowser_refresh();
+        }
+        else
+        {
+            if(fb_window_pos > 0)
+            {
+                --fb_window_pos;
+                filebrowser_refresh();
+            }
+        }
+        break;
+    case KEY1_DOWN:
+        if((fb_cursor_pos < LCD_LINE_COUNT-1) && (fb_cursor_pos < fb_dir_entry_count-1))
+        {
+            ++fb_cursor_pos;
+            filebrowser_refresh();
+        }
+        else
+        {
+            if(fb_window_pos < fb_dir_entry_count - LCD_LINE_COUNT)
+            {
+                ++fb_window_pos;
+                filebrowser_refresh();
+            }
+        }
+        break;
+    case KEY2_UP:
+        // stop_timer0();
+        // no_byte_ready_send = 1;
+
+        // close_disk_image(fd);
+
+        if(fb_dir_entry[fb_cursor_pos].fattrib & AM_DIR)
+        {
+            // Eintrag ist ein Verzeichnis
+        //     change_dir(fb_dir_entry[fb_cursor_pos].long_name);
+            fb_cursor_pos = 0;
+            fb_window_pos = 0;
+            filebrowser_refresh();
+            return;
+        }
+
+        // fd = open_disk_image(fs, &fb_dir_entry[fb_cursor_pos], &akt_image_type);
+
+        // if(akt_image_type == UNDEF_IMAGE)
+        // {
+        //     display_clear();
+        //     display_setcursor(disp_unsupportedimg_p);
+        //     display_string(disp_unsupportedimg_s);
+        //     _delay_ms(1000);
+        // }
+
+        filebrowser_refresh();
+
+        // if(!fd)
+        // {
+        //     is_image_mount = 0;
+        //     return ;
+        // }
+
+        strcpy(image_filename, fb_dir_entry[fb_cursor_pos].fname);
+
+        // read_disk_track(fd,akt_image_type,akt_half_track>>1,gcr_track, &gcr_track_length);
+        // akt_track_pos = 0;
+
+        // no_byte_ready_send = 0;
+        // start_timer0();
+
+        // is_image_mount = 1;
+        // send_disk_change();
+
+        // menu_set_entry_var1(&image_menu, M_WP_IMAGE, floppy_wp);
+
+        set_gui_mode(GUI_INFO_MODE);
+        break;
+    case KEY2_TIMEOUT1:
+        set_gui_mode(GUI_MENU_MODE);
+        break;
+    }
+
+    //// Filename Scrolling
+    static uint16_t wait_counter0;
+    ++wait_counter0;
+
+    if((fb_current_line_offset > 0) && (wait_counter0 == 30000))
+    {
+        wait_counter0 = 0;
+
+        if(0 == fb_line_scroll_end_begin_wait)
+        {
+            // Es darf gescrollt werden
+            if(!fb_line_scroll_direction)
+            {
+                ++fb_line_scroll_pos;
+                if(fb_line_scroll_pos >= fb_current_line_offset)
+                {
+                    fb_line_scroll_end_begin_wait = 6;
+                    fb_line_scroll_direction = 1;
+                }
+            }
+            else
+            {
+                --fb_line_scroll_pos;
+                if(fb_line_scroll_pos == 0)
+                {
+                    fb_line_scroll_end_begin_wait = 6;
+                    fb_line_scroll_direction = 0;
+                }
+            }
+
+            display_setcursor(2,fb_cursor_pos);
+            display_print(fb_dir_entry[fb_cursor_pos].fname,fb_line_scroll_pos, LCD_LINE_SIZE-3 );
+        }
+        else
+        {
+            --fb_line_scroll_end_begin_wait;
+        }
+    }
+}
+
+/////////////////////////////////////////////////////////////////////
+
+void filebrowser_refresh()
+{
+    display_clear();
+
+    // fr = f_opendir(&dir_object, path);  /* Open the target directory */
+    // if (fr == FR_OK) {
+    // }
+    seek_to_dir_entry(fb_window_pos);
+
+    uint8_t i=0;
+
+    while((i<LCD_LINE_COUNT) && ((fb_window_pos + i) < fb_dir_entry_count))
+    {
+        fr = f_readdir(&dir_object, &(fb_dir_entry[i]));
+        if((fb_dir_entry[i].fname[0]==0) || (fr != FR_OK))
+        {
+            break;
+        }
+
+        display_setcursor(1,i);
+        if(fb_dir_entry[i].fattrib & AM_DIR)
+        {
+            display_data(display_dir_char);
+        } else {
+            display_data(' ');
+        }
+
+        display_print(fb_dir_entry[i].fname, 0, LCD_LINE_SIZE-3);
+
+        i++;
+    }
+
+    display_setcursor(0, fb_cursor_pos);
+    display_data(display_cursor_char);
+
+
+    if(fb_window_pos > 0)
+    {
+        display_setcursor(LCD_LINE_SIZE-1,0);
+        display_data(display_more_top_char);
+    }
+
+    if((fb_window_pos + LCD_LINE_COUNT) < fb_dir_entry_count)
+    {
+        display_setcursor(LCD_LINE_SIZE-1, LCD_LINE_COUNT-1);
+        display_data(display_more_down_char);
+    }
+
+    // Für Scrollenden Filename
+    int8_t var = (int8_t)strlen(fb_dir_entry[fb_cursor_pos].fname) - (LCD_LINE_SIZE-3);
+    if(var < 0)
+        fb_current_line_offset = 0;
+    else
+        fb_current_line_offset = var;
+
+    fb_line_scroll_pos = 0;
+    fb_line_scroll_direction = 0;
+    fb_line_scroll_end_begin_wait = 6;
+}
+
+/////////////////////////////////////////////////////////////////////
+
+uint16_t get_dir_entry_count()
+{
+    uint16_t entry_count = 0;
+
+//    f_closedir(&dir_object);
+
+    char pattern[] = {"*"};
+    char path[] = {""};
+
+    dir_object.pat = pattern;           /* Save pointer to pattern string */
+    fr = f_opendir(&dir_object, path);  /* Open the target directory */
+    if (FR_OK == fr)
+    {
+        while(FR_OK == f_readdir(&dir_object, &dir_entry))
+        {
+            if(0 == dir_entry.fname[0])
+            {
+                break;
+            }
+            if(!(dir_entry.fattrib & (AM_SYS | AM_HID )))
+            {
+                entry_count++;
+            }
+        }
+    }
+    return entry_count;
+}
+
+/////////////////////////////////////////////////////////////////////
+
+uint16_t seek_to_dir_entry(uint16_t entry_num)
+{
+    uint16_t entry_count = 0;
+
+    //        fat_reset_dir(dd);
+    f_closedir(&dir_object);
+
+    char pattern[] = {"*"};
+    char path[] = {""};
+
+    dir_object.pat = pattern;           /* Save pointer to pattern string */
+    fr = f_opendir(&dir_object, path);  /* Open the target directory */
+
+    if((FR_OK == fr) || (entry_num != 0))
+    {
+        while(FR_OK == f_readdir(&dir_object, &dir_entry) && (entry_count < (entry_num-1)))
+        {
+            if(0 == dir_entry.fname[0])
+            {
+                break;
+            }
+            if(!(dir_entry.fattrib & (AM_SYS | AM_HID )))
+            {
+                entry_count++;
+            }
+        }
+    }
+    return entry_count;
 }

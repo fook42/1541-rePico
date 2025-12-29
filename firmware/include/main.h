@@ -1,4 +1,6 @@
 /////
+#define LCD_LINE_COUNT  (LCD_ROWS)
+#define LCD_LINE_SIZE   (LCD_COLS)
 
 
 const uint16_t d64_track_offset[41] = {0,0x0000,0x0015,0x002A,0x003F,0x0054,0x0069,0x007E,0x0093,
@@ -31,3 +33,24 @@ const uint64_t timer0_values[4] = {26,28,30,32};
 
 const uint8_t d64_sector_gap[4] = {12, 21, 16, 13}; // von GPZ Code übermommen imggen
 #define HEADER_GAP_BYTES (9)
+
+
+char image_filename[32]; //Maximal 32 Zeichen
+
+uint8_t current_gui_mode;
+
+uint8_t gui_current_line_offset;         // >0 dann ist der Name länger als die maximale Anzeigelaenge
+uint8_t gui_line_scroll_pos;             // Kann zwischen 0 und fb_current_line_offset liegen
+uint8_t gui_line_scroll_direction;       // Richtung des Scrollings
+uint8_t gui_line_scroll_end_begin_wait;
+
+// Alles für den FilebrowserSS
+uint16_t fb_dir_entry_count = 0;        // Anzahl der Einträge im aktuellen Direktory
+uint8_t fb_cursor_pos = 0;              // Position des Cursors auf dem LCD Display
+uint8_t fb_window_pos = 0;              // Position des Anzeigebereichs innerhablb der Menüeinträge
+
+uint8_t fb_current_line_offset = 0;         // >0 dann ist der Name länger als die maximale Anzeigelaenge
+uint8_t fb_line_scroll_pos = 0;             // Kann zwischen 0 und fb_current_line_offset liegen
+uint8_t fb_line_scroll_direction = 0;       // Richtung des Scrollings
+uint8_t fb_line_scroll_end_begin_wait = 10;
+
