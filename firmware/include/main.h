@@ -30,7 +30,7 @@ uint8_t d64_sector_puffer[21*D64_SECTOR_SIZE+5];
 #define G64_TRACKCOUNT  (42)
 #define G64_TRACKSIZE   (7928)  // = 0x1ef8
 
-const uint8_t g64_head[]      = {'G','C','R','-','1','5','4','1', G64_VERSION, G64_TRACKCOUNT*2, (G64_TRACKSIZE&0xff), ((G64_TRACKSIZE>>8)&0xff)};
+const uint8_t g64_head[] = {'G','C','R','-','1','5','4','1', G64_VERSION, G64_TRACKCOUNT*2, (G64_TRACKSIZE&0xff), ((G64_TRACKSIZE>>8)&0xff)};
 uint8_t g64_jumptable[8*G64_TRACKCOUNT];
 /* = {                                                                  0xac, 0x02, 0x00, 0x00,
 0x00, 0x00, 0x00, 0x00, 0xa6, 0x21, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xa0, 0x40, 0x00, 0x00,
@@ -83,10 +83,12 @@ uint8_t g64_speedtable[8*G64_TRACKCOUNT];
 
 const uint8_t g64_speedzones[] = { 3, 2, 1, 0};
 
-#define G64_HEADERSIZE (sizeof(g64_head)+sizeof(g64_jumptable)+sizeof(g64_speedtable))
-// enough space to store 42 tracks, each 7928 bytes+2 byte length
-uint8_t g64_tracks[G64_TRACKCOUNT][(G64_TRACKSIZE+2)];
+#define G64_HEADERSIZE (sizeof(g64_head)+sizeof(g64_jumptable)+sizeof(g64_speedtable)) // should be 684 bytes
 
+uint16_t g64_tracklen[G64_TRACKCOUNT];
+
+// enough space to store 42 tracks, each 7928 bytes byte length
+uint8_t g64_tracks[G64_TRACKCOUNT][G64_TRACKSIZE];
 
 // Originale Bitraten
 //Zone 0: 8000000/26 = 307692 Hz    (ByteReady 38461.5 Hz)
