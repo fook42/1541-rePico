@@ -29,6 +29,7 @@
 #include "f_util.h"
 #include "ff.h"
 
+
 #define START_MESSAGE_TIME 1500
 
 FATFS       fs;
@@ -40,14 +41,6 @@ FILINFO     file_entry;
 FILINFO     fb_dir_entry[LCD_LINE_COUNT];
 
 
-uint8_t stepper_signal_puffer[0x80]; // Ringpuffer für Stepper Signale (128 Bytes)
-volatile uint8_t stepper_signal_r_pos = 0;
-volatile uint8_t stepper_signal_w_pos = 0;
-volatile uint8_t stepper_signal_time = 0;
-volatile uint8_t stepper_signal = 0;
-
-uint8_t akt_half_track = 100;
-
 int new_value, delta, old_value = 0;
 int last_value = -1, last_delta = -1;
 PIO pio = pio0;
@@ -56,6 +49,9 @@ const uint sm = 0;
 uint8_t key3_irq_value = NO_KEY;
 
 // -----------
+
+void check_stepper_signals(void);
+void check_motor_signal(void);
 
 void set_gui_mode(const uint8_t gui_mode);
 uint8_t get_key_from_buffer(void);
@@ -77,6 +73,14 @@ void send_disk_change(void);
 
 int8_t read_disk(FIL* fd, const int image_type);
 
+void init_stepper(void);
+void stepper_inc(void);
+void stepper_dec(void);
+void init_motor(void);
+void init_controll_signals(void);
+
+
+
 
 bool repeating_timer_callback(__unused struct repeating_timer *t) {
 //    printf("Repeat at %lld\n", time_us_64());
@@ -89,7 +93,7 @@ void gpio_callback(uint gpio, uint32_t events)
     if ((GPIO_STP0==gpio) || (GPIO_STP1==gpio))
     {
         // general gpio-ISR .. triggered for STP0 or STP1 change.. no need to detect the cause
-        stepper_signal_puffer[stepper_signal_w_pos & 0x7F] = ((bool_to_bit(gpio_get(GPIO_STP0))) | (bool_to_bit(gpio_get(GPIO_STP1))<<1));
+        stepper_signal_puffer[stepper_signal_w_pos] = ((bool_to_bit(gpio_get(GPIO_STP0))) | (bool_to_bit(gpio_get(GPIO_STP1))<<1));
         stepper_signal_w_pos++;
     } else if (GPIO_BT3==gpio)
     {
@@ -101,21 +105,20 @@ int main()
 {
     stdio_init_all();
 
-    // set interrupt on pin-change for STP0 and STP1 ...
-    gpio_init(GPIO_STP0);
-    gpio_init(GPIO_STP1);
-    gpio_set_dir(GPIO_STP0, GPIO_IN);
-    gpio_set_dir(GPIO_STP1, GPIO_IN);
-    gpio_set_irq_enabled_with_callback(GPIO_STP0, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &gpio_callback);
-    gpio_set_irq_enabled(GPIO_STP1, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true);
-
-
     // --- Input ----
-
     gpio_init(GPIO_BT3);
     gpio_set_dir(GPIO_BT3, GPIO_IN);
     gpio_set_pulls(GPIO_BT3, true, false);
     gpio_set_irq_enabled(GPIO_BT3, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true);
+
+    // Stepper Initialisieren
+    init_stepper();
+
+    // Motor Initialisieren
+    init_motor();
+
+    // Steursignale BYTE_READY, SYNC und SOE Initialisieren
+    init_controll_signals();
 
 
     gpio_init(GPIO_WPS);
@@ -141,7 +144,6 @@ int main()
     {
         success = cancel_repeating_timer(&timer);
     }
-
 
 
     if (display_init())
@@ -196,13 +198,109 @@ int main()
     set_gui_mode(GUI_MENU_MODE);
 
     while (true) {
+        check_stepper_signals();
+        check_motor_signal();
         update_gui();
 
 //        sleep_ms(10);
     }
 }
+/////////////////////////////////////////////////////////////////////
 
-////////////////////////////////////////////////////////////////////7
+void check_stepper_signals(void)
+{
+    // Auf Steppermotor aktivität prüfen
+    // und auswerten
+    if(stepper_signal_r_pos != stepper_signal_w_pos)    // Prüfen ob sich was neues im Ringpuffer für die Steppersignale befindet
+    {
+        uint8_t stepper = stepper_signal_puffer[stepper_signal_r_pos] | stepper_signal_puffer[stepper_signal_r_pos-1]<<2;
+        stepper_signal_r_pos++;
+
+        switch(stepper)
+        {
+            case 0b00000011:
+            case 0b00000100:
+            case 0b00001001:
+            case 0b00001110:
+                {
+                    // DEC
+                    stepper_dec();
+                    stepper_signal_time = 0;
+                    stepper_signal = 1;
+                }
+                break;
+
+            case 0b00000001:
+            case 0b00000110:
+            case 0b00001011:
+            case 0b00001100:
+                {
+                    // INC
+                    stepper_inc();
+                    stepper_signal_time = 0;
+                    stepper_signal = 1;
+                }
+                break;
+
+            default:
+                break;
+        }
+    }
+    // else if(stepper_signal && (stepper_signal_time >= STEPPER_DELAY_TIME))
+    // {
+    //     stepper_signal = 0;
+
+    //     if(!(akt_half_track & 0x01))
+    //     {
+    //         stop_timer0();
+
+    //         // Geschwindigkeit setzen
+    //         OCR0A = timer0_orca0[d64_track_zone[akt_half_track>>1]];
+    //         akt_track_pos = 0;
+
+    //         if(track_is_written == 1)
+    //         {
+    //             no_byte_ready_send = 1;
+
+    //             track_is_written = 0;
+    //             write_disk_track(fd,akt_image_type,old_half_track>>1,gcr_track, &gcr_track_length);
+
+    //             read_disk_track(fd,akt_image_type,akt_half_track>>1,gcr_track, &gcr_track_length);
+    //             old_half_track = akt_half_track;    // Merken um evtl. dort zurück zu schreiben
+
+    //             no_byte_ready_send = 0;
+    //         }
+    //         else
+    //         {
+    //             read_disk_track(fd,akt_image_type,akt_half_track>>1,gcr_track, &gcr_track_length);
+    //             old_half_track = akt_half_track;    // Merken um evtl. dort zurück zu schreiben
+    //         }
+    //         start_timer0();
+    //     }
+    // }
+}
+
+/////////////////////////////////////////////////////////////////////
+
+void check_motor_signal(void)
+{
+    if(!get_motor_status())
+    {
+        // Sollte der aktuelle Track noch veränderungen haben so wird hier erstmal gesichert.
+        if(track_is_written == 1)
+        {
+            // stop_timer0();
+            no_byte_ready_send = 1;
+            track_is_written = 0;
+            // write_disk_track(fd,akt_image_type,old_half_track>>1,gcr_track, &gcr_track_length);
+            no_byte_ready_send = 0;
+            // start_timer0();
+        }
+    }
+}
+
+/////////////////////////////////////////////////////////////////////
+
 uint8_t get_key_from_buffer(void)
 {
     uint8_t val;
@@ -392,20 +490,24 @@ void set_gui_mode(const uint8_t gui_mode)
         display_string(disp_tracktxt_s);
 
         display_setcursor(disp_trackno_p);
-        // sprintf (byte_str,"%02d",akt_half_track >> 1);
-        // display_string(byte_str);
+        sprintf (byte_str,"%02d",akt_half_track >> 1);
+        display_string(byte_str);
 
-        display_setcursor(disp_motortxt_p);
-        // if(get_motor_status())
+        if(get_motor_status())
+        {
+            display_setcursor(disp_motortxt_p);
             display_string(disp_motor_on_s);
+        }
         // else
         //     display_string(disp_motor_off_s);
 
-        display_setcursor(disp_writeprottxt_p);
         if(floppy_wp)
+        {
+            display_setcursor(disp_writeprottxt_p);
             display_string(disp_writeprot_on_s);
-        else
-            display_string(disp_writeprot_off_s);
+        }
+        // else
+        //     display_string(disp_writeprot_off_s);
 
         display_setcursor(disp_scrollfilename_p);
         if(is_image_mount)
@@ -1230,3 +1332,82 @@ void write_disk_track(struct fat_file_struct *fd, uint8_t image_type, uint8_t tr
     }
 }
 */
+
+
+/////////////////////////////////////////////////////////////////////
+
+void init_stepper(void)
+{
+    // Stepper PINs als Eingang schalten
+    gpio_init(GPIO_STP0);
+    gpio_init(GPIO_STP1);
+    gpio_set_dir(GPIO_STP0, GPIO_IN);
+    gpio_set_dir(GPIO_STP1, GPIO_IN);
+    // STP_DDR &= ~(1<<STP0 | 1<<STP1);
+
+    akt_half_track = INIT_TRACK << 1;
+
+    // Pin Change Interrupt für beide STPx PIN's aktivieren
+    gpio_set_irq_enabled_with_callback(GPIO_STP0, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &gpio_callback);
+    gpio_set_irq_enabled(GPIO_STP1, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true);
+    // PCICR = 0x08;   // Enable PCINT24..31
+    // PCMSK3 = 0x03;  // Set Mask Register für PCINT24 und PCINT25
+}
+
+/////////////////////////////////////////////////////////////////////
+
+void stepper_inc(void)
+{
+    if(akt_half_track >= 83) return;
+
+    ++akt_half_track;
+}
+
+/////////////////////////////////////////////////////////////////////
+
+void stepper_dec(void)
+{
+    if(akt_half_track <= 2) return;
+
+    --akt_half_track;
+}
+
+/////////////////////////////////////////////////////////////////////
+
+void init_motor(void)
+{
+    // Als Eingang schalten
+    gpio_init(GPIO_MTR);
+    gpio_set_dir(GPIO_MTR, GPIO_IN);
+    // MTR_DDR &= ~(1<<MTR);
+}
+
+/////////////////////////////////////////////////////////////////////
+
+void init_controll_signals(void)
+{
+    // Als Ausgang schalten
+    //DDxn = 0 , PORTxn = 0 --> HiZ
+    //DDxn = 1 , PORTxn = 0 --> Output Low (Sink)
+    gpio_init(GPIO_BRDY);
+    gpio_set_dir(GPIO_BRDY, GPIO_OUT);
+
+    // BYTE_READY_DDR &= ~(1<<BYTE_READY);             // Byte Ready auf HiZ
+    // BYTE_READY_PORT &= ~(1<<BYTE_READY);
+
+
+    gpio_init(GPIO_SYNC);
+    gpio_set_dir(GPIO_SYNC, GPIO_OUT);
+    // SYNC_DDR |= 1<<SYNC;
+
+    // Als Eingang schalten
+    gpio_init(GPIO_PAPORT);
+    gpio_set_dir(GPIO_PAPORT, GPIO_IN);
+    // DATA_DDR = 0x00;
+    gpio_init(GPIO_SOE);
+    gpio_set_dir(GPIO_SOE, GPIO_IN);
+    // SOE_DDR &= ~(1<<SOE);
+    gpio_init(GPIO_OE);
+    gpio_set_dir(GPIO_OE, GPIO_IN);
+    // SO_DDR &= ~(1<<SO);
+}
