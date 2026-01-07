@@ -16,6 +16,7 @@
 #define GPIO_STP1   7
 
 #define GPIO_PAPORT 8  //defines the first bit of 8
+#define PAPORT_MASK (uint32_t)(0xFF<<GPIO_PAPORT)
 /*
 #define GPIO_PA0    8
 #define GPIO_PA1    9

@@ -34,6 +34,8 @@ const uint8_t d64_track_zone[43] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,        
 #define D64_SECTOR_SIZE (256)
 uint8_t d64_sector_puffer[21*D64_SECTOR_SIZE+5];
 
+
+#define GCR_SYNCMARK    (0xFF)
 // *** definition of GCR-structure
 // see: https://ist.uwaterloo.ca/~schepers/formats/G64.TXT
 
@@ -147,9 +149,26 @@ uint8_t is_image_mount;
 uint8_t is_wps_pin_enable = 0; // 0=WPS PIN=HiZ / 1=WPS Output
 int8_t floppy_wp = 0;          // Hier wird der aktuelle WriteProtection Zustand gespeichert / 0=Nicht Schreibgeschützt 1=Schreibgeschützt
 
+
+#define set_byte_ready()    gpio_set_dir(GPIO_BRDY, GPIO_IN)    // HiZ
+#define clear_byte_ready()  { gpio_set_dir(GPIO_BRDY, GPIO_OUT);gpio_put(GPIO_BRDY,0); }   // auf Ground ziehen
+
+#define get_soe_status()    gpio_get(GPIO_SOE)
+
+#define get_so_status()     gpio_get(GPIO_OE)
+
 #define set_wps()           gpio_put(GPIO_WPS,1)     // 5V Level = WritePotect
 #define clear_wps()         gpio_put(GPIO_WPS,0)     // 0V Level = Writetable
+
 #define get_motor_status()  gpio_get(GPIO_MTR)
+
+#define set_sync()          gpio_put(GPIO_SYNC,1)
+#define clear_sync()        gpio_put(GPIO_SYNC,0)
+
+#define out_gcr_byte(gcr_byte)  gpio_put_masked(PAPORT_MASK,gcr_byte<<GPIO_PAPORT)
+#define in_gcr_byte()       (gpio_get_all()&PAPORT_MASK)>>GPIO_PAPORT
+
+
 
 uint8_t stepper_signal_puffer[256]; // Ringpuffer für Stepper Signale (256 Bytes)
 volatile uint8_t stepper_signal_r_pos = 0;

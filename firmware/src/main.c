@@ -79,6 +79,7 @@ void stepper_dec(void);
 void init_motor(void);
 void init_controll_signals(void);
 
+void timer_isr(void);
 
 
 
@@ -1390,7 +1391,8 @@ void init_controll_signals(void)
     //DDxn = 0 , PORTxn = 0 --> HiZ
     //DDxn = 1 , PORTxn = 0 --> Output Low (Sink)
     gpio_init(GPIO_BRDY);
-    gpio_set_dir(GPIO_BRDY, GPIO_OUT);
+    gpio_set_dir(GPIO_BRDY, GPIO_IN);
+    gpio_put(GPIO_BRDY, 0);
 
     // BYTE_READY_DDR &= ~(1<<BYTE_READY);             // Byte Ready auf HiZ
     // BYTE_READY_PORT &= ~(1<<BYTE_READY);
@@ -1410,4 +1412,100 @@ void init_controll_signals(void)
     gpio_init(GPIO_OE);
     gpio_set_dir(GPIO_OE, GPIO_IN);
     // SO_DDR &= ~(1<<SO);
+}
+
+
+
+///////////////////////////////////////
+///////// ISR
+///////////////////////////////////////
+
+
+//ISR (TIMER0_COMPA_vect)
+void timer_isr(void)
+{
+    // ISR wird alle 26,28,30 oder 32µs ausfgrufen
+    // Je nach dem welche Spur gerade aktiv ist
+
+    stepper_signal_time++;
+
+    static uint8_t old_gcr_byte = 0;
+    uint8_t is_sync;
+
+    if(get_so_status())     // Wenn OE HI dann von Prot lesen
+    {
+        // LESE MODUS
+        // Daten aus Ringpuffer senden wenn Motor an und ein Image gemountet ist
+        if(get_motor_status() && is_image_mount)
+        {                                                               // Wenn Motor läuft
+            akt_gcr_byte = g64_tracks[akt_half_track>>1][akt_track_pos++];                  // Nächstes GCR Byte holen
+            if(akt_track_pos == g64_tracklen[akt_half_track>>1]) akt_track_pos = 0;    // Ist Spurende erreicht? Zurück zum Anfang
+
+            if((GCR_SYNCMARK == akt_gcr_byte) && (GCR_SYNCMARK == old_gcr_byte))        // Prüfen auf SYNC (mindesten 2 aufeinanderfolgende 0xFF)
+            {                                                           // Wenn SYNC
+                clear_sync();                                           // SYNC Leitung auf Low setzen
+                is_sync = 1;                                            // SYNC Merker auf 1
+            }
+                else
+            {                                                           // Wenn kein SYNC
+                set_sync();                                             // SYNC Leitung auf High setzen
+                is_sync = 0;                                            // SYNC Merker auf 0
+            }
+        }
+        else
+        {                                                               // Wenn Motor nicht läuft
+            akt_gcr_byte = 0x00;                                        // 0 senden wenn Motor aus
+            is_sync = 0;                                                // SYNC Merker auf 0
+        }
+
+        // SOE
+        // Unabhängig ob der Motor läuft oder nicht
+        if(get_soe_status())
+        {
+        if(!is_sync)
+            {
+                gpio_set_dir_out_masked(PAPORT_MASK);
+                out_gcr_byte(akt_gcr_byte);
+
+                if(0 == no_byte_ready_send)
+                {
+                    // BYTE_READY für 3µs löschen
+                    clear_byte_ready();
+                    sleep_us(3);
+                    set_byte_ready();
+                }
+            }
+        // else --> kein Byte senden !!
+        }
+        old_gcr_byte = akt_gcr_byte;
+    }
+    else
+    {
+        // SCHREIB MODUS
+
+        // SOE
+        // Unabhängig ob der Motor läuft oder nicht
+        if(get_soe_status())
+        {
+            gpio_set_dir_in_masked(PAPORT_MASK);
+            akt_gcr_byte = in_gcr_byte();
+
+            // BYTE_READY für 3µs löschen
+            if(0 == no_byte_ready_send)
+            {
+                clear_byte_ready();
+                sleep_us(3);
+                set_byte_ready();
+            }
+        }
+
+        // Daten aus Ringpuffer senden wenn Motor an
+        if(get_motor_status())
+        {
+            // Wenn Motor läuft
+            g64_tracks[akt_half_track>>1][akt_track_pos++] = akt_gcr_byte;  // Nächstes GCR Byte schreiben
+            track_is_written = 1;
+            if(akt_track_pos == g64_tracklen[akt_half_track>>1]) akt_track_pos = 0;    // Ist Spurende erreicht? Zurück zum Anfang
+        }
+    }
 }
