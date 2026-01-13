@@ -1,6 +1,9 @@
-/* general routines for display */
-// implementation: F00K42
-// last change: 11/10/2025
+/**********************************
+ * header - routines for display
+ *
+ * Author: F00K42
+ * Last change: 2025/10/11
+***********************************/
 
 #ifndef _DISPLAY_H_INCLUDE_
 #define _DISPLAY_H_INCLUDE_

@@ -1,20 +1,22 @@
+/////////////////////////////////////////////////
+// 1541-rePico //////////////////////////////////
+/////////////////////////////////////////////////
+// author: F00K42 ///////////////////////////////
+// version: 1.0.4 // last changed: 2026/01/11  //
+// repo: https://github.com/fook42/1541-rePico //
+/////////////////////////////////////////////////
+
+
 #include <stdio.h>
 #include "pico/stdlib.h"
-// #include "hardware/spi.h"
 #include "hardware/i2c.h"
-// #include "hardware/dma.h"
-// #include "hardware/pio.h"
-// #include "hardware/interp.h"
 #include "hardware/timer.h"
 #include "hardware/clocks.h"
-
-#include "quadrature_encoder.pio.h"
 
 #include "pinout.h"
 
 #define _EXTERN_
 
-#include "main.h"
 #include "version.h"
 #include "display.h"
 #include "lcd.h"
@@ -29,87 +31,55 @@
 #include "f_util.h"
 #include "ff.h"
 
+#include "main.h"
+
 
 #define START_MESSAGE_TIME 1500
 
-FATFS       fs;
-FRESULT     fr;
-DIR         dir_object;
-FIL         fd;
-FILINFO     dir_entry;
-FILINFO     file_entry;
-FILINFO     fb_dir_entry[LCD_LINE_COUNT];
-
-
 int new_value, delta, old_value = 0;
-int last_value = -1, last_delta = -1;
-PIO pio = pio0;
-int pio_prg_offset;
-const uint sm = 0;
+
 uint8_t key3_irq_value = NO_KEY;
 
-// -----------
-
-void check_stepper_signals(void);
-void check_motor_signal(void);
-
-void set_gui_mode(const uint8_t gui_mode);
-uint8_t get_key_from_buffer(void);
-void check_menu_events(const uint16_t menu_event);
-void update_gui();
-void show_start_message(void);
-
-void filebrowser_update(uint8_t key_code);
-void filebrowser_refresh();
-uint16_t seek_to_dir_entry(uint16_t entry_num);
-uint16_t get_dir_entry_count();
-
-void open_disk_image(FIL* fd, FILINFO *file_entry, uint8_t* image_type);
-void open_g64_image(FIL* fd);
-void open_d64_image(FIL* fd);
-void close_disk_image(FIL* fd);
-void set_write_protection(int8_t wp);
-void send_disk_change(void);
-
-int8_t read_disk(FIL* fd, const int image_type);
-
-void init_stepper(void);
-void stepper_inc(void);
-void stepper_dec(void);
-void init_motor(void);
-void init_controll_signals(void);
-
-void timer_isr(void);
-
-
-
-bool repeating_timer_callback(__unused struct repeating_timer *t) {
-//    printf("Repeat at %lld\n", time_us_64());
-    return true;
-}
-
+// ---------------------------------------------------------------
 
 void gpio_callback(uint gpio, uint32_t events)
 {
     if ((GPIO_STP0==gpio) || (GPIO_STP1==gpio))
     {
         // general gpio-ISR .. triggered for STP0 or STP1 change.. no need to detect the cause
-        stepper_signal_puffer[stepper_signal_w_pos] = ((bool_to_bit(gpio_get(GPIO_STP0))) | (bool_to_bit(gpio_get(GPIO_STP1))<<1));
+        stepper_signal_puffer[stepper_signal_w_pos] = ((bool_to_bit(gpio_get(GPIO_STP0))<<1) | (bool_to_bit(gpio_get(GPIO_STP1))));
         stepper_signal_w_pos++;
     } else if (GPIO_BT3==gpio)
     {
         key3_irq_value=(events==GPIO_IRQ_EDGE_FALL)?KEY2_DOWN:KEY2_UP;
+    } else if ((GPIO_BT1==gpio) /* || (GPIO_BT2==gpio)*/)
+    {
+        if (gpio_get(GPIO_BT2))
+        {
+            ++new_value;
+        } else {
+            --new_value;
+        }
     }
 }
+
+// ---------------------------------------------------------------
 
 int main()
 {
     stdio_init_all();
 
     // --- Input ----
+    gpio_init(GPIO_BT1);
+    gpio_init(GPIO_BT2);
     gpio_init(GPIO_BT3);
+    gpio_set_dir(GPIO_BT1, GPIO_IN);
+    gpio_set_dir(GPIO_BT2, GPIO_IN);
     gpio_set_dir(GPIO_BT3, GPIO_IN);
+    gpio_set_pulls(GPIO_BT1, true, false);
+    gpio_set_pulls(GPIO_BT2, true, false);
     gpio_set_pulls(GPIO_BT3, true, false);
+    gpio_set_irq_enabled_with_callback(GPIO_BT1, GPIO_IRQ_EDGE_FALL, true, &gpio_callback);
     gpio_set_irq_enabled(GPIO_BT3, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true);
 
     // Stepper Initialisieren
@@ -119,33 +89,28 @@ int main()
     init_motor();
 
     // Steursignale BYTE_READY, SYNC und SOE Initialisieren
-    init_controll_signals();
+    init_control_signals();
 
+    soe_gatearray_init();
+    clear_soe_gatearray();
+
+    init_bytetimer();
 
     gpio_init(GPIO_WPS);
     gpio_set_dir(GPIO_WPS, GPIO_OUT);
 //    gpio_set_pulls(GPIO_WPS, true, false);
 
-    // Base pin to connect the A phase of the encoder.
-    // The B phase must be connected to the next pin
-    const uint PIN_AB = GPIO_BT2; // GPIO26+27
 
-    // we don't really need to keep the offset, as this program must be loaded
-    // at offset 0
-    pio_prg_offset = pio_add_program(pio, &quadrature_encoder_program);
-    quadrature_encoder_program_init(pio, sm, PIN_AB, 500);
+    /* no pio.. no cry
+        // Base pin to connect the A phase of the encoder.
+        // The B phase must be connected to the next pin
+        const uint PIN_AB = GPIO_BT2; // GPIO26+27
 
-    // // gpio_put_masked(0xFF<<GPIO_PAPORT,value<<GPIO_PAPORT);
-
-    struct repeating_timer timer;
-    bool success;
-    success = add_repeating_timer_us(timer0_values[0], repeating_timer_callback, NULL, &timer);
-
-    if (success)
-    {
-        success = cancel_repeating_timer(&timer);
-    }
-
+        // we don't really need to keep the offset, as this program must be loaded
+        // at offset 0
+        pio_prg_offset = pio_add_program(pio, &quadrature_encoder_program);
+        quadrature_encoder_program_init(pio, sm, PIN_AB, 500);
+    */
 
     if (display_init())
     {
@@ -202,8 +167,6 @@ int main()
         check_stepper_signals();
         check_motor_signal();
         update_gui();
-
-//        sleep_ms(10);
     }
 }
 /////////////////////////////////////////////////////////////////////
@@ -216,6 +179,13 @@ void check_stepper_signals(void)
     {
         uint8_t stepper = stepper_signal_puffer[stepper_signal_r_pos] | stepper_signal_puffer[stepper_signal_r_pos-1]<<2;
         stepper_signal_r_pos++;
+        display_setcursor(0+(stepper_signal_r_pos&0x0F),2);
+        display_data(stepper+'@');
+
+        display_setcursor(0,3);
+        char byte_str[16];
+        sprintf (byte_str,"%03d",stepper_signal_time);
+        display_string(byte_str);
 
         switch(stepper)
         {
@@ -247,38 +217,41 @@ void check_stepper_signals(void)
                 break;
         }
     }
-    // else if(stepper_signal && (stepper_signal_time >= STEPPER_DELAY_TIME))
-    // {
-    //     stepper_signal = 0;
+    else if(stepper_signal && (STEPPER_DELAY_TIME <= stepper_signal_time))
+    {
+        stepper_signal = 0;
+        display_setcursor(8,3);
+        char byte_str[16];
+        sprintf (byte_str,"%03d %03d",akt_half_track, akt_track_pos);
+        display_string(byte_str);
 
-    //     if(!(akt_half_track & 0x01))
-    //     {
-    //         stop_timer0();
+        if(!(akt_half_track & 0x01))
+        {
+            stop_bytetimer();
 
-    //         // Geschwindigkeit setzen
-    //         OCR0A = timer0_orca0[d64_track_zone[akt_half_track>>1]];
-    //         akt_track_pos = 0;
+            // Geschwindigkeit setzen
+            akt_track_pos = 0;
 
-    //         if(track_is_written == 1)
-    //         {
-    //             no_byte_ready_send = 1;
+            if(track_is_written)
+            {
+                no_byte_ready_send = true;
 
-    //             track_is_written = 0;
-    //             write_disk_track(fd,akt_image_type,old_half_track>>1,gcr_track, &gcr_track_length);
+                track_is_written = false;
+                // write_disk_track(fd,akt_image_type,old_half_track>>1,gcr_track, &gcr_track_length);
 
-    //             read_disk_track(fd,akt_image_type,akt_half_track>>1,gcr_track, &gcr_track_length);
-    //             old_half_track = akt_half_track;    // Merken um evtl. dort zurück zu schreiben
+                // read_disk_track(fd,akt_image_type,akt_half_track>>1,gcr_track, &gcr_track_length);
+                old_half_track = akt_half_track;    // Merken um evtl. dort zurück zu schreiben
 
-    //             no_byte_ready_send = 0;
-    //         }
-    //         else
-    //         {
-    //             read_disk_track(fd,akt_image_type,akt_half_track>>1,gcr_track, &gcr_track_length);
-    //             old_half_track = akt_half_track;    // Merken um evtl. dort zurück zu schreiben
-    //         }
-    //         start_timer0();
-    //     }
-    // }
+                no_byte_ready_send = false;
+            }
+            else
+            {
+                // read_disk_track(fd,akt_image_type,akt_half_track>>1,gcr_track, &gcr_track_length);
+                old_half_track = akt_half_track;    // Merken um evtl. dort zurück zu schreiben
+            }
+            start_bytetimer();
+        }
+    }
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -288,13 +261,13 @@ void check_motor_signal(void)
     if(!get_motor_status())
     {
         // Sollte der aktuelle Track noch veränderungen haben so wird hier erstmal gesichert.
-        if(track_is_written == 1)
+        if(track_is_written)
         {
             // stop_timer0();
-            no_byte_ready_send = 1;
-            track_is_written = 0;
+            no_byte_ready_send = true;
+            track_is_written = false;
             // write_disk_track(fd,akt_image_type,old_half_track>>1,gcr_track, &gcr_track_length);
-            no_byte_ready_send = 0;
+            no_byte_ready_send = false;
             // start_timer0();
         }
     }
@@ -305,12 +278,14 @@ void check_motor_signal(void)
 uint8_t get_key_from_buffer(void)
 {
     uint8_t val;
-    new_value = quadrature_encoder_get_count(pio, sm); // problem .. this blocks :(
+//    new_value = quadrature_encoder_get_count(pio, sm); // problem .. this blocks :(
+    // new_value is updated in ISR ...
+    
     if ((new_value - old_value)>0) {
-        ++old_value;
+        old_value = new_value;
         val = KEY1_DOWN;
     } else if ((old_value - new_value)>0) {
-        --old_value;
+        old_value = new_value;
         val = KEY0_DOWN;
     } else {
         val = key3_irq_value;
@@ -319,15 +294,32 @@ uint8_t get_key_from_buffer(void)
     return val;
 }
 
-void update_gui()
+void update_gui(void)
 {
     static uint8_t old_half_track = 0;
-    static uint8_t old_motor_status = 0;
-    static uint16_t wait_counter0 = 0;
-    uint8_t new_motor_status;
+    static bool old_motor_status = false;
+    static uint32_t wait_counter0 = 0;
+    bool new_motor_status;
     uint8_t key_code = get_key_from_buffer();
     char byte_str[16];
 
+    /* // DEBUG ...
+        display_setcursor(0,2);
+        display_data((id1&0xF0>>4)+'0');
+        display_data((id1&0x0F)+'0');
+        display_data((id2&0xF0>>4)+'0');
+        display_data((id2&0x0F)+'0');
+
+        display_setcursor(8,2);
+        sprintf (byte_str,"%03d",stepper_signal_w_pos&0xFF);
+        display_string(byte_str);
+        sprintf (byte_str,"%03d",stepper_signal_r_pos&0xFF);
+        display_string(byte_str);
+
+        display_setcursor(0,3);
+        sprintf (byte_str,"%03d",akt_gcr_byte);
+        display_string(byte_str);
+    */
     switch (current_gui_mode)
     {
     case GUI_INFO_MODE:
@@ -348,7 +340,7 @@ void update_gui()
         }
         old_half_track = akt_half_track;
 
-//        new_motor_status = get_motor_status();
+        new_motor_status = get_motor_status();
         if(old_motor_status != new_motor_status)
         {
             old_motor_status = new_motor_status;
@@ -365,7 +357,7 @@ void update_gui()
 
             ++wait_counter0;
 
-            if((gui_current_line_offset > 0) && (wait_counter0 == 300))
+            if((gui_current_line_offset > 0) && (wait_counter0 == 300000))
             {
                 wait_counter0 = 0;
 
@@ -442,9 +434,9 @@ void check_menu_events(const uint16_t menu_event)
                 case M_WP_IMAGE:
                     if(menu_get_entry_var1(&image_menu, M_WP_IMAGE))
                     {
-                        set_write_protection(1);
+                        set_write_protection(true);
                     } else {
-                        set_write_protection(0);
+                        set_write_protection(false);
                     }
                     menu_refresh();
                     break;
@@ -499,16 +491,12 @@ void set_gui_mode(const uint8_t gui_mode)
             display_setcursor(disp_motortxt_p);
             display_string(disp_motor_on_s);
         }
-        // else
-        //     display_string(disp_motor_off_s);
 
         if(floppy_wp)
         {
             display_setcursor(disp_writeprottxt_p);
             display_string(disp_writeprot_on_s);
         }
-        // else
-        //     display_string(disp_writeprot_off_s);
 
         display_setcursor(disp_scrollfilename_p);
         if(is_image_mount)
@@ -558,7 +546,7 @@ void show_start_message(void)
 
 void filebrowser_update(uint8_t key_code)
 {
-    static uint16_t fbup_wait_counter0 = 0;
+    static uint32_t fbup_wait_counter0 = 0;
     int8_t tracks_read;
 
     switch (key_code)
@@ -595,14 +583,14 @@ void filebrowser_update(uint8_t key_code)
         break;
     case KEY2_UP:
         // stop_timer0();
-        // no_byte_ready_send = 1;
+        stop_bytetimer();
+        no_byte_ready_send = true;
 
         close_disk_image(&fd);
 
         if(fb_dir_entry[fb_cursor_pos].fattrib & AM_DIR)
         {
             // Eintrag ist ein Verzeichnis
-        //     change_dir(fb_dir_entry[fb_cursor_pos].long_name);
             f_chdir(fb_dir_entry[fb_cursor_pos].fname);
             fb_cursor_pos = 0;
             fb_window_pos = 0;
@@ -612,7 +600,7 @@ void filebrowser_update(uint8_t key_code)
 
         open_disk_image(&fd, &fb_dir_entry[fb_cursor_pos], &akt_image_type);
 
-        if(akt_image_type == UNDEF_IMAGE)
+        if(UNDEF_IMAGE == akt_image_type)
         {
             display_clear();
             display_setcursor(disp_unsupportedimg_p);
@@ -622,26 +610,28 @@ void filebrowser_update(uint8_t key_code)
 
         filebrowser_refresh();
 
-        // if(!fd)
-        // {
-            // is_image_mount = 0;
-        //     return ;
-        // }
+        if((0 == fd.obj.fs) || (UNDEF_IMAGE == akt_image_type))
+        {
+            is_image_mount = false;
+            return;
+        }
 
         strcpy(image_filename, fb_dir_entry[fb_cursor_pos].fname);
 
         //new: read complete image
         if ((tracks_read=read_disk(&fd, akt_image_type))>0)
         {
-            // akt_track_pos = 0;
+            akt_track_pos = 0;
 
-            // no_byte_ready_send = 0;
-            // start_timer0();
+            no_byte_ready_send = false;
+            start_bytetimer();
 
-            is_image_mount = 1;
+            is_image_mount = true;
             send_disk_change();
 
             menu_set_entry_var1(&image_menu, M_WP_IMAGE, floppy_wp);
+
+            close_disk_image(&fd);  // we can close the image - everything is in ram now.
 
             set_gui_mode(GUI_INFO_MODE);
         } else {
@@ -656,19 +646,9 @@ void filebrowser_update(uint8_t key_code)
 
     //// Filename Scrolling
     ++fbup_wait_counter0;
-    // DEBUG
-    // display_setcursor(LCD_LINE_SIZE-1, 1);
-    // display_data('0'+fb_current_line_offset);
-    // for(int i=0;i<5;i++)
-    // {
-    //     display_setcursor(LCD_LINE_SIZE-1-i, 0);
-    //     display_data('0'+((fbup_wait_counter0>>(i*4))&0x0f));
-    // }
-    // DEBUG
-    if((fb_current_line_offset > 0) && (fbup_wait_counter0 == 300))
+
+    if((fb_current_line_offset > 0) && (fbup_wait_counter0 >= 300000))
     {
-        display_setcursor(LCD_LINE_SIZE-1, 1);
-        display_data('0'+fb_current_line_offset);
         fbup_wait_counter0 = 0;
 
         if(0 == fb_line_scroll_end_begin_wait)
@@ -705,7 +685,7 @@ void filebrowser_update(uint8_t key_code)
 
 /////////////////////////////////////////////////////////////////////
 
-void filebrowser_refresh()
+void filebrowser_refresh(void)
 {
     display_clear();
 
@@ -767,7 +747,7 @@ void filebrowser_refresh()
 
 /////////////////////////////////////////////////////////////////////
 
-uint16_t get_dir_entry_count()
+uint16_t get_dir_entry_count(void)
 {
     uint16_t entry_count = 0;
 
@@ -856,7 +836,7 @@ void open_disk_image(FIL* fd, FILINFO *file_entry, uint8_t* image_type)
         {
             *image_type = G64_IMAGE;
             open_g64_image(fd);
-            set_write_protection(1);
+            set_write_protection(true);
         }
     }
     else if(!strcmp(extension,".d64"))
@@ -867,13 +847,14 @@ void open_disk_image(FIL* fd, FILINFO *file_entry, uint8_t* image_type)
         {
             *image_type = D64_IMAGE;
             open_d64_image(fd);
-            set_write_protection(1);
+            set_write_protection(true);
         }
     }
 
     if (FR_OK != fr)
     {
         // Nicht unterstützt
+        f_close(fd);
         *image_type = UNDEF_IMAGE;
     }
     return;
@@ -884,7 +865,6 @@ void open_disk_image(FIL* fd, FILINFO *file_entry, uint8_t* image_type)
 void close_disk_image(FIL* fd)
 {
     f_close(fd);
-    fd = NULL;
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -918,7 +898,7 @@ void open_d64_image(FIL* fd)
 
 /////////////////////////////////////////////////////////////////////
 
-void set_write_protection(int8_t wp)
+void set_write_protection(bool wp)
 {
     if(0 == is_wps_pin_enable) return;
 
@@ -1342,6 +1322,8 @@ void init_stepper(void)
     // Stepper PINs als Eingang schalten
     gpio_init(GPIO_STP0);
     gpio_init(GPIO_STP1);
+    gpio_set_pulls(GPIO_STP0, true, false);
+    gpio_set_pulls(GPIO_STP1, true, false);
     gpio_set_dir(GPIO_STP0, GPIO_IN);
     gpio_set_dir(GPIO_STP1, GPIO_IN);
     // STP_DDR &= ~(1<<STP0 | 1<<STP1);
@@ -1349,7 +1331,7 @@ void init_stepper(void)
     akt_half_track = INIT_TRACK << 1;
 
     // Pin Change Interrupt für beide STPx PIN's aktivieren
-    gpio_set_irq_enabled_with_callback(GPIO_STP0, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &gpio_callback);
+    gpio_set_irq_enabled(GPIO_STP0, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true);
     gpio_set_irq_enabled(GPIO_STP1, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true);
     // PCICR = 0x08;   // Enable PCINT24..31
     // PCMSK3 = 0x03;  // Set Mask Register für PCINT24 und PCINT25
@@ -1379,42 +1361,73 @@ void init_motor(void)
 {
     // Als Eingang schalten
     gpio_init(GPIO_MTR);
+    gpio_set_pulls(GPIO_MTR, true, false);
     gpio_set_dir(GPIO_MTR, GPIO_IN);
     // MTR_DDR &= ~(1<<MTR);
 }
 
 /////////////////////////////////////////////////////////////////////
 
-void init_controll_signals(void)
+void init_control_signals(void)
 {
     // Als Ausgang schalten
     //DDxn = 0 , PORTxn = 0 --> HiZ
     //DDxn = 1 , PORTxn = 0 --> Output Low (Sink)
     gpio_init(GPIO_BRDY);
+    gpio_set_pulls(GPIO_BRDY, false, false);
     gpio_set_dir(GPIO_BRDY, GPIO_IN);
-    gpio_put(GPIO_BRDY, 0);
-
     // BYTE_READY_DDR &= ~(1<<BYTE_READY);             // Byte Ready auf HiZ
     // BYTE_READY_PORT &= ~(1<<BYTE_READY);
-
 
     gpio_init(GPIO_SYNC);
     gpio_set_dir(GPIO_SYNC, GPIO_OUT);
     // SYNC_DDR |= 1<<SYNC;
 
     // Als Eingang schalten
-    gpio_init(GPIO_PAPORT);
-    gpio_set_dir(GPIO_PAPORT, GPIO_IN);
+    gpio_init_mask(PAPORT_MASK);
+    gpio_set_dir_in_masked(PAPORT_MASK); // should set all 8 bits to input
     // DATA_DDR = 0x00;
+
     gpio_init(GPIO_SOE);
+    gpio_set_pulls(GPIO_SOE, true, false);
     gpio_set_dir(GPIO_SOE, GPIO_IN);
     // SOE_DDR &= ~(1<<SOE);
     gpio_init(GPIO_OE);
+    gpio_set_pulls(GPIO_OE, true, false);
     gpio_set_dir(GPIO_OE, GPIO_IN);
     // SO_DDR &= ~(1<<SO);
 }
 
+/////////////////////////////////////////////////////////////////////
 
+void soe_gatearray_init(void)
+{
+    //DDxn = 1 , PORTxn = 0 --> Lo
+    //DDxn = 1 , PORTxn = 1 --> Hi
+    gpio_init(GPIO_SOE_GA);
+    gpio_set_dir(GPIO_SOE_GA, GPIO_OUT);
+}
+
+/////////////////////////////////////////////////////////////////////
+
+void init_bytetimer(void)
+{
+    stop_bytetimer();
+}
+
+/////////////////////////////////////////////////////////////////////
+
+void start_bytetimer(void)
+{
+    (void) add_repeating_timer_us(-bytetimer_values[d64_track_zone[akt_half_track>>1]], repeating_timer_callback, NULL, &bytetimer);
+}
+
+/////////////////////////////////////////////////////////////////////
+
+void stop_bytetimer(void)
+{
+    (void) cancel_repeating_timer(&bytetimer);
+}
 
 ///////////////////////////////////////
 ///////// ISR
@@ -1422,7 +1435,7 @@ void init_controll_signals(void)
 
 
 //ISR (TIMER0_COMPA_vect)
-void timer_isr(void)
+bool repeating_timer_callback(__unused struct repeating_timer *t)
 {
     // ISR wird alle 26,28,30 oder 32µs ausfgrufen
     // Je nach dem welche Spur gerade aktiv ist
@@ -1446,7 +1459,7 @@ void timer_isr(void)
                 clear_sync();                                           // SYNC Leitung auf Low setzen
                 is_sync = 1;                                            // SYNC Merker auf 1
             }
-                else
+            else
             {                                                           // Wenn kein SYNC
                 set_sync();                                             // SYNC Leitung auf High setzen
                 is_sync = 0;                                            // SYNC Merker auf 0
@@ -1462,12 +1475,12 @@ void timer_isr(void)
         // Unabhängig ob der Motor läuft oder nicht
         if(get_soe_status())
         {
-        if(!is_sync)
+            if(!is_sync)
             {
                 gpio_set_dir_out_masked(PAPORT_MASK);
                 out_gcr_byte(akt_gcr_byte);
 
-                if(0 == no_byte_ready_send)
+                if(!no_byte_ready_send)
                 {
                     // BYTE_READY für 3µs löschen
                     clear_byte_ready();
@@ -1475,7 +1488,7 @@ void timer_isr(void)
                     set_byte_ready();
                 }
             }
-        // else --> kein Byte senden !!
+            // else --> kein Byte senden !!
         }
         old_gcr_byte = akt_gcr_byte;
     }
@@ -1491,7 +1504,7 @@ void timer_isr(void)
             akt_gcr_byte = in_gcr_byte();
 
             // BYTE_READY für 3µs löschen
-            if(0 == no_byte_ready_send)
+            if(!no_byte_ready_send)
             {
                 clear_byte_ready();
                 sleep_us(3);
@@ -1504,8 +1517,9 @@ void timer_isr(void)
         {
             // Wenn Motor läuft
             g64_tracks[akt_half_track>>1][akt_track_pos++] = akt_gcr_byte;  // Nächstes GCR Byte schreiben
-            track_is_written = 1;
+            track_is_written = true;
             if(akt_track_pos == g64_tracklen[akt_half_track>>1]) akt_track_pos = 0;    // Ist Spurende erreicht? Zurück zum Anfang
         }
     }
+    return true;
 }

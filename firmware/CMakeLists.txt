@@ -46,10 +46,6 @@ pico_set_program_version(1541-rePico "0.1")
 pico_enable_stdio_uart(1541-rePico 0)
 pico_enable_stdio_usb(1541-rePico 1)
 
-
-pico_generate_pio_header(1541-rePico ${PROJECT_SOURCE_DIR}/src/quadrature_encoder.pio)
-
-
 # NOTE: for this to work, src\ff15\source\ffconf.h must be removed or renamed.
 # target_include_directories(no-OS-FatFS-SD-SDIO-SPI-RPi-Pico BEFORE INTERFACE
 #     ${CMAKE_CURRENT_LIST_DIR}/include

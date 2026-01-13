@@ -1,8 +1,9 @@
-/* basic i2c routines for Pico2 */
-// header
-// implementation: F00K42
-// last change: 11/10/2025
-
+/**********************************
+ * header - basic i2c routines for Pico2
+ *
+ * Author: F00K42
+ * Last change: 2025/10/11
+***********************************/
 #ifndef _I2C_INCLUDE_
 #define _I2C_INCLUDE_
 

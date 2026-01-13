@@ -1,3 +1,15 @@
+/* Name: main.h
+* Project: 1541-rePico
+* Author: fook42
+* Copyright: 
+* License: GPL 2
+*/
+
+
+#include "hw_config.h"
+#include "f_util.h"
+#include "ff.h"
+
 /////
 #define LCD_LINE_COUNT  (LCD_ROWS)
 #define LCD_LINE_SIZE   (LCD_COLS)
@@ -5,6 +17,55 @@
 // Spur auf dem der Lesekopf beim Start/Reset stehen soll
 // Track 18 --> Directory
 #define INIT_TRACK  (18)
+
+// functions
+
+void check_stepper_signals(void);
+void check_motor_signal(void);
+uint8_t get_key_from_buffer(void);
+void update_gui(void);
+void check_menu_events(const uint16_t menu_event);
+void set_gui_mode(const uint8_t gui_mode);
+void filebrowser_update(uint8_t key_code);
+void filebrowser_refresh(void);
+
+uint16_t get_dir_entry_count(void);
+uint16_t seek_to_dir_entry(uint16_t entry_num);
+
+void show_start_message(void);
+
+void init_stepper(void);
+void stepper_inc(void);
+void stepper_dec(void);
+void init_motor(void);
+void init_control_signals(void);
+void soe_gatearray_init(void);
+
+void open_disk_image(FIL* fd, FILINFO *file_entry, uint8_t* image_type);
+void close_disk_image(FIL* fd);
+void open_g64_image(FIL* fd);
+void open_d64_image(FIL* fd);
+int8_t read_disk(FIL* fd, const int image_type);
+
+void set_write_protection(bool wp);
+void send_disk_change(void);
+
+bool repeating_timer_callback(__unused struct repeating_timer *t);
+void init_bytetimer(void);
+void start_bytetimer(void);
+void stop_bytetimer(void);
+
+/////////////
+
+// Filesystem-variables:
+FATFS       fs;             // filesystem handle - only created once
+FRESULT     fr;             // general purpos result variable
+DIR         dir_object;
+FIL         fd;             // file descriptor for every open file
+FILINFO     dir_entry;
+FILINFO     file_entry;
+FILINFO     fb_dir_entry[LCD_LINE_COUNT];
+//
 
 
 volatile uint8_t akt_gcr_byte = 0;
@@ -103,17 +164,22 @@ uint16_t g64_tracklen[G64_TRACKCOUNT];
 // enough space to store 42 tracks, each 7928 bytes byte length
 uint8_t g64_tracks[G64_TRACKCOUNT][G64_TRACKSIZE];
 
+// timer definition
+
+struct repeating_timer bytetimer;
 // Originale Bitraten
 //Zone 0: 8000000/26 = 307692 Hz    (ByteReady 38461.5 Hz)
 //Zone 1: 8000000/28 = 285714 Hz    (ByteReady 35714.25 Hz)
 //Zone 2: 8000000/30 = 266667 Hz    (ByteReady 33333.375 Hz)
 //Zone 3: 8000000/32 = 250000 Hz    (ByteReady 31250 Hz)
 
-//Höhere Werte verlangsammen die Bitrate
-const uint64_t timer0_values[4] = {26,28,30,32};
+//Höhere Werte verlangsammen die Bitrate (=us delay-values between bytes)
+const int64_t bytetimer_values[4] = {26, 28, 30, 32};
 
-//const uint8_t timer0_orca0[4] = {64,69,74,79};            // Diese Werte erzeugen den genausten Bittakt aber nicht 100% (Bei 20MHz)
-//const uint8_t timer0_orca0[4] = {77,83,89,95};              // Diese Werte erzeugen den genausten Bittakt aber nicht 100% (Bei 24MHz)
+// Zeit die nach der letzten Stepperaktivität vergehen muss, um einen neuen Track von SD Karte zu laden
+// (1541 Original Rom schaltet STP1 alle 15ms)
+// Default 15
+#define STEPPER_DELAY_TIME 193  // zwischen 26µs*193=5,02ms bis 32µs*160=6,176ms
 
 const uint8_t d64_sector_gap[4] = {12, 21, 16, 13}; // von GPZ Code übermommen imggen
 #define HEADER_GAP_BYTES (9)
@@ -144,26 +210,30 @@ enum {UNDEF_IMAGE, G64_IMAGE, D64_IMAGE};
 
 // floppydisk emulation
 uint8_t akt_image_type = UNDEF_IMAGE;     // 0=kein Image, 1=G64, 2=D64
-uint8_t is_image_mount;
+bool is_image_mount;
 
 uint8_t is_wps_pin_enable = 0; // 0=WPS PIN=HiZ / 1=WPS Output
-int8_t floppy_wp = 0;          // Hier wird der aktuelle WriteProtection Zustand gespeichert / 0=Nicht Schreibgeschützt 1=Schreibgeschützt
+bool floppy_wp = true;  // Hier wird der aktuelle WriteProtection Zustand gespeichert
+                        // false=Nicht Schreibgeschützt , true=Schreibgeschützt
 
-
-#define set_byte_ready()    gpio_set_dir(GPIO_BRDY, GPIO_IN)    // HiZ
-#define clear_byte_ready()  { gpio_set_dir(GPIO_BRDY, GPIO_OUT);gpio_put(GPIO_BRDY,0); }   // auf Ground ziehen
+#define set_byte_ready()    gpio_set_dir(GPIO_BRDY,GPIO_IN)    // HiZ
+#define clear_byte_ready()  { gpio_set_dir(GPIO_BRDY,GPIO_OUT);gpio_put(GPIO_BRDY,false); }   // auf Ground ziehen
 
 #define get_soe_status()    gpio_get(GPIO_SOE)
 
 #define get_so_status()     gpio_get(GPIO_OE)
 
-#define set_wps()           gpio_put(GPIO_WPS,1)     // 5V Level = WritePotect
-#define clear_wps()         gpio_put(GPIO_WPS,0)     // 0V Level = Writetable
+#define set_soe_gatearray()     gpio_put(GPIO_SOE_GA,true)
+#define clear_soe_gatearray()   gpio_put(GPIO_SOE_GA,false)
+
+
+#define set_wps()           gpio_put(GPIO_WPS,true)     // 5V Level = WritePotect
+#define clear_wps()         gpio_put(GPIO_WPS,false)    // 0V Level = Writeable
 
 #define get_motor_status()  gpio_get(GPIO_MTR)
 
-#define set_sync()          gpio_put(GPIO_SYNC,1)
-#define clear_sync()        gpio_put(GPIO_SYNC,0)
+#define set_sync()          gpio_put(GPIO_SYNC,true)
+#define clear_sync()        gpio_put(GPIO_SYNC,false)
 
 #define out_gcr_byte(gcr_byte)  gpio_put_masked(PAPORT_MASK,gcr_byte<<GPIO_PAPORT)
 #define in_gcr_byte()       (gpio_get_all()&PAPORT_MASK)>>GPIO_PAPORT
@@ -176,6 +246,5 @@ volatile uint8_t stepper_signal_w_pos = 0;
 volatile uint8_t stepper_signal_time = 0;
 volatile uint8_t stepper_signal = 0;
 
-volatile uint8_t track_is_written = 0;
-volatile uint8_t track_is_written_old = 0;
-volatile uint8_t no_byte_ready_send = 0;
+volatile bool track_is_written   = false;
+volatile bool no_byte_ready_send = false;

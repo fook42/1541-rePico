@@ -1,10 +1,14 @@
-/* Bitmap Fontdata */
-// base : C64 Font
-// size : 8x8 per character
-// ascii-range: 0x20..7f
-//
-// last change: 19/09/2021
-
+/**********************************
+ * header - Bitmap Fontdata
+ *
+ * Author: F00K42
+ * Last change: 2021/09/19
+***********************************/
+/*
+ *   base : C64 Font
+ *   size : 8x8 per character
+ *   ascii-range: 0x20..7f
+ */
 #ifndef _FONTDATA_H_INCLUDE_
 #define _FONTDATA_H_INCLUDE_
 
