@@ -1,11 +1,9 @@
-/* Name: main.h
-* Project: 1541-rePico
-* Author: fook42
-* Copyright: 
-* License: GPL 2
-*/
-
-
+/**********************************
+ * header - main routines, defines, variables
+ *
+ * Author: F00K42
+ * Last change: 2026/01/16
+***********************************/
 #include "hw_config.h"
 #include "f_util.h"
 #include "ff.h"
@@ -105,7 +103,7 @@ uint8_t d64_sector_puffer[21*D64_SECTOR_SIZE+5];
 #define G64_TRACKSIZE   (7928)  // = 0x1ef8
 
 const uint8_t g64_head[] = {'G','C','R','-','1','5','4','1', G64_VERSION, G64_TRACKCOUNT*2, (G64_TRACKSIZE&0xff), ((G64_TRACKSIZE>>8)&0xff)};
-uint8_t g64_jumptable[8*G64_TRACKCOUNT];
+uint32_t g64_jumptable[2*G64_TRACKCOUNT];
 /* = {                                                                  0xac, 0x02, 0x00, 0x00,
 0x00, 0x00, 0x00, 0x00, 0xa6, 0x21, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xa0, 0x40, 0x00, 0x00,
 0x00, 0x00, 0x00, 0x00, 0x9a, 0x5f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x94, 0x7e, 0x00, 0x00,
@@ -130,7 +128,7 @@ uint8_t g64_jumptable[8*G64_TRACKCOUNT];
 0x00, 0x00, 0x00, 0x00, 0xb6, 0xf8, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00};
 */
 
-uint8_t g64_speedtable[8*G64_TRACKCOUNT];
+uint32_t g64_speedtable[2*G64_TRACKCOUNT];
 /* = {                                                                  0x03, 0x00, 0x00, 0x00,
 0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00,
 0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00,
@@ -217,7 +215,7 @@ bool floppy_wp = true;  // Hier wird der aktuelle WriteProtection Zustand gespei
                         // false=Nicht Schreibgeschützt , true=Schreibgeschützt
 
 #define set_byte_ready()    gpio_set_dir(GPIO_BRDY,GPIO_IN)    // HiZ
-#define clear_byte_ready()  { gpio_set_dir(GPIO_BRDY,GPIO_OUT);gpio_put(GPIO_BRDY,false); }   // auf Ground ziehen
+#define clear_byte_ready()  {gpio_set_dir(GPIO_BRDY,GPIO_OUT);gpio_put(GPIO_BRDY,false);}   // auf Ground ziehen
 
 #define get_soe_status()    gpio_get(GPIO_SOE)
 
