@@ -38,4 +38,6 @@ _EXTERN_ void (*display_generatechar)(const uint8_t, const uint8_t*);
 // detect the display type & set it up
 uint8_t display_init(void);
 
+char* dez2out(int32_t value, uint8_t digits, char* dest);
+
 #endif // _DISPLAY_H_INCLUDE_
