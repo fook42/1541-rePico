@@ -2,7 +2,7 @@
  * header - routines for display
  *
  * Author: F00K42
- * Last change: 2025/10/11
+ * Last change: 2026/02/09
 ***********************************/
 
 #ifndef _DISPLAY_H_INCLUDE_
@@ -39,5 +39,6 @@ _EXTERN_ void (*display_generatechar)(const uint8_t, const uint8_t*);
 uint8_t display_init(void);
 
 char* dez2out(int32_t value, uint8_t digits, char* dest);
+char* hex2out(uint32_t dez, uint8_t digits, char* dest);
 
 #endif // _DISPLAY_H_INCLUDE_

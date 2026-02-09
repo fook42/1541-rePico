@@ -1,7 +1,9 @@
-/* general routines for display */
-// implementation: F00K42
-// last change: 11/10/2025
-
+/**********************************
+ * routines for display
+ *
+ * Author: F00K42
+ * Last change: 2026/02/09
+***********************************/
 #include "display.h"
 
 extern uint8_t DEV_I2C_ADDR;
@@ -89,6 +91,29 @@ char* dez2out(int32_t value, uint8_t digits, char* dest)
             *dest++=c+'0';
         }
         value=value%_dez[digits];
+    }
+    *dest=0;
+    return dest;
+}
+
+char* hex2out(uint32_t dez, uint8_t digits, char* dest)
+{
+    uint8_t c;
+    bool show = true;
+    if (0 == digits)
+    {
+        digits = 8;
+        show = false;
+    }
+    while (digits--)
+    {
+        c=(dez>>(digits<<2))&0x0F;
+        if ((true == show) || (0 != c) || (0 == digits))
+        {
+            show = true;
+            if (c>9) { c+=7; }
+            *dest++=c+'0';
+        }
     }
     *dest=0;
     return dest;

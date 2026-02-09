@@ -1,9 +1,9 @@
 /////////////////////////////////////////////////
-// 1541-rePico //////////////////////////////////
+// 1541-rePico
 /////////////////////////////////////////////////
-// author: F00K42 ///////////////////////////////
-// version: 1.0.6 // last changed: 2026/02/07  //
-// repo: https://github.com/fook42/1541-rePico //
+// author: F00K42
+// last changed: 2026/02/09
+// repo: https://github.com/fook42/1541-rePico
 /////////////////////////////////////////////////
 
 
@@ -40,7 +40,45 @@ int new_value, delta, old_value = 0;
 
 uint8_t key3_irq_value = NO_KEY;
 
+typedef struct int_input_data {
+    uint int_source;
+    bool int_source_value;
+    uint32_t int_event;
+} int_input_data_t;
+
+int_input_data_t gpio_input_data;
+
 // ---------------------------------------------------------------
+
+int64_t rotary_alarm_callback(alarm_id_t id, void *user_data)
+{
+    int_input_data_t *input_data = (int_input_data_t *)user_data;
+
+    if (input_data->int_source_value == gpio_get(input_data->int_source))
+    {
+        switch(input_data->int_source)
+        {
+            case GPIO_BT3:
+                {
+                    key3_irq_value=((input_data->int_event)==GPIO_IRQ_EDGE_FALL)?KEY2_DOWN:KEY2_UP;
+                    break;
+                }
+            case GPIO_BT1:
+                {
+                    if (gpio_get(GPIO_BT2))
+                    {
+                        ++new_value;
+                    } else {
+                        --new_value;
+                    }
+                    break;
+                }
+            default: {}
+        }
+    }
+    cancel_alarm(input_debounce_alarm);
+    return 0;
+}
 
 void gpio_callback(uint gpio, uint32_t events)
 {
@@ -49,17 +87,14 @@ void gpio_callback(uint gpio, uint32_t events)
         // general gpio-ISR .. triggered for STP0 or STP1 change.. no need to detect the cause
         stepper_signal_puffer[stepper_signal_w_pos] = ((bool_to_bit(gpio_get(GPIO_STP0))<<1) | (bool_to_bit(gpio_get(GPIO_STP1))));
         stepper_signal_w_pos++;
-    } else if (GPIO_BT3==gpio)
+    } else if ((GPIO_BT3==gpio) || (GPIO_BT1==gpio))
     {
-        key3_irq_value=(events==GPIO_IRQ_EDGE_FALL)?KEY2_DOWN:KEY2_UP;
-    } else if ((GPIO_BT1==gpio) /* || (GPIO_BT2==gpio)*/)
-    {
-        if (gpio_get(GPIO_BT2))
-        {
-            ++new_value;
-        } else {
-            --new_value;
-        }
+        gpio_input_data.int_event = events;
+        gpio_input_data.int_source = gpio;
+        gpio_input_data.int_source_value = gpio_get(gpio);
+
+        if (input_debounce_alarm) { cancel_alarm(input_debounce_alarm); }
+        input_debounce_alarm = add_alarm_in_ms(INPUT_DEBOUNCE_TIME, rotary_alarm_callback, &gpio_input_data, false);
     }
 }
 
@@ -88,19 +123,7 @@ int main()
 
     gpio_init(GPIO_WPS);
     gpio_set_dir(GPIO_WPS, GPIO_OUT);
-//    gpio_set_pulls(GPIO_WPS, true, false);
-
-
-    /* no pio.. no cry
-        // Base pin to connect the A phase of the encoder.
-        // The B phase must be connected to the next pin
-        const uint PIN_AB = GPIO_BT2; // GPIO26+27
-
-        // we don't really need to keep the offset, as this program must be loaded
-        // at offset 0
-        pio_prg_offset = pio_add_program(pio, &quadrature_encoder_program);
-        quadrature_encoder_program_init(pio, sm, PIN_AB, 500);
-    */
+    gpio_set_pulls(GPIO_WPS, true, false);
 
     if (display_init())
     {
@@ -108,7 +131,7 @@ int main()
         display_home();
 
     }
-    
+
     show_start_message();
 
     fr = f_mount(&fs, "", 1);
@@ -160,16 +183,42 @@ int main()
     }
 }
 /////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////
+
+int64_t steppertimer_callback(alarm_id_t id, void *user_data)
+{
+    send_byte_ready = false;
+    stop_bytetimer();
+
+    // neue track Geschwindigkeit setzen -> timer restart
+    akt_track_pos = 0;
+
+    akt_half_track = selected_track&0x7E;
+
+    start_bytetimer(akt_half_track);
+    send_byte_ready = true;
+    return 0;
+}
+
+
+void start_stepper_timer(void)
+{
+    if (stepper_alarm) { cancel_alarm(stepper_alarm); }
+    stepper_alarm = add_alarm_in_ms(STEPPER_DELAY_TIME, steppertimer_callback, NULL, false);
+}
+
+/////////////////////////////////////////////////////////////////////
 
 void check_stepper_signals(void)
 {
+    uint8_t stepper;
     // Auf Steppermotor aktivität prüfen
     // und auswerten
     if(stepper_signal_r_pos != stepper_signal_w_pos)    // Prüfen ob sich was neues im Ringpuffer für die Steppersignale befindet
     {
-        uint8_t stepper = stepper_signal_puffer[stepper_signal_r_pos]<<2;
-        stepper_signal_r_pos++;
+        stepper  = stepper_signal_puffer[stepper_signal_r_pos-1]<<2;
         stepper |= stepper_signal_puffer[stepper_signal_r_pos];
+        stepper_signal_r_pos++;
 
         switch(stepper)
         {
@@ -180,8 +229,7 @@ void check_stepper_signals(void)
                 {
                     // DEC
                     stepper_dec();
-                    // stepper_signal_time = 0;
-                    stepper_signal = 1;
+                    start_stepper_timer();
                 }
                 break;
 
@@ -192,52 +240,12 @@ void check_stepper_signals(void)
                 {
                     // INC
                     stepper_inc();
-                    // stepper_signal_time = 0;
-                    stepper_signal = 1;
+                    start_stepper_timer();
                 }
                 break;
 
             default:
                 break;
-        }
-    }
-/*    else */
-    if(change_track) /* (stepper_signal && (STEPPER_DELAY_TIME <= stepper_signal_time) ) */
-    {
-        change_track=false;
-        // stepper_signal = 0;
-
-        // if(!(selected_track & 0x01))        // only change track data and timing, when on "even" half-track (0,2,4,...)
-        {
-            send_byte_ready = false;//new
-            stop_bytetimer();
-
-            // neue track Geschwindigkeit setzen -> timer restart
-            akt_track_pos = 0;
-
-            // if(track_is_written)
-            // {
-            //     send_byte_ready = false;
-
-            //     track_is_written = false;
-            //     // write_disk_track(fd,akt_image_type,old_half_track>>1,gcr_track, &gcr_track_length);
-
-            /* **** at this point, the new track should be selected/published... not earlier!!! */
-            akt_half_track = selected_track;
-
-            //     // read_disk_track(fd,akt_image_type,akt_half_track>>1,gcr_track, &gcr_track_length);
-            //     old_half_track = akt_half_track;    // Merken um evtl. dort zurück zu schreiben
-
-            //     send_byte_ready = true;
-            // }
-            // else
-            // {
-            //     // read_disk_track(fd,akt_image_type,akt_half_track>>1,gcr_track, &gcr_track_length);
-//                old_half_track = selected_track;    // Merken um evtl. dort zurück zu schreiben
-            // }
-            start_bytetimer(akt_half_track);
-            send_byte_ready = true;//new
-            change_track=false;
         }
     }
 }
@@ -301,7 +309,7 @@ uint8_t get_key_from_buffer(void)
 
 void update_gui(void)
 {
-    static uint8_t old_half_track = 0;
+    static uint8_t old_half_track = 255;
     static bool old_motor_status = false;
     static uint32_t wait_counter0 = 0;
     bool new_motor_status;
@@ -320,32 +328,14 @@ void update_gui(void)
             // exit_main = 0;
         }
 
-        // if(old_half_track != akt_half_track)
+        if(old_half_track != akt_half_track)
         {
             display_setcursor(disp_trackno_p);
-            (void)dez2out((akt_half_track>>1)+1, 2, byte_str);
+            (void)dez2out((akt_half_track>>1)+1, 2, byte_str);  // much faster than sprintf
             display_data(byte_str[0]);
             display_data(byte_str[1]);
             old_half_track = akt_half_track;
         }
-
-        // debug
-        display_setcursor(0,2);
-        display_string("Sel:");
-        (void)dez2out(selected_track, 2, byte_str);
-        display_data(byte_str[0]);
-        display_data(byte_str[1]);
-
-        display_setcursor(0,3);
-        display_string("GCR:");
-        (void)dez2out(gcr_track, 2, byte_str);
-        display_data(byte_str[0]);
-        display_data(byte_str[1]);
-        display_data(',');
-        (void)dez2out(gcr_sector, 2, byte_str);
-        display_data(byte_str[0]);
-        display_data(byte_str[1]);
-        // ----
 
         new_motor_status = get_motor_status();
         if(old_motor_status != new_motor_status)
@@ -434,7 +424,7 @@ void check_menu_events(const uint16_t menu_event)
                     break;
 
                 case M_UNLOAD_IMAGE:
-                    //unmount_image();
+                    unmount_image();
                     set_gui_mode(GUI_INFO_MODE);
                     break;
 
@@ -628,8 +618,8 @@ void filebrowser_update(uint8_t key_code)
         {
             close_disk_image(&fd);  // we can close the image - everything needed is in ram now.
             akt_track_pos = 0;
-            selected_track = INIT_TRACK << 1;   // select directory-track as default (quicker access)
-            akt_half_track = selected_track;
+            // selected_track = INIT_TRACK << 1;   // select directory-track as default (quicker access)
+            // akt_half_track = selected_track;
 
             send_byte_ready = true;         // enable VIA transfer
             is_image_mount = true;
@@ -1323,6 +1313,17 @@ void write_disk_track(struct fat_file_struct *fd, uint8_t image_type, uint8_t tr
 }
 */
 
+/////////////////////////////////////////////////////////////////////
+
+void unmount_image(void)
+{
+    close_disk_image(&fd);
+    is_image_mount = 0;
+    akt_image_type = UNDEF_IMAGE;
+    set_write_protection(1);
+    menu_set_entry_var1(&image_menu, M_WP_IMAGE, 1);
+    send_disk_change();
+}
 
 /////////////////////////////////////////////////////////////////////
 
@@ -1390,6 +1391,14 @@ void init_control_signals(void)
 
     // Als Eingang schalten
     gpio_init_mask(PAPORT_MASK);
+    gpio_set_pulls(GPIO_PAPORT, true, false);
+    gpio_set_pulls(GPIO_PAPORT+1, true, false);
+    gpio_set_pulls(GPIO_PAPORT+2, true, false);
+    gpio_set_pulls(GPIO_PAPORT+3, true, false);
+    gpio_set_pulls(GPIO_PAPORT+4, true, false);
+    gpio_set_pulls(GPIO_PAPORT+5, true, false);
+    gpio_set_pulls(GPIO_PAPORT+6, true, false);
+    gpio_set_pulls(GPIO_PAPORT+7, true, false);
     gpio_set_dir_in_masked(PAPORT_MASK); // should set all 8 bits to input
 
     gpio_init(GPIO_SOE);
@@ -1407,6 +1416,7 @@ void soe_gatearray_init(void)
 {
     gpio_init(GPIO_SOE_GA);
     gpio_set_dir(GPIO_SOE_GA, GPIO_OUT);
+    set_soe_gatearray();
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -1442,20 +1452,8 @@ bool repeating_timer_callback(__unused struct repeating_timer *t)
     // Je nach dem welche Spur gerade aktiv ist
 
     uint8_t akt_gcr_byte;
-    uint8_t header_bytes[10];
     static uint8_t old_gcr_byte = 0;
     uint8_t is_sync;
-
-    if (stepper_signal)
-    {
-        ++stepper_signal_time;
-        if (STEPPER_DELAY_TIME <= stepper_signal_time)
-        {
-            change_track=true;
-            stepper_signal=0;
-            stepper_signal_time=0;
-        }
-    }
 
     if(get_so_status())
     {
@@ -1470,18 +1468,6 @@ bool repeating_timer_callback(__unused struct repeating_timer *t)
             {                                                           // Wenn SYNC
                 clear_sync();                                           // SYNC Leitung auf Low setzen
                 is_sync = 1;                                            // SYNC Merker auf 1
-
-
-                // debug --------
-                // read current track+sector from gcr-header (0xFFFF52..) [bytes 2+3] while sending..
-                if (g64_tracks[akt_half_track>>1][akt_track_pos]==0x52)
-                {
-                    ConvertFromGCR(&g64_tracks[akt_half_track>>1][akt_track_pos], header_bytes);
-                    gcr_sector=header_bytes[2];
-                    gcr_track =header_bytes[3];
-                }
-                // --------
-
             }
             else
             {                                                           // Wenn kein SYNC

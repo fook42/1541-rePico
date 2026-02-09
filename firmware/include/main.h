@@ -2,11 +2,15 @@
  * header - main routines, defines, variables
  *
  * Author: F00K42
- * Last change: 2026/02/07
+ * Last change: 2026/02/09
 ***********************************/
 #include "hw_config.h"
 #include "f_util.h"
 #include "ff.h"
+
+//
+#define INPUT_DEBOUNCE_TIME (10)
+alarm_id_t input_debounce_alarm = 0;
 
 /////
 #define LCD_LINE_COUNT  (LCD_ROWS)
@@ -49,6 +53,7 @@ void open_g64_image(FIL* fd);
 void open_d64_image(FIL* fd);
 int8_t read_disk(FIL* fd, const int image_type);
 
+void unmount_image(void);
 void set_write_protection(bool wp);
 void send_disk_change(void);
 
@@ -56,6 +61,9 @@ bool repeating_timer_callback(__unused struct repeating_timer *t);
 void init_bytetimer(void);
 void start_bytetimer(uint8_t half_track);
 void stop_bytetimer(void);
+
+int64_t steppertimer_callback(alarm_id_t id, void *user_data);
+void start_stepper_timer(void);
 
 /////////////
 
@@ -128,14 +136,13 @@ struct repeating_timer bytetimer;
 //Zone 3: 8000000/32 = 250000 Hz    (ByteReady 31250 Hz)
 
 //Höhere Werte verlangsammen die Bitrate (=us delay-values between bytes)
+//const int64_t bytetimer_values[4] = {26, 28, 30, 32};
 const int64_t bytetimer_values[4] = {26, 28, 30, 32};
 
 // Zeit die nach der letzten Stepperaktivität vergehen muss, um einen neuen Track von SD Karte zu laden
 // (1541 Original Rom schaltet STP1 alle 15ms)
 // Default 15
-//#define STEPPER_DELAY_TIME ((uint16_t)469)  // zwischen 26µs*469=12,20ms bis 32µs*469=15,01ms
-#define STEPPER_DELAY_TIME ((uint16_t)193)  // zwischen 26µs*193=5,02ms bis 32µs*193=6,176ms
-//#define STEPPER_DELAY_TIME ((uint16_t)32)  // zwischen 26µs*64=0,83ms bis 32µs*193=1,02ms
+#define STEPPER_DELAY_TIME (5)
 
 const uint8_t d64_sector_gap[4] = {12, 21, 16, 13}; // von GPZ Code übernommen imggen
 #define HEADER_GAP_BYTES (9)
@@ -201,6 +208,9 @@ volatile uint8_t stepper_signal_r_pos = 0;
 volatile uint8_t stepper_signal_w_pos = 0;
 volatile uint16_t stepper_signal_time = 0;  // extended to 16bit to cover bigger step-wait times
 volatile uint8_t stepper_signal = 0;
+
+
+alarm_id_t stepper_alarm = 0;
 
 volatile bool track_is_written   = false;
 volatile bool send_byte_ready    = true;
