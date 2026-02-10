@@ -45,7 +45,7 @@ void stepper_inc(void);
 void stepper_dec(void);
 void init_motor(void);
 void init_control_signals(void);
-void soe_gatearray_init(void);
+void init_soe_gatearray(void);
 
 void open_disk_image(FIL* fd, FILINFO *file_entry, uint8_t* image_type);
 void close_disk_image(FIL* fd);
@@ -54,7 +54,7 @@ void open_d64_image(FIL* fd);
 int8_t read_disk(FIL* fd, const int image_type);
 
 void unmount_image(void);
-void set_write_protection(bool wp);
+void init_writeprot(void);
 void send_disk_change(void);
 
 bool repeating_timer_callback(__unused struct repeating_timer *t);
@@ -201,6 +201,8 @@ bool floppy_wp = true;  // Hier wird der aktuelle WriteProtection Zustand gespei
 #define out_gcr_byte(gcr_byte)  gpio_put_masked(PAPORT_MASK,gcr_byte<<GPIO_PAPORT)
 #define in_gcr_byte()       (gpio_get_all()&PAPORT_MASK)>>GPIO_PAPORT
 
+#define enable_write_protection()   {clear_wps();floppy_wp=true;}
+#define disable_write_protection()  {set_wps();floppy_wp=false;}
 
 
 uint8_t stepper_signal_puffer[256]; // Ringpuffer für Stepper Signale (256 Bytes)

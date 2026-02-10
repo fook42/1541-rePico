@@ -116,14 +116,13 @@ int main()
     // Steursignale BYTE_READY, SYNC und SOE Initialisieren
     init_control_signals();
 
-    soe_gatearray_init();
+    init_soe_gatearray();
     clear_soe_gatearray();
 
     init_bytetimer();
 
-    gpio_init(GPIO_WPS);
-    gpio_set_dir(GPIO_WPS, GPIO_OUT);
-    gpio_set_pulls(GPIO_WPS, true, false);
+    init_writeprot();
+    enable_write_protection();
 
     if (display_init())
     {
@@ -431,9 +430,9 @@ void check_menu_events(const uint16_t menu_event)
                 case M_WP_IMAGE:
                     if(menu_get_entry_var1(&image_menu, M_WP_IMAGE))
                     {
-                        set_write_protection(true);
+                        enable_write_protection();
                     } else {
-                        set_write_protection(false);
+                        disable_write_protection();
                     }
                     menu_refresh();
                     break;
@@ -839,7 +838,7 @@ void open_disk_image(FIL* fd, FILINFO *file_entry, uint8_t* image_type)
         {
             *image_type = G64_IMAGE;
             open_g64_image(fd);
-            set_write_protection(true);
+            enable_write_protection();
         }
     }
     else if(!strcmp(extension,".d64"))
@@ -850,7 +849,7 @@ void open_disk_image(FIL* fd, FILINFO *file_entry, uint8_t* image_type)
         {
             *image_type = D64_IMAGE;
             open_d64_image(fd);
-            set_write_protection(true);
+            enable_write_protection();
         }
     }
 
@@ -901,20 +900,14 @@ void open_d64_image(FIL* fd)
 
 /////////////////////////////////////////////////////////////////////
 
-void set_write_protection(bool wp)
+void init_writeprot(void)
 {
-    if(0 == is_wps_pin_enable) return;
-
-    floppy_wp = wp;
-
-    if(wp)
-    {
-        clear_wps();
-    }
-    else
-    {
-        set_wps();
-    }
+    gpio_init(GPIO_WPS);
+    gpio_set_dir(GPIO_WPS, GPIO_OUT);
+    gpio_set_pulls(GPIO_WPS, false, false);
+    // remark:
+    // 1541 schematics include a 74ls04 which drives WPS low by default
+    // having a pull-up enabled is not a good idea
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -922,7 +915,7 @@ void set_write_protection(bool wp)
 void send_disk_change(void)
 {
     if(floppy_wp)
-    {
+    {                   // WP enabled = wps set to 0
         set_wps();
         sleep_ms(1);
         clear_wps();
@@ -930,7 +923,7 @@ void send_disk_change(void)
         set_wps();
         sleep_ms(1);
         clear_wps();
-    } else {
+    } else {            // WP disabled = wps set to 1
         clear_wps();
         sleep_ms(1);
         set_wps();
@@ -1320,7 +1313,7 @@ void unmount_image(void)
     close_disk_image(&fd);
     is_image_mount = 0;
     akt_image_type = UNDEF_IMAGE;
-    set_write_protection(1);
+    enable_write_protection();
     menu_set_entry_var1(&image_menu, M_WP_IMAGE, 1);
     send_disk_change();
 }
@@ -1412,7 +1405,7 @@ void init_control_signals(void)
 
 /////////////////////////////////////////////////////////////////////
 
-void soe_gatearray_init(void)
+void init_soe_gatearray(void)
 {
     gpio_init(GPIO_SOE_GA);
     gpio_set_dir(GPIO_SOE_GA, GPIO_OUT);
