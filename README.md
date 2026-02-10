@@ -1,20 +1,27 @@
 # 1541-rePico
 replacement of analog-part of Commodore 1541-Floppy devices based on Pi-Pico(2)
 
-## prepare tools (linux) ##
+## preface ##
+this project was derived from the original 1541-rebuild from Thorsten Kattaneck (https://github.com/ThKattanek/1541-rebuild) !
+parts of his code was taken from there and adopted for Raspberry Pico and modified to handle disk images differently. Thanks!
+
+
+## how to build ##
+
+### prepare tools (linux) ###
 
 ```
 sudo apt install cmake ninja-build
 ```
 
 
-### picotool
+### picotool ###
 
 from : <https://github.com/raspberrypi/picotool>
 
 
 
-## howto build ##
+### build steps ###
 
 prepare build-folder / configure Ninja for build the cmake project
 
