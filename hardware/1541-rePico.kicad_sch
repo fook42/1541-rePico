@@ -3209,6 +3209,16 @@
 	)
 	(wire
 		(pts
+			(xy 140.97 125.73) (xy 140.97 134.62)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "3364c579-944c-4900-a406-6d036e6228c8")
+	)
+	(wire
+		(pts
 			(xy 119.38 167.64) (xy 128.27 167.64)
 		)
 		(stroke
@@ -3519,6 +3529,16 @@
 	)
 	(wire
 		(pts
+			(xy 138.43 125.73) (xy 138.43 134.62)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "813711a1-6a3c-44d7-91d9-d067b30d8440")
+	)
+	(wire
+		(pts
 			(xy 106.68 170.18) (xy 97.79 170.18)
 		)
 		(stroke
@@ -3796,6 +3816,16 @@
 			(type default)
 		)
 		(uuid "cc330261-6d75-4bf3-82a7-0b7a1cb365d0")
+	)
+	(wire
+		(pts
+			(xy 135.89 125.73) (xy 135.89 134.62)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "cfbaa228-3165-421d-bf8a-3b31a404b952")
 	)
 	(wire
 		(pts
@@ -6061,6 +6091,79 @@
 			(project "1541-rePico"
 				(path "/7c37ffbe-d8d1-4c30-ad42-fd3ef959e14d"
 					(reference "#PWR018")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Connector_Generic:Conn_01x03")
+		(at 138.43 139.7 270)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "4a3f6aed-0b4f-4ca1-b975-c22d9425fd70")
+		(property "Reference" "SWDBG1"
+			(at 143.51 139.7 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+		(property "Value" "DEBUG"
+			(at 138.43 142.24 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical"
+			(at 138.43 139.7 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 138.43 139.7 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 138.43 139.7 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "e5cc8ea9-8f4a-48bf-8ba1-2567c3c3e4f3")
+		)
+		(pin "2"
+			(uuid "c643fe4c-5ee8-4cd1-9a05-46d89a9cb1bd")
+		)
+		(pin "3"
+			(uuid "95709f15-8778-4362-85df-436ba4407547")
+		)
+		(instances
+			(project "1541-rePico"
+				(path "/7c37ffbe-d8d1-4c30-ad42-fd3ef959e14d"
+					(reference "SWDBG1")
 					(unit 1)
 				)
 			)
