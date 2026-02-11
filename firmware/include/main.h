@@ -2,14 +2,14 @@
  * header - main routines, defines, variables
  *
  * Author: F00K42
- * Last change: 2026/02/09
+ * Last change: 2026/02/11
 ***********************************/
 #include "hw_config.h"
 #include "f_util.h"
 #include "ff.h"
 
 //
-#define INPUT_DEBOUNCE_TIME (10)
+#define INPUT_DEBOUNCE_TIME (200)
 alarm_id_t input_debounce_alarm = 0;
 
 /////
@@ -23,6 +23,7 @@ alarm_id_t input_debounce_alarm = 0;
 
 #define MAX_TRACKS      (42)
 // functions
+int64_t input_debounce_callback(alarm_id_t id, void *user_data);
 
 void check_stepper_signals(void);
 void check_motor_signal(void);

@@ -2,7 +2,7 @@
 // 1541-rePico
 /////////////////////////////////////////////////
 // author: F00K42
-// last changed: 2026/02/09
+// last changed: 2026/02/11
 // repo: https://github.com/fook42/1541-rePico
 /////////////////////////////////////////////////
 
@@ -36,47 +36,15 @@
 
 #define START_MESSAGE_TIME 1500
 
-int new_value, delta, old_value = 0;
+volatile uint8_t irq_key_value = NO_KEY;
 
-uint8_t key3_irq_value = NO_KEY;
-
-typedef struct int_input_data {
-    uint int_source;
-    bool int_source_value;
-    uint32_t int_event;
-} int_input_data_t;
-
-int_input_data_t gpio_input_data;
+volatile bool rotary_input_block = false;
 
 // ---------------------------------------------------------------
 
-int64_t rotary_alarm_callback(alarm_id_t id, void *user_data)
+int64_t input_debounce_callback(alarm_id_t id, void *user_data)
 {
-    int_input_data_t *input_data = (int_input_data_t *)user_data;
-
-    if (input_data->int_source_value == gpio_get(input_data->int_source))
-    {
-        switch(input_data->int_source)
-        {
-            case GPIO_BT3:
-                {
-                    key3_irq_value=((input_data->int_event)==GPIO_IRQ_EDGE_FALL)?KEY2_DOWN:KEY2_UP;
-                    break;
-                }
-            case GPIO_BT1:
-                {
-                    if (gpio_get(GPIO_BT2))
-                    {
-                        ++new_value;
-                    } else {
-                        --new_value;
-                    }
-                    break;
-                }
-            default: {}
-        }
-    }
-    cancel_alarm(input_debounce_alarm);
+    rotary_input_block = false;
     return 0;
 }
 
@@ -87,14 +55,19 @@ void gpio_callback(uint gpio, uint32_t events)
         // general gpio-ISR .. triggered for STP0 or STP1 change.. no need to detect the cause
         stepper_signal_puffer[stepper_signal_w_pos] = ((bool_to_bit(gpio_get(GPIO_STP0))<<1) | (bool_to_bit(gpio_get(GPIO_STP1))));
         stepper_signal_w_pos++;
-    } else if ((GPIO_BT3==gpio) || (GPIO_BT1==gpio))
+    } else if (GPIO_BT3==gpio)
     {
-        gpio_input_data.int_event = events;
-        gpio_input_data.int_source = gpio;
-        gpio_input_data.int_source_value = gpio_get(gpio);
-
-        if (input_debounce_alarm) { cancel_alarm(input_debounce_alarm); }
-        input_debounce_alarm = add_alarm_in_ms(INPUT_DEBOUNCE_TIME, rotary_alarm_callback, &gpio_input_data, false);
+        irq_key_value=(events==GPIO_IRQ_EDGE_FALL)?KEY2_DOWN:KEY2_UP;
+    } else if ((GPIO_BT1==gpio) && (false == rotary_input_block) && (NO_KEY==irq_key_value))
+    {
+        rotary_input_block = true;
+        if (gpio_get(GPIO_BT2))
+        {
+            irq_key_value = KEY1_DOWN;
+        } else {
+            irq_key_value = KEY0_DOWN;
+        }
+        input_debounce_alarm = add_alarm_in_ms(INPUT_DEBOUNCE_TIME, input_debounce_callback, NULL, false);
     }
 }
 
@@ -128,7 +101,6 @@ int main()
     {
         display_clear();
         display_home();
-
     }
 
     show_start_message();
@@ -149,7 +121,7 @@ int main()
         display_data(retry_count+'0');
         retry_count--;
         sleep_ms(2000);
-        FRESULT fr = f_mount(&fs, "", 1);
+        fr = f_mount(&fs, "", 1);
         display_clear();
     }
 
@@ -290,19 +262,10 @@ void init_key_inputs(void)
 uint8_t get_key_from_buffer(void)
 {
     uint8_t val;
-//    new_value = quadrature_encoder_get_count(pio, sm); // problem .. this blocks :(
-    // new_value is updated in ISR ...
-    
-    if ((new_value - old_value)>0) {
-        old_value = new_value;
-        val = KEY1_DOWN;
-    } else if ((old_value - new_value)>0) {
-        old_value = new_value;
-        val = KEY0_DOWN;
-    } else {
-        val = key3_irq_value;
-        key3_irq_value = NO_KEY;
-    }
+
+    val = irq_key_value;    // get last detected key
+    irq_key_value = NO_KEY; // reset last state - ready for more
+
     return val;
 }
 
@@ -335,6 +298,7 @@ void update_gui(void)
             display_data(byte_str[1]);
             old_half_track = akt_half_track;
         }
+
 
         new_motor_status = get_motor_status();
         if(old_motor_status != new_motor_status)
@@ -605,8 +569,8 @@ void filebrowser_update(uint8_t key_code)
 
         if((0 == fd.obj.fs) || (UNDEF_IMAGE == akt_image_type))
         {
-            filebrowser_refresh();
             is_image_mount = false;
+            filebrowser_refresh();
             return;
         }
 
@@ -632,6 +596,8 @@ void filebrowser_update(uint8_t key_code)
             set_gui_mode(GUI_INFO_MODE);
         } else {
             close_disk_image(&fd);
+            akt_image_type = UNDEF_IMAGE;
+            is_image_mount = false;
         }
 
         break;
@@ -1010,7 +976,7 @@ int8_t read_disk(FIL* fd, const int image_type)
                 }
 
                 // fill up the remaining bytes
-                memset(&g64_tracks[track_nr][g64_tracklen[track_nr]], 0x00, G64_TRACKSIZE-g64_tracklen[track_nr]);
+                memset(&g64_tracks[track_nr][g64_tracklen[track_nr]], 0x55, G64_TRACKSIZE-g64_tracklen[track_nr]);
 
                 ++SUM;
                 last_track=track_nr;
