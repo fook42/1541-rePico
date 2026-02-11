@@ -9,8 +9,8 @@
 	(paper "A4")
 	(title_block
 		(title "1541-rePico")
-		(date "2026-01-13")
-		(rev "1.1")
+		(date "2026-02-11")
+		(rev "1.2")
 	)
 	(layers
 		(0 "F.Cu" signal)
@@ -3836,6 +3836,7 @@
 		(property "Value" "Display Connector"
 			(at 1.25 -2.56 0)
 			(layer "F.Fab")
+			(hide yes)
 			(uuid "ce2bb295-2272-4961-9544-a43e909f745c")
 			(effects
 				(font
