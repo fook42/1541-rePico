@@ -149,7 +149,6 @@ int main()
 
     while (true) {
         check_stepper_signals();
-        check_motor_signal();
         update_gui();
     }
 }
@@ -217,27 +216,6 @@ void check_stepper_signals(void)
 
             default:
                 break;
-        }
-    }
-}
-
-/////////////////////////////////////////////////////////////////////
-
-void check_motor_signal(void)
-{
-    if(!get_motor_status())
-    {
-        // Sollte der aktuelle Track noch veränderungen haben so wird hier erstmal gesichert.
-        if(track_is_written)
-        {
-            send_byte_ready = false;
-            stop_bytetimer();
-
-            track_is_written = false;
-            // write_disk_track(fd,akt_image_type,old_half_track>>1,gcr_track, &gcr_track_length);
-
-            start_bytetimer(akt_half_track);
-            send_byte_ready = true;
         }
     }
 }
@@ -370,6 +348,8 @@ void check_menu_events(const uint16_t menu_event)
     const uint8_t command = (uint8_t) ((menu_event >> 8) & 0xff);
     const uint8_t value = (uint8_t) (menu_event & 0xff);
 
+    char byte_str[16];
+
     switch(command)
     {
         case MC_EXIT_MENU:
@@ -384,6 +364,26 @@ void check_menu_events(const uint16_t menu_event)
                 /// Image Menü
                 case M_LOAD_IMAGE:
                     set_gui_mode(GUI_FILE_BROWSER);
+                    break;
+
+                case M_SAVE_IMAGE:
+                    int8_t num_of_tracks = write_disk(D64_IMAGE); // akt_image_type);
+                    display_clear();
+                    display_home();
+                    if (0 <= num_of_tracks) {
+                        (void)dez2out(num_of_tracks, 2, byte_str);
+                        display_data(byte_str[0]);
+                        display_data(byte_str[1]);
+                    } else {
+                        fr = f_close(&fd);
+                        display_string("write error:");
+                        (void)dez2out(-num_of_tracks, 2, byte_str);
+                        display_data(byte_str[0]);
+                        display_data(byte_str[1]);
+                    }
+                    sleep_ms(5000);
+
+                    set_gui_mode(GUI_INFO_MODE);
                     break;
 
                 case M_UNLOAD_IMAGE:
@@ -580,6 +580,7 @@ void filebrowser_update(uint8_t key_code)
         if ((tracks_read=read_disk(&fd, akt_image_type))>0)
         {
             close_disk_image(&fd);  // we can close the image - everything needed is in ram now.
+            diskdata_modified = false;      // this data is not changed yet
             akt_track_pos = 0;
             // selected_track = INIT_TRACK << 1;   // select directory-track as default (quicker access)
             // akt_half_track = selected_track;
@@ -591,6 +592,7 @@ void filebrowser_update(uint8_t key_code)
 
             start_bytetimer(akt_half_track);    // start the track-spinning
 
+            enable_write_protection();
             menu_set_entry_var1(&image_menu, M_WP_IMAGE, floppy_wp);
 
             set_gui_mode(GUI_INFO_MODE);
@@ -804,7 +806,6 @@ void open_disk_image(FIL* fd, FILINFO *file_entry, uint8_t* image_type)
         {
             *image_type = G64_IMAGE;
             open_g64_image(fd);
-            enable_write_protection();
         }
     }
     else if(!strcmp(extension,".d64"))
@@ -815,7 +816,6 @@ void open_disk_image(FIL* fd, FILINFO *file_entry, uint8_t* image_type)
         {
             *image_type = D64_IMAGE;
             open_d64_image(fd);
-            enable_write_protection();
         }
     }
 
@@ -1093,12 +1093,242 @@ int8_t read_disk(FIL* fd, const int image_type)
                 last_track = track_nr;
             }
         }
+        break;
 
         default: break;
     }
     return last_track;
 }
 
+int8_t write_disk(const int image_type)
+{
+    UINT bytes_write;
+    uint8_t* P;
+    uint8_t* Out_P;
+    uint8_t sector_nr;
+    uint8_t num;
+    uint8_t temp;
+    int32_t offset = 0;
+    int32_t offset_track = 0;
+
+    int8_t last_track = -1;
+
+// debug for now: open a standard-file to not destroy data
+    char filename_g64[]="1541repico.g64";
+    char filename_d64[]="1541repico.d64";
+    char* filename;
+    switch(image_type)
+    {
+        ///////////////////////////////////////////////////////////////////////////
+        case G64_IMAGE:	// G64
+        {
+            filename=filename_g64;
+            fr = f_open(&fd, filename, FA_CREATE_ALWAYS|FA_WRITE);
+            if (FR_OK != fr)
+            {
+                last_track = -fr;
+                break;
+            }
+
+            // GCR-1541 header
+            fr = f_write(&fd, g64_head, sizeof(g64_head),&bytes_write);
+            if((FR_OK != fr) || (sizeof(g64_head) != bytes_write))
+            {
+                last_track = -fr-20;
+                break;
+            }
+
+            // jumptable
+            fr = f_write(&fd, g64_jumptable, sizeof(g64_jumptable),&bytes_write);
+            if((FR_OK != fr) || (sizeof(g64_jumptable) != bytes_write))
+            {
+                last_track = -fr-40;
+                break;
+            }
+
+            // speedtable
+            fr = f_write(&fd, g64_speedtable, sizeof(g64_speedtable),&bytes_write);
+            if((FR_OK != fr) || (sizeof(g64_speedtable) != bytes_write))
+            {
+                last_track = -fr-60;
+                break;
+            }
+
+            // raw-tracks
+            for (int track_nr=0; track_nr<G64_TRACKCOUNT; track_nr++)
+            {
+                fr = f_write(&fd, &g64_tracklen[track_nr], sizeof(g64_tracklen[0]),&bytes_write);
+                if((FR_OK != fr) || (sizeof(g64_tracklen[0]) != bytes_write))
+                {
+                    last_track = -fr-80;
+                    break;
+                }
+
+                UINT track_write_len = G64_TRACKSIZE;
+                if (G64_TRACKCOUNT > (track_nr+1))
+                {
+                    if (0 != g64_jumptable[(track_nr+1)*2])
+                    {
+                        track_write_len = g64_jumptable[(track_nr+1)*2]-g64_jumptable[track_nr*2]-sizeof(g64_tracklen[track_nr]);
+                    }
+                }
+
+                fr = f_write(&fd, &g64_tracks[track_nr], track_write_len,&bytes_write);
+                if((FR_OK != fr) || (track_write_len != bytes_write))
+                {
+                    last_track = -fr-80;
+                    break;
+                }
+                last_track = track_nr;
+            }
+
+            fr = f_close(&fd);
+            break;
+        }
+        case D64_IMAGE:
+        {
+            filename=filename_d64;
+            fr = f_open(&fd, filename, FA_CREATE_ALWAYS|FA_WRITE);
+            if (FR_OK != fr)
+            {
+                last_track = -fr-80;
+                break;
+            }
+
+            for (int track_nr=0; track_nr<G64_TRACKCOUNT; track_nr++)
+            {
+                P = g64_tracks[track_nr];
+                sector_nr = d64_sector_count[d64_track_zone[track_nr]];
+                uint8_t *P_end = &g64_tracks[track_nr][g64_tracklen[track_nr]];
+
+                offset_track = ((int32_t) d64_track_offset[track_nr]) << 8;   // we store only 16bit values;
+
+                // find first track-marker .. FF FF 52 ... FF FF 55
+                do
+                {
+                    // tricky thing.. while searching for first track-marker
+                    //  copy all "wrapped" bytes of last sector to the end again.
+                    while((temp = *P++) != 0xFF) { *P_end++ = temp; };
+                    if (*P++ == 0xFF)
+                    {
+                        while(*P == 0xFF) { ++P; };
+                        if (*P == 0x52)
+                        {
+                            break;
+                        }
+                    }
+                } while(1);
+                ConvertFromGCR(P, d64_sector_puffer);
+                if ((track_nr+1) != d64_sector_puffer[3])
+                {
+                    break;
+                }
+                P += 5;
+                offset = offset_track + (d64_sector_puffer[2]*D64_SECTOR_SIZE);
+                if(FR_OK == (fr=f_lseek(&fd,offset)))
+                {
+                    // lets extract the given FloppyID for further readback of GCR...
+                    ConvertFromGCR(P, d64_sector_puffer);
+                    id2 = d64_sector_puffer[0];
+                    id1 = d64_sector_puffer[1];
+                    P += 5;
+                    // find sector-marker
+                    do
+                    {
+                        while(*P++ != 0xFF) { };
+                        if (*P++ == 0xFF)
+                        {
+                            while(*P == 0xFF) { ++P; };
+                            if (*P == 0x55)
+                            {
+                                break;
+                            }
+                        }
+                    } while(1);
+                    // ----
+                    Out_P = d64_sector_puffer;
+                    for(int i=0; i<65; ++i)
+                    {
+                        ConvertFromGCR(P, Out_P);
+                        P += 5;
+                        Out_P += 4;
+                    }
+                    fr = f_write(&fd, &d64_sector_puffer[1], D64_SECTOR_SIZE,&bytes_write);
+                    if((FR_OK != fr) || (D64_SECTOR_SIZE != bytes_write))
+                    {
+                        last_track = -fr-60;
+                        break;
+                    }
+                } else {
+                    last_track = -fr-40;
+                    break;
+                }
+
+                for(num=0; num<(sector_nr-1); ++num)
+                {
+                    // find track-marker .. FF FF 52 ... FF FF 55
+                    do
+                    {
+                        while(*P++ != 0xFF) { };
+                        if (*P++ == 0xFF)
+                        {
+                            while(*P == 0xFF) { ++P; };
+                            if (*P == 0x52)
+                            {
+                                break;
+                            }
+                        }
+                    } while(1);
+                    ConvertFromGCR(P, d64_sector_puffer);
+                    if ((track_nr+1) != d64_sector_puffer[3])
+                    {
+                        break;
+                    }
+                    P += 4;
+                    offset = offset_track + (d64_sector_puffer[2]*D64_SECTOR_SIZE);
+                    if(FR_OK == (fr=f_lseek(&fd,offset)))
+                    {
+                        // find sector-marker
+                        do
+                        {
+                            while(*P++ != 0xFF) { };
+                            if (*P++ == 0xFF)
+                            {
+                                while(*P == 0xFF) { ++P; };
+                                if (*P == 0x55)
+                                {
+                                    break;
+                                }
+                            }
+                        } while(1);
+                        // ----
+                        Out_P = d64_sector_puffer;
+                        for(int i=0; i<65; ++i)
+                        {
+                            ConvertFromGCR(P, Out_P);
+                            P += 5;
+                            Out_P += 4;
+                        }
+                        fr = f_write(&fd, &d64_sector_puffer[1], D64_SECTOR_SIZE,&bytes_write);
+                        if((FR_OK != fr) || (D64_SECTOR_SIZE != bytes_write))
+                        {
+                            last_track = -fr;
+                            break;
+                        }
+                    } else {
+                        last_track = -fr-20;
+                        break;
+                    }
+                }
+                last_track = track_nr;
+            }
+            f_close(&fd);
+            break;
+        }
+        default: break;
+    }
+    return last_track;
+}
 
 /*
 /////////////////////////////////////////////////////////////////////
@@ -1479,11 +1709,11 @@ bool repeating_timer_callback(__unused struct repeating_timer *t)
         }
 
         // Daten aus Ringpuffer senden wenn Motor an
-        if(get_motor_status())
+        if(get_motor_status() && (false==floppy_wp))
         {
             // Wenn Motor läuft
             g64_tracks[akt_half_track>>1][akt_track_pos++] = akt_gcr_byte;  // Nächstes GCR Byte schreiben
-            track_is_written = true;
+            diskdata_modified = true;
             if(akt_track_pos == g64_tracklen[akt_half_track>>1]) akt_track_pos = 0;    // Ist Spurende erreicht? Zurück zum Anfang
         }
     }

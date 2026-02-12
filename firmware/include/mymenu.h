@@ -22,10 +22,10 @@ MENU_ENTRY main_menu_entrys[] = {{"Disk Menu", M_IMAGE,ENTRY_MENU,   0,&image_me
                                  {"Info",      M_INFO,ENTRY_MENU,    0,&info_menu}};
 /// Image Menü
 MENU_ENTRY image_menu_entrys[] = {{"Load Image",   M_LOAD_IMAGE},
+                                  {"Save Image",   M_SAVE_IMAGE},
                                   {"Unload Image", M_UNLOAD_IMAGE},
                                   {"WriteProt.",   M_WP_IMAGE, ENTRY_ONOFF, 1},
-                                  {"New Image",    M_NEW_IMAGE},
-                                  {"Save Image",   M_SAVE_IMAGE}};
+                                  {"New Image",    M_NEW_IMAGE}};
 /// Settings Menü
 MENU_ENTRY settings_menu_entrys[] = {{"Restart",M_RESTART}};
 /// Info Menü

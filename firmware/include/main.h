@@ -53,6 +53,8 @@ void close_disk_image(FIL* fd);
 void open_g64_image(FIL* fd);
 void open_d64_image(FIL* fd);
 int8_t read_disk(FIL* fd, const int image_type);
+int8_t write_disk(const int image_type);
+
 
 void unmount_image(void);
 void init_writeprot(void);
@@ -214,7 +216,7 @@ volatile uint8_t stepper_signal = 0;
 
 alarm_id_t stepper_alarm = 0;
 
-volatile bool track_is_written   = false;
+volatile bool diskdata_modified  = false;
 volatile bool send_byte_ready    = true;
 
 
