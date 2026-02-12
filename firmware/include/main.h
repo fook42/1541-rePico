@@ -2,7 +2,7 @@
  * header - main routines, defines, variables
  *
  * Author: F00K42
- * Last change: 2026/02/11
+ * Last change: 2026/02/12
 ***********************************/
 #include "hw_config.h"
 #include "f_util.h"
@@ -78,11 +78,10 @@ FILINFO     file_entry;
 FILINFO     fb_dir_entry[LCD_LINE_COUNT];
 //
 
-
 volatile uint16_t akt_track_pos = 0;
 
-uint8_t selected_track;     // this holds the selected tracknumber
-volatile uint8_t akt_half_track;     // this will be the one to be transfered
+uint8_t selected_track;             // this holds the selected tracknumber
+volatile uint8_t akt_half_track;    // this will be the one to be transfered
 uint8_t old_half_track;
 
 const uint16_t d64_track_offset[MAX_TRACKS] = { 0x0000,0x0015,0x002A,0x003F,0x0054,0x0069,0x007E,0x0093,
@@ -176,12 +175,11 @@ enum {UNDEF_IMAGE, G64_IMAGE, D64_IMAGE};
 uint8_t akt_image_type = UNDEF_IMAGE;     // 0=kein Image, 1=G64, 2=D64
 bool is_image_mount;
 
-uint8_t is_wps_pin_enable = 0; // 0=WPS PIN=HiZ / 1=WPS Output
 bool floppy_wp = true;  // Hier wird der aktuelle WriteProtection Zustand gespeichert
                         // false=Nicht Schreibgeschützt , true=Schreibgeschützt
 
 #define set_byte_ready()    gpio_set_dir(GPIO_BRDY,GPIO_IN)    // HiZ
-#define clear_byte_ready()  {gpio_set_dir(GPIO_BRDY,GPIO_OUT);gpio_put(GPIO_BRDY,false);}   // auf Ground ziehen
+#define clear_byte_ready()  {gpio_set_dir(GPIO_BRDY,GPIO_OUT);gpio_put(GPIO_BRDY,false);}   // pull low
 
 #define get_soe_status()    gpio_get(GPIO_SOE)
 
@@ -190,9 +188,10 @@ bool floppy_wp = true;  // Hier wird der aktuelle WriteProtection Zustand gespei
 #define set_soe_gatearray()     gpio_put(GPIO_SOE_GA,true)
 #define clear_soe_gatearray()   gpio_put(GPIO_SOE_GA,false)
 
-
-#define set_wps()           gpio_put(GPIO_WPS,true)     // 5V Level = WritePotect
-#define clear_wps()         gpio_put(GPIO_WPS,false)    // 0V Level = Writeable
+// WPS will be generated via inverter 74ls04 on 1541*-mainboard
+// ... thus we send the inverse here (clear_wps = "1" on WPS)
+#define clear_wps()     gpio_set_dir(GPIO_WPS,GPIO_IN)    // HiZ
+#define set_wps()       {gpio_set_dir(GPIO_WPS,GPIO_OUT);gpio_put(GPIO_WPS,false);}   // pull low
 
 #define get_motor_status()  gpio_get(GPIO_MTR)
 

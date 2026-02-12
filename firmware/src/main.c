@@ -2,7 +2,7 @@
 // 1541-rePico
 /////////////////////////////////////////////////
 // author: F00K42
-// last changed: 2026/02/11
+// last changed: 2026/02/12
 // repo: https://github.com/fook42/1541-rePico
 /////////////////////////////////////////////////
 
@@ -869,11 +869,8 @@ void open_d64_image(FIL* fd)
 void init_writeprot(void)
 {
     gpio_init(GPIO_WPS);
-    gpio_set_dir(GPIO_WPS, GPIO_OUT);
+    gpio_set_dir(GPIO_WPS, GPIO_IN);
     gpio_set_pulls(GPIO_WPS, false, false);
-    // remark:
-    // 1541 schematics include a 74ls04 which drives WPS low by default
-    // having a pull-up enabled is not a good idea
 }
 
 /////////////////////////////////////////////////////////////////////
