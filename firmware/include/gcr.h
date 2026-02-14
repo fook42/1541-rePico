@@ -8,8 +8,6 @@
 #ifndef _GCR_HEADER_
 #define _GCR_HEADER_
 
-#include <stdio.h>
-#include <string.h>
 #include <stdint.h>
 
 void ConvertToGCR(const uint8_t *source_buffer, uint8_t *destination_buffer);
