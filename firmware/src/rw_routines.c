@@ -161,11 +161,11 @@ int8_t read_disk(FIL* fd, const int image_type)
                 {
                     current_sector[0] = 0x07;                   // data-marker for all sectors
 
-                    P[0] = 0xFF;								// SYNC
-                    P[1] = 0xFF;								// SYNC
-                    P[2] = 0xFF;								// SYNC
-                    P[3] = 0xFF;								// SYNC
-                    P[4] = 0xFF;								// SYNC
+                    P[0] = GCR_SYNCMARK;								// SYNC
+                    P[1] = GCR_SYNCMARK;								// SYNC
+                    P[2] = GCR_SYNCMARK;								// SYNC
+                    P[3] = GCR_SYNCMARK;								// SYNC
+                    P[4] = GCR_SYNCMARK;								// SYNC
 
                     buffer[0] = 0x08;							// Header Markierung
                     buffer[1] = sector_nr ^ chksum_trackid;     // Checksumme
@@ -187,11 +187,11 @@ int8_t read_disk(FIL* fd, const int image_type)
                     }
 
                     // SYNC
-                    *P++ = 0xFF;								// SYNC
-                    *P++ = 0xFF;								// SYNC
-                    *P++ = 0xFF;								// SYNC
-                    *P++ = 0xFF;								// SYNC
-                    *P++ = 0xFF;								// SYNC
+                    *P++ = GCR_SYNCMARK;								// SYNC
+                    *P++ = GCR_SYNCMARK;								// SYNC
+                    *P++ = GCR_SYNCMARK;								// SYNC
+                    *P++ = GCR_SYNCMARK;								// SYNC
+                    *P++ = GCR_SYNCMARK;								// SYNC
 
                     SUM = 0x07;     // checksum is prefilled with data-marker
                                     // -> the complete buffer can be processed
@@ -320,10 +320,10 @@ int8_t write_disk(FIL* fd, const int image_type, const uint8_t num_tracks)
                 {
                     // tricky thing.. while searching for first track-marker
                     //  copy all "wrapped" bytes of last sector to the end again.
-                    while((temp = *P++) != 0xFF) { *P_end++ = temp; };
-                    if (*P++ == 0xFF)
+                    while((temp = *P++) != GCR_SYNCMARK) { *P_end++ = temp; };
+                    if (*P++ == GCR_SYNCMARK)
                     {
-                        while(*P == 0xFF) { ++P; };
+                        while(*P == GCR_SYNCMARK) { ++P; };
                         if (*P == 0x52)
                         {
                             break;
@@ -347,10 +347,10 @@ int8_t write_disk(FIL* fd, const int image_type, const uint8_t num_tracks)
                     // find sector-marker
                     do
                     {
-                        while(*P++ != 0xFF) { };
-                        if (*P++ == 0xFF)
+                        while(*P++ != GCR_SYNCMARK) { };
+                        if (*P++ == GCR_SYNCMARK)
                         {
-                            while(*P == 0xFF) { ++P; };
+                            while(*P == GCR_SYNCMARK) { ++P; };
                             if (*P == 0x55)
                             {
                                 break;
@@ -381,10 +381,10 @@ int8_t write_disk(FIL* fd, const int image_type, const uint8_t num_tracks)
                     // find track-marker .. FF FF 52 ... FF FF 55
                     do
                     {
-                        while(*P++ != 0xFF) { };
-                        if (*P++ == 0xFF)
+                        while(*P++ != GCR_SYNCMARK) { };
+                        if (*P++ == GCR_SYNCMARK)
                         {
-                            while(*P == 0xFF) { ++P; };
+                            while(*P == GCR_SYNCMARK) { ++P; };
                             if (*P == 0x52)
                             {
                                 break;
@@ -403,10 +403,10 @@ int8_t write_disk(FIL* fd, const int image_type, const uint8_t num_tracks)
                         // find sector-marker
                         do
                         {
-                            while(*P++ != 0xFF) { };
-                            if (*P++ == 0xFF)
+                            while(*P++ != GCR_SYNCMARK) { };
+                            if (*P++ == GCR_SYNCMARK)
                             {
-                                while(*P == 0xFF) { ++P; };
+                                while(*P == GCR_SYNCMARK) { ++P; };
                                 if (*P == 0x55)
                                 {
                                     break;

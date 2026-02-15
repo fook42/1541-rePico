@@ -42,6 +42,7 @@ volatile uint8_t irq_key_value = NO_KEY;
 
 volatile bool rotary_input_block = false;
 
+uint8_t num_max_tracks;
 // ---------------------------------------------------------------
 
 int64_t input_debounce_callback(alarm_id_t id, void *user_data)
@@ -140,10 +141,10 @@ int main()
     uint8_t dsp_zeile = 0;
 
     // setup menus
-    menu_init(&main_menu,     main_menu_entrys,     count_of(main_menu_entrys),     LCD_COLS, LCD_ROWS);
-    menu_init(&image_menu,    image_menu_entrys,    count_of(image_menu_entrys),    LCD_COLS, LCD_ROWS);
-    menu_init(&settings_menu, settings_menu_entrys, count_of(settings_menu_entrys), LCD_COLS, LCD_ROWS);
-    menu_init(&info_menu,     info_menu_entrys,     count_of(info_menu_entrys),     LCD_COLS, LCD_ROWS);
+    menu_init(&main_menu,     main_menu_entrys,     count_of(main_menu_entrys),     LCD_LINE_SIZE, LCD_LINE_COUNT);
+    menu_init(&image_menu,    image_menu_entrys,    count_of(image_menu_entrys),    LCD_LINE_SIZE, LCD_LINE_COUNT);
+    menu_init(&settings_menu, settings_menu_entrys, count_of(settings_menu_entrys), LCD_LINE_SIZE, LCD_LINE_COUNT);
+    menu_init(&info_menu,     info_menu_entrys,     count_of(info_menu_entrys),     LCD_LINE_SIZE, LCD_LINE_COUNT);
 
     menu_set_root(&main_menu);
     // ----
@@ -371,6 +372,7 @@ void check_menu_events(const uint16_t menu_event)
 {
     const uint8_t command = (uint8_t) ((menu_event >> 8) & 0xff);
     const uint8_t value = (uint8_t) (menu_event & 0xff);
+    char byte_str[6];
 
     switch(command)
     {
@@ -386,6 +388,43 @@ void check_menu_events(const uint16_t menu_event)
                 /// Image Menü
                 case M_LOAD_IMAGE:
                     set_gui_mode(GUI_FILE_BROWSER);
+                    break;
+
+                case M_SAVE_IMAGE:
+                    if (is_image_mount)
+                    {
+                        display_clear();
+                        display_home();
+                        // todo: create save-file dialog, name, type
+                        // for now: open a "standard-file" (G64)
+                        fr = f_open(&fd, "1541-repico.g64", FA_CREATE_ALWAYS|FA_WRITE);
+                        if (FR_OK == fr)
+                        {
+                            display_string("file opened");
+                            display_setcursor(0,1);
+                            int8_t status = write_disk(&fd, G64_IMAGE, num_max_tracks);
+                            if (status>0)
+                            {
+                                (void)dez2out(status+1,2,byte_str);
+                                display_data(byte_str[0]);
+                                display_data(byte_str[1]);
+                                display_string(" Tracks out");
+                            } else {
+                                display_string("Error:");
+                                (void)dez2out(-status,2,byte_str);
+                                display_data(byte_str[0]);
+                                display_data(byte_str[1]);
+                            }
+                            sleep_ms(5000);
+                        } else {
+                            display_string("failed to open");
+                            display_setcursor(0,1);
+                            display_string("file for writing");
+                            sleep_ms(5000);
+                        }
+                        f_close(&fd);
+                        set_gui_mode(GUI_INFO_MODE);
+                    }
                     break;
 
                 case M_UNLOAD_IMAGE:
@@ -509,7 +548,7 @@ void show_start_message(void)
 void filebrowser_update(uint8_t key_code)
 {
     static uint32_t fbup_wait_counter0 = 0;
-    int8_t tracks_read;
+    int8_t last_track_read;
 
     switch (key_code)
     {
@@ -579,7 +618,7 @@ void filebrowser_update(uint8_t key_code)
         strcpy(image_filename, fb_dir_entry[fb_cursor_pos].fname);
 
         //new: read complete image
-        if ((tracks_read=read_disk(&fd, akt_image_type))>0)
+        if ((last_track_read=read_disk(&fd, akt_image_type))>0)
         {
             close_disk_image(&fd);  // we can close the image - everything needed is in ram now.
             akt_track_pos = 0;
@@ -588,6 +627,7 @@ void filebrowser_update(uint8_t key_code)
 
             send_byte_ready = true;         // enable VIA transfer
             is_image_mount = true;
+            num_max_tracks = last_track_read+1;
 
             send_disk_change();
 
@@ -909,6 +949,7 @@ void unmount_image(void)
     close_disk_image(&fd);
     is_image_mount = 0;
     akt_image_type = UNDEF_IMAGE;
+    num_max_tracks = 0;
     enable_write_protection();
     menu_set_entry_var1(&image_menu, M_WP_IMAGE, 1);
     send_disk_change();
