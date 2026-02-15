@@ -2,7 +2,7 @@
  * header - pinout assignment for Pico2 to baseboard
  *
  * Author: F00K42
- * Last change: 2025/10/25
+ * Last change: 2026/02/15
 ***********************************/
 #include "hardware/spi.h"
 
