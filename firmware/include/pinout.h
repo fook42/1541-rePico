@@ -44,6 +44,6 @@
 // 3 für den Drück-Dreh-Schalter
 #define GPIO_BT1    27
 #define GPIO_BT2    26
-#define GPIO_BT3    22
+#define GPIO_BT3    28
 
-#define GPIO_BRDY   28
+#define GPIO_BRDY   22
