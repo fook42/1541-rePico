@@ -247,6 +247,8 @@ int8_t write_disk(FIL* fd, const int image_type, const uint8_t num_tracks)
     int8_t last_track = -1;
     FRESULT fr;
 
+    block_data_changes = true;  // block changes to gcr-track data while we dump it
+
     switch(image_type)
     {
         ///////////////////////////////////////////////////////////////////////////
@@ -438,5 +440,7 @@ int8_t write_disk(FIL* fd, const int image_type, const uint8_t num_tracks)
         }
         default: break;
     }
+    block_data_changes = false; // accept incomming data again
+
     return last_track;
 }

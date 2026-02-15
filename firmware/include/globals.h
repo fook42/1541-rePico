@@ -71,4 +71,6 @@ extern const uint8_t d64_sector_gap[NUM_SPEEDZONES];
 // Default 15
 #define STEPPER_DELAY_TIME (5)
 
+extern bool block_data_changes;
+
 #endif

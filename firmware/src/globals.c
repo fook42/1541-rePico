@@ -53,3 +53,4 @@ const int64_t bytetimer_values[NUM_SPEEDZONES] = {26, 28, 30, 32};
 
 const uint8_t d64_sector_gap[NUM_SPEEDZONES] = {12, 21, 16, 13}; // von GPZ Code übernommen imggen
 
+bool block_data_changes = false;

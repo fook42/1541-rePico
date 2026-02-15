@@ -43,6 +43,7 @@ volatile uint8_t irq_key_value = NO_KEY;
 volatile bool rotary_input_block = false;
 
 uint8_t num_max_tracks;
+
 // ---------------------------------------------------------------
 
 int64_t input_debounce_callback(alarm_id_t id, void *user_data)
@@ -1136,29 +1137,32 @@ bool repeating_timer_callback(__unused struct repeating_timer *t)
     {
         // SCHREIB MODUS
 
-        // SOE
-        // Unabhängig ob der Motor läuft oder nicht
-        if(get_soe_status())
+        if (!block_data_changes)    // only accept changes when no image-dump is happening
         {
-            gpio_set_dir_in_masked(PAPORT_MASK);
-            akt_gcr_byte = in_gcr_byte();
-
-            if(send_byte_ready)
+            // SOE
+            // Unabhängig ob der Motor läuft oder nicht
+            if(get_soe_status())
             {
-                // BYTE_READY für 3µs löschen
-                clear_byte_ready();
-                sleep_us(3);
-                set_byte_ready();
-            }
-        }
+                gpio_set_dir_in_masked(PAPORT_MASK);
+                akt_gcr_byte = in_gcr_byte();
 
-        // Daten aus Ringpuffer senden wenn Motor an
-        if(get_motor_status())
-        {
-            // Wenn Motor läuft
-            g64_tracks[akt_half_track>>1][akt_track_pos++] = akt_gcr_byte;  // Nächstes GCR Byte schreiben
-            track_is_written = true;
-            if(akt_track_pos == g64_tracklen[akt_half_track>>1]) akt_track_pos = 0;    // Ist Spurende erreicht? Zurück zum Anfang
+                if(send_byte_ready)
+                {
+                    // BYTE_READY für 3µs löschen
+                    clear_byte_ready();
+                    sleep_us(3);
+                    set_byte_ready();
+                }
+            }
+
+            // Daten aus Ringpuffer senden wenn Motor an
+            if(get_motor_status())
+            {
+                // Wenn Motor läuft
+                g64_tracks[akt_half_track>>1][akt_track_pos++] = akt_gcr_byte;  // Nächstes GCR Byte schreiben
+                track_is_written = true;
+                if(akt_track_pos == g64_tracklen[akt_half_track>>1]) akt_track_pos = 0;    // Ist Spurende erreicht? Zurück zum Anfang
+            }
         }
     }
     return true;
