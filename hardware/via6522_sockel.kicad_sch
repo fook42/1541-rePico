@@ -6,8 +6,8 @@
 	(paper "A4")
 	(title_block
 		(title "1541-rePico")
-		(date "2026-02-11")
-		(rev "1.2")
+		(date "2026-02-15")
+		(rev "1.3")
 	)
 	(lib_symbols
 		(symbol "1541-rebuild-rescue:VIA6522-floppy1541_tk-1541-rebuild-rescue"
