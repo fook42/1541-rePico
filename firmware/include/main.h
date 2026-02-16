@@ -2,7 +2,7 @@
  * header - main routines, defines, variables
  *
  * Author: F00K42
- * Last change: 2026/02/11
+ * Last change: 2026/02/16
 ***********************************/
 #include "hw_config.h"
 #include "f_util.h"
@@ -64,8 +64,10 @@ void start_stepper_timer(void);
 #define set_soe_gatearray()     gpio_put(GPIO_SOE_GA,true)
 #define clear_soe_gatearray()   gpio_put(GPIO_SOE_GA,false)
 
-#define set_wps()           gpio_put(GPIO_WPS,true)     // 5V Level = WritePotect
-#define clear_wps()         gpio_put(GPIO_WPS,false)    // 0V Level = Writeable
+// WPS will be generated via inverter 74ls04 on 1541*-mainboard
+// ... thus we send the inverse here (clear_wps = "1" on WPS)
+#define set_wps()           gpio_set_dir(GPIO_WPS,GPIO_IN)    // HiZ
+#define clear_wps()         {gpio_set_dir(GPIO_WPS,GPIO_OUT);gpio_put(GPIO_WPS,false);}   // pull low
 
 #define get_motor_status()  gpio_get(GPIO_MTR)
 
@@ -91,8 +93,6 @@ FILINFO     fb_dir_entry[LCD_LINE_COUNT];
 //
 #define INPUT_DEBOUNCE_TIME (200)
 alarm_id_t input_debounce_alarm = 0;
-
-
 
 volatile uint16_t akt_track_pos = 0;
 
