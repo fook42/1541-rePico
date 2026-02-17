@@ -519,7 +519,7 @@
       "gencad": "",
       "idf": "",
       "netlist": "",
-      "plot": "",
+      "plot": "./CAM",
       "pos_files": "",
       "specctra_dsn": "",
       "step": "",
