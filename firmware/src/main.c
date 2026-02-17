@@ -40,7 +40,7 @@
 
 volatile uint8_t irq_key_value = NO_KEY;
 
-volatile bool rotary_input_block = false;
+volatile bool input_block = false;
 
 uint8_t num_max_tracks;
 
@@ -48,7 +48,7 @@ uint8_t num_max_tracks;
 
 int64_t input_debounce_callback(alarm_id_t id, void *user_data)
 {
-    rotary_input_block = false;
+    input_block = false;
     return 0;
 }
 
@@ -59,19 +59,26 @@ void gpio_callback(uint gpio, uint32_t events)
         // general gpio-ISR .. triggered for STP0 or STP1 change.. no need to detect the cause
         stepper_signal_puffer[stepper_signal_w_pos] = ((bool_to_bit(gpio_get(GPIO_STP0))<<1) | (bool_to_bit(gpio_get(GPIO_STP1))));
         stepper_signal_w_pos++;
-    } else if (GPIO_BT3==gpio)
-    {
-        irq_key_value=(events==GPIO_IRQ_EDGE_FALL)?KEY2_DOWN:KEY2_UP;
-    } else if ((GPIO_BT1==gpio) && (false == rotary_input_block) && (NO_KEY==irq_key_value))
-    {
-        rotary_input_block = true;
-        if (gpio_get(GPIO_BT2))
+    } else {
+        if ((NO_KEY == irq_key_value) && (false == input_block))
         {
-            irq_key_value = KEY1_DOWN;
-        } else {
-            irq_key_value = KEY0_DOWN;
+            if (GPIO_BT3==gpio)
+            {
+                input_block = true;
+                irq_key_value=(events==GPIO_IRQ_EDGE_FALL)?KEY2_DOWN:KEY2_UP;
+                input_debounce_alarm = add_alarm_in_ms(BUTTON_DEBOUNCE_TIME, input_debounce_callback, NULL, false);
+            } else if (GPIO_BT1==gpio)
+            {
+                input_block = true;
+                if (gpio_get(GPIO_BT2))
+                {
+                    irq_key_value = KEY1_DOWN;
+                } else {
+                    irq_key_value = KEY0_DOWN;
+                }
+                input_debounce_alarm = add_alarm_in_ms(ROTARY_DEBOUNCE_TIME, input_debounce_callback, NULL, false);
+            }
         }
-        input_debounce_alarm = add_alarm_in_ms(INPUT_DEBOUNCE_TIME, input_debounce_callback, NULL, false);
     }
 }
 
@@ -99,7 +106,7 @@ int main()
     init_bytetimer();
 
     init_writeprot();
-    enable_write_protection();
+    disable_write_protection();
 
     if (display_init())
     {
@@ -303,6 +310,14 @@ void update_gui(void)
             old_half_track = akt_half_track;
         }
 
+        display_setcursor(0,2);
+        display_string("Disk ID: ");
+        (void)hex2out(id1, 2, byte_str);  // much faster than sprintf
+        display_data(byte_str[0]);
+        display_data(byte_str[1]);
+        (void)hex2out(id2, 2, byte_str);  // much faster than sprintf
+        display_data(byte_str[0]);
+        display_data(byte_str[1]);
 
         new_motor_status = get_motor_status();
         if(old_motor_status != new_motor_status)
@@ -630,6 +645,12 @@ void filebrowser_update(uint8_t key_code)
             is_image_mount = true;
             num_max_tracks = last_track_read+1;
 
+            enable_write_protection();      // this is the default
+            if (0 == (fb_dir_entry[fb_cursor_pos].fattrib & AM_RDO))
+            {
+                disable_write_protection();
+            }
+
             send_disk_change();
 
             start_bytetimer(akt_half_track);    // start the track-spinning
@@ -846,8 +867,6 @@ void open_disk_image(FIL* fd, FILINFO *file_entry, uint8_t* image_type)
         if (FR_OK == fr)
         {
             *image_type = G64_IMAGE;
-            open_g64_image(fd);
-            enable_write_protection();
         }
     }
     else if(!strcmp(extension,".d64"))
@@ -857,8 +876,6 @@ void open_disk_image(FIL* fd, FILINFO *file_entry, uint8_t* image_type)
         if (FR_OK == fr)
         {
             *image_type = D64_IMAGE;
-            open_d64_image(fd);
-            enable_write_protection();
         }
     }
 
@@ -876,35 +893,6 @@ void open_disk_image(FIL* fd, FILINFO *file_entry, uint8_t* image_type)
 void close_disk_image(FIL* fd)
 {
     f_close(fd);
-}
-
-/////////////////////////////////////////////////////////////////////
-
-void open_g64_image(FIL* fd)
-{
-    return;
-}
-
-/////////////////////////////////////////////////////////////////////
-
-void open_d64_image(FIL* fd)
-{
-    // extract DiskID from $165A2+A3 .. better than nothing.
-    FSIZE_t offset = (((FSIZE_t) d64_track_offset[DIRECTORY_TRACK]) << 8) + 0xA2;
-    uint8_t buffer[2];
-    UINT byte_read;
-    FRESULT fr;
-    fr = f_lseek(fd, offset);
-    if (FR_OK == fr)
-    {
-        fr = f_read(fd, buffer, 2, &byte_read);
-        if ((FR_OK == fr) && (2 == byte_read))
-        {
-            id1 = buffer[0];
-            id2 = buffer[1];
-        }
-    }
-    return;
 }
 
 /////////////////////////////////////////////////////////////////////

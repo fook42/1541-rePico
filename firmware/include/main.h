@@ -38,10 +38,8 @@ void init_soe_gatearray(void);
 
 void open_disk_image(FIL* fd, FILINFO *file_entry, uint8_t* image_type);
 void close_disk_image(FIL* fd);
-void open_g64_image(FIL* fd);
-void open_d64_image(FIL* fd);
-
 void unmount_image(void);
+
 void init_writeprot(void);
 void send_disk_change(void);
 
@@ -91,7 +89,9 @@ FILINFO     file_entry;
 FILINFO     fb_dir_entry[LCD_LINE_COUNT];
 //
 //
-#define INPUT_DEBOUNCE_TIME (200)
+#define ROTARY_DEBOUNCE_TIME    (200)
+#define BUTTON_DEBOUNCE_TIME    (100)
+
 alarm_id_t input_debounce_alarm = 0;
 
 volatile uint16_t akt_track_pos = 0;
