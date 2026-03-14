@@ -22,6 +22,9 @@ int8_t read_disk(FIL* fd, const int image_type)
     UINT    bytes_read;
     FRESULT fr;
 
+    id1 = 0xFF;
+    id2 = 0xFF;
+
     switch(image_type)
     {
         ///////////////////////////////////////////////////////////////////////////
@@ -98,8 +101,6 @@ int8_t read_disk(FIL* fd, const int image_type)
             }
             if (0<last_track)
             {
-                id1 = 0x7F;
-                id2 = 0x7F;
                 // extract id2+id1 from GCR stream...
                 P = g64_tracks[last_track];
                 uint8_t *P_end = &g64_tracks[last_track][g64_tracklen[last_track]];
@@ -109,7 +110,7 @@ int8_t read_disk(FIL* fd, const int image_type)
                 {
                     while((GCR_SYNCMARK != *P++) && (P<P_end)) { };    // find first FF
 
-                    if (P>=P_end) { id1 = 0xFF; id2 = 0xFF; break; }
+                    if (P>=P_end) { id1 = 0x7F; id2 = 0x7F; break; }
 
                     if (GCR_SYNCMARK == *P++)           // find second FF
                     {
@@ -120,7 +121,7 @@ int8_t read_disk(FIL* fd, const int image_type)
                         }
                     }
                 } while(1);
-                if (0xFF != id1)
+                if (0x7F != id1)
                 {
                     P += 5; // skip the header
 
@@ -136,8 +137,7 @@ int8_t read_disk(FIL* fd, const int image_type)
         case D64_IMAGE: // D64
         {
             // now convert the D64 to GCR raw-data and fill G64 structures
-            id1 = 0;
-            id2 = 0;
+
             // extract id-fields from directory track for checksum calculation
             // assumption, disk has a dir in track 18 in DOS-format where ID fiels are populated
             offset = (((uint32_t) d64_track_offset[DIRECTORY_TRACK]) << 8) + DIR_ID_OFFSET;

@@ -64,7 +64,7 @@ enum GUI_MODE{GUI_INFO_MODE, GUI_MENU_MODE, GUI_FILE_BROWSER};
 #define disp_sdinfo_prod_p    0,1
 #define disp_sdinfo_prod_s    ""
 #define disp_sdinfo_size_p    8,1
-#define disp_sdinfo_size_s    ""
+#define disp_sdinfo_size_s    "SD-Size:"
 #define disp_sdinfo_rev_p     0,0
 #define disp_sdinfo_rev_s     "Rev:"
 #define disp_sdinfo_serial_p  8,0

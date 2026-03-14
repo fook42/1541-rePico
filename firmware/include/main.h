@@ -13,6 +13,9 @@
 // functions
 int64_t input_debounce_callback(alarm_id_t id, void *user_data);
 
+FRESULT mount_sdcard(void);
+FRESULT umount_sdcard(void);
+
 void check_stepper_signals(void);
 void check_motor_signal(void);
 
@@ -28,6 +31,7 @@ uint16_t get_dir_entry_count(void);
 uint16_t seek_to_dir_entry(uint16_t entry_num);
 
 void show_start_message(void);
+void show_sdcard_info_message(void);
 
 void init_stepper(void);
 void stepper_inc(void);
