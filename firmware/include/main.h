@@ -27,6 +27,8 @@ void set_gui_mode(const uint8_t gui_mode);
 void filebrowser_update(uint8_t key_code);
 void filebrowser_refresh(void);
 
+void infomode_update(void);
+
 uint16_t get_dir_entry_count(void);
 uint16_t seek_to_dir_entry(uint16_t entry_num);
 
@@ -68,8 +70,8 @@ void start_stepper_timer(void);
 
 // WPS will be generated via inverter 74ls04 on 1541*-mainboard
 // ... thus we send the inverse here (clear_wps = "1" on WPS)
-#define set_wps()           gpio_set_dir(GPIO_WPS,GPIO_IN)    // HiZ
-#define clear_wps()         {gpio_set_dir(GPIO_WPS,GPIO_OUT);gpio_put(GPIO_WPS,false);}   // pull low
+#define clear_wps()          gpio_set_dir(GPIO_WPS,GPIO_IN)    // HiZ
+#define set_wps()           {gpio_set_dir(GPIO_WPS,GPIO_OUT);gpio_put(GPIO_WPS,false);}   // pull low
 
 #define get_motor_status()  gpio_get(GPIO_MTR)
 
@@ -97,6 +99,7 @@ FILINFO     fb_dir_entry[LCD_LINE_COUNT];
 #define BUTTON_DEBOUNCE_TIME    (100)
 
 alarm_id_t input_debounce_alarm = 0;
+// timer_t key_longpress_timer;
 
 volatile uint16_t akt_track_pos = 0;
 

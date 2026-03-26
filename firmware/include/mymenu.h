@@ -21,17 +21,19 @@ MENU_ENTRY main_menu_entrys[] = {{"Disk Menu", M_IMAGE,ENTRY_MENU,   0,&image_me
                                  {"Settings",  M_SETTINGS,ENTRY_MENU,0,&settings_menu},
                                  {"Info",      M_INFO,ENTRY_MENU,    0,&info_menu}};
 /// Image Menü
-MENU_ENTRY image_menu_entrys[] = {{"Load Image",   M_LOAD_IMAGE},
+MENU_ENTRY image_menu_entrys[] = {{"..",           M_BACK_IMAGE,ENTRY_TO_PARENT},
+                                  {"Load Image",   M_LOAD_IMAGE},
                                   {"Save Image",   M_SAVE_IMAGE},
                                   {"Unload Image", M_UNLOAD_IMAGE},
                                   {"WriteProt.",   M_WP_IMAGE, ENTRY_ONOFF, 1},
                                   {"New Image",    M_NEW_IMAGE}};
 /// Settings Menü
-MENU_ENTRY settings_menu_entrys[] = {{"Restart",M_RESTART}};
+MENU_ENTRY settings_menu_entrys[] = {{"..",      M_BACK_SETTINGS,ENTRY_TO_PARENT},
+                                     {"Restart", M_RESTART}};
+
 /// Info Menü
-MENU_ENTRY info_menu_entrys[] = {{"Version",     M_VERSION_INFO},
-                                 {"SD Card Info",M_SDCARD_INFO}};
-
-
+MENU_ENTRY info_menu_entrys[] = {{"..",           M_BACK_INFO,ENTRY_TO_PARENT},
+                                 {"Version",      M_VERSION_INFO},
+                                 {"SD Card Info", M_SDCARD_INFO}};
 
 #endif

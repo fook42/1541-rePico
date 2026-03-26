@@ -11,6 +11,7 @@
 
 extern uint8_t DEV_I2C_ADDR;
 uint8_t oled_cursor_x, oled_cursor_y;
+bool oled_bright = false;
 
 const uint8_t OLED_customchars[][8] = {
 { // Menü More Top
@@ -136,7 +137,7 @@ void oled_clear( void )
 // place display cursor top left
 void oled_home( void )
 {
-    ssd1306_command(SSD1306_PAGE_START );
+    ssd1306_command(SSD1306_PAGE_START | 7);
     ssd1306_command(SSD1306_COLUMN_START_L );
     ssd1306_command(SSD1306_COLUMN_START_H );
     oled_cursor_x = 0;
@@ -173,13 +174,16 @@ void oled_data( const uint8_t data )
         memcpy((void*) &buffer[1], (const void*) &FontData[data-FONT_MINCHAR][0], FONT_HEIGHT);
     }
 
-    // i2c_write_blocking(I2C_PORT, DEV_I2C_ADDR, buffer, count_of(buffer), false);
-
-    ssd1306_command(SSD1306_PAGE_START | (7-oled_cursor_y-4));
-    ssd1306_command(SSD1306_COLUMN_START_L |  ((FONT_WIDTH*oled_cursor_x)     & 0x0f));
-    ssd1306_command(SSD1306_COLUMN_START_H | (((FONT_WIDTH*oled_cursor_x)>>4) & 0x0f));
-
     i2c_write_blocking(I2C_PORT, DEV_I2C_ADDR, buffer, count_of(buffer), false);
+
+    if (oled_bright)
+    {
+        ssd1306_command(SSD1306_PAGE_START | (3-oled_cursor_y));
+        ssd1306_command(SSD1306_COLUMN_START_L |  ((FONT_WIDTH*oled_cursor_x)     & 0x0f));
+        ssd1306_command(SSD1306_COLUMN_START_H | (((FONT_WIDTH*oled_cursor_x)>>4) & 0x0f));
+
+        i2c_write_blocking(I2C_PORT, DEV_I2C_ADDR, buffer, count_of(buffer), false);
+    }
 
     ++oled_cursor_x;
     oled_setcursor(oled_cursor_x, oled_cursor_y);
@@ -213,4 +217,11 @@ void oled_print( const char *string, const uint8_t start, const uint8_t length)
 // specify user-defined characters with "data"-bitmap
 void oled_generatechar( const uint8_t code, const uint8_t *data )
 {
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// set "bright" mode or "light" mode for 128x64 display
+void oled_setbright( bool bright_on )
+{
+    oled_bright = bright_on;
 }

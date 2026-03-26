@@ -2,6 +2,6 @@
  * header - version information
  *
  * Author: F00K42
- * Last change: 2026/02/16
+ * Last change: 2026/03/25
 ***********************************/
-#define VERSION "1.1.0"
+#define VERSION "1.4.0"

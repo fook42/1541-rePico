@@ -97,6 +97,7 @@ uint16_t menu_update(const uint8_t key_code)
                     case ENTRY_MENU:
                         current_menu->entry_list[menu_index].menu->parent_menu = current_menu;
                         current_menu = current_menu->entry_list[menu_index].menu;
+                        current_menu->lcd_cursor_pos = 1;
                         current_menu->view_obsolete = 1;
                         break;
 
