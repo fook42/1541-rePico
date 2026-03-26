@@ -8,8 +8,8 @@
 #ifndef GUI_CONSTANCY_H
 #define GUI_CONSTANCY_H
 
-#define TIMEOUT1_KEY2 15    // 15 * 50ms = 750ms
-#define TIMEOUT2_KEY2 60    // 60 * 50ms = 3s
+#define TIMEOUT1_KEY2  750000 // 750ms
+#define TIMEOUT2_KEY2 3000000 // 3s
 
 enum INPUT_MODE{INPUT_MODE_BUTTON, INPUT_MODE_ENCODER};
 enum KEY_CODES{KEY0_DOWN, KEY0_UP, KEY1_DOWN, KEY1_UP, KEY2_DOWN, KEY2_UP, KEY2_TIMEOUT1, KEY2_TIMEOUT2, NO_KEY};
@@ -64,7 +64,7 @@ enum GUI_MODE{GUI_INFO_MODE, GUI_MENU_MODE, GUI_FILE_BROWSER};
 #define disp_sdinfo_prod_p    0,1
 #define disp_sdinfo_prod_s    ""
 #define disp_sdinfo_size_p    8,1
-#define disp_sdinfo_size_s    ""
+#define disp_sdinfo_size_s    "SD-Size:"
 #define disp_sdinfo_rev_p     0,0
 #define disp_sdinfo_rev_s     "Rev:"
 #define disp_sdinfo_serial_p  8,0

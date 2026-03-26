@@ -34,6 +34,7 @@ _EXTERN_ void (*display_data)( const uint8_t character);
 _EXTERN_ void (*display_string)( char* char_array);
 _EXTERN_ void (*display_print)( const char* char_array, const uint8_t array_offset, const uint8_t print_length);
 _EXTERN_ void (*display_generatechar)(const uint8_t, const uint8_t*);
+_EXTERN_ void (*display_setbright)( bool bright_on );
 
 // detect the display type & set it up
 uint8_t display_init(void);

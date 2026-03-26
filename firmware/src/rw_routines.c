@@ -22,6 +22,9 @@ int8_t read_disk(FIL* fd, const int image_type)
     UINT    bytes_read;
     FRESULT fr;
 
+    id1 = 0xFF;
+    id2 = 0xFF;
+
     switch(image_type)
     {
         ///////////////////////////////////////////////////////////////////////////
@@ -96,6 +99,38 @@ int8_t read_disk(FIL* fd, const int image_type)
                 ++SUM;
                 last_track=track_nr;
             }
+            if (0<last_track)
+            {
+                // extract id2+id1 from GCR stream...
+                P = g64_tracks[last_track];
+                uint8_t *P_end = &g64_tracks[last_track][g64_tracklen[last_track]];
+
+                // find first track-marker .. FF FF 52 ... FF FF 55
+                do
+                {
+                    while((GCR_SYNCMARK != *P++) && (P<P_end)) { };    // find first FF
+
+                    if (P>=P_end) { id1 = 0x7F; id2 = 0x7F; break; }
+
+                    if (GCR_SYNCMARK == *P++)           // find second FF
+                    {
+                        while(GCR_SYNCMARK == *P) { ++P; }; // repeat until no more FF are found
+                        if (0x52 == *P)                 // check for header-id
+                        {
+                            break;
+                        }
+                    }
+                } while(1);
+                if (0x7F != id1)
+                {
+                    P += 5; // skip the header
+
+                    // lets extract the given FloppyID for further readback of GCR...
+                    ConvertFromGCR(P, d64_sector_puffer);
+                    id2 = d64_sector_puffer[0];
+                    id1 = d64_sector_puffer[1];
+                }
+            }
         }
         break;
 
@@ -103,8 +138,6 @@ int8_t read_disk(FIL* fd, const int image_type)
         {
             // now convert the D64 to GCR raw-data and fill G64 structures
 
-            id1 = 0;
-            id2 = 0;
             // extract id-fields from directory track for checksum calculation
             // assumption, disk has a dir in track 18 in DOS-format where ID fiels are populated
             offset = (((uint32_t) d64_track_offset[DIRECTORY_TRACK]) << 8) + DIR_ID_OFFSET;

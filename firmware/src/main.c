@@ -2,7 +2,7 @@
 // 1541-rePico
 /////////////////////////////////////////////////
 // author: F00K42
-// last changed: 2026/02/11
+// last changed: 2026/03/25
 // repo: https://github.com/fook42/1541-rePico
 /////////////////////////////////////////////////
 
@@ -40,15 +40,16 @@
 
 volatile uint8_t irq_key_value = NO_KEY;
 
-volatile bool rotary_input_block = false;
+volatile bool input_block = false;
 
+uint64_t key2_down_time=0;
 uint8_t num_max_tracks;
 
 // ---------------------------------------------------------------
 
 int64_t input_debounce_callback(alarm_id_t id, void *user_data)
 {
-    rotary_input_block = false;
+    input_block = false;
     return 0;
 }
 
@@ -59,19 +60,45 @@ void gpio_callback(uint gpio, uint32_t events)
         // general gpio-ISR .. triggered for STP0 or STP1 change.. no need to detect the cause
         stepper_signal_puffer[stepper_signal_w_pos] = ((bool_to_bit(gpio_get(GPIO_STP0))<<1) | (bool_to_bit(gpio_get(GPIO_STP1))));
         stepper_signal_w_pos++;
-    } else if (GPIO_BT3==gpio)
-    {
-        irq_key_value=(events==GPIO_IRQ_EDGE_FALL)?KEY2_DOWN:KEY2_UP;
-    } else if ((GPIO_BT1==gpio) && (false == rotary_input_block) && (NO_KEY==irq_key_value))
-    {
-        rotary_input_block = true;
-        if (gpio_get(GPIO_BT2))
+    } else {
+        if ((NO_KEY == irq_key_value) && (false == input_block))
         {
-            irq_key_value = KEY1_DOWN;
-        } else {
-            irq_key_value = KEY0_DOWN;
+            if (GPIO_BT3==gpio)
+            {
+                input_block = true;
+                if (events==GPIO_IRQ_EDGE_FALL)
+                {
+                    irq_key_value = KEY2_DOWN;
+                    input_debounce_alarm = add_alarm_in_ms(BUTTON_DEBOUNCE_TIME, input_debounce_callback, NULL, false);
+                    key2_down_time = time_us_64();
+                } else {
+                    uint64_t now_time = time_us_64();
+                    if (key2_down_time > now_time)
+                    {
+                        key2_down_time -= (now_time+1);
+                        now_time = ((uint64_t)-1);
+                    }
+                    if (key2_down_time < (now_time-TIMEOUT1_KEY2))
+                    { irq_key_value = KEY2_TIMEOUT1; }
+                    else if (key2_down_time < (now_time-TIMEOUT2_KEY2))
+                    { irq_key_value = KEY2_TIMEOUT2; }
+                    else
+                    { irq_key_value = KEY2_UP; }
+                    key2_down_time = now_time;
+                    input_debounce_alarm = add_alarm_in_ms(BUTTON_DEBOUNCE_TIME, input_debounce_callback, NULL, false);
+                }
+            } else if (GPIO_BT1==gpio)
+            {
+                input_block = true;
+                if (gpio_get(GPIO_BT2))
+                {
+                    irq_key_value = KEY1_DOWN;
+                } else {
+                    irq_key_value = KEY0_DOWN;
+                }
+                input_debounce_alarm = add_alarm_in_ms(ROTARY_DEBOUNCE_TIME, input_debounce_callback, NULL, false);
+            }
         }
-        input_debounce_alarm = add_alarm_in_ms(INPUT_DEBOUNCE_TIME, input_debounce_callback, NULL, false);
     }
 }
 
@@ -80,6 +107,13 @@ void gpio_callback(uint gpio, uint32_t events)
 int main()
 {
     stdio_init_all();
+
+    if (display_init())
+    {
+        display_home();
+    }
+
+    show_start_message();
 
     // init input-keys
     init_key_inputs();
@@ -99,45 +133,7 @@ int main()
     init_bytetimer();
 
     init_writeprot();
-    enable_write_protection();
-
-    if (display_init())
-    {
-        display_clear();
-        display_home();
-    }
-
-    show_start_message();
-
-    fr = f_mount(&fs, "", 1);
-    uint8_t retry_count = 3;
-
-    while ((FR_OK != fr) && (retry_count > 0)) {
-        display_setcursor(0, 0);
-        display_string("f_mount error:");
-        display_data(fr+'0');
-        display_setcursor(0, 1);
-        display_print(FRESULT_str(fr),0,16);
-        display_setcursor(0, 2);
-        display_print(FRESULT_str(fr),16,16);
-        display_setcursor(0, 3);
-        display_string("retrying ... ");
-        display_data(retry_count+'0');
-        retry_count--;
-        sleep_ms(2000);
-        fr = f_mount(&fs, "", 1);
-        display_clear();
-    }
-
-    display_setcursor(0, 0);
-    display_string("f_mount okay");
-
-    fb_dir_entry_count = get_dir_entry_count(); // open card, count entries on root level
-
-    sleep_ms(1000);
-
-    display_clear();
-    display_home();
+    disable_write_protection();
 
     uint8_t dsp_zeile = 0;
 
@@ -149,16 +145,53 @@ int main()
 
     menu_set_root(&main_menu);
     // ----
+
+    sleep_ms(START_MESSAGE_TIME);
+
+    display_clear();
+    display_home();
+
     set_gui_mode(GUI_MENU_MODE);
 
     while (true) {
         check_stepper_signals();
-        check_motor_signal();
         update_gui();
     }
 }
 /////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////
+
+FRESULT mount_sdcard(void)
+{
+    char mount_path[] = {""};
+    BYTE mount_option = 1; /* 0=Do not mount (delayed mount), 1=Mount immediately */
+
+    fr = f_mount(&fs, mount_path, mount_option);
+    // uint8_t retry_count = 3;
+
+    // while ((FR_OK != fr) && (retry_count > 0)) {
+    //     retry_count--;
+    //     sleep_ms(1000);
+    //     fr = f_mount(&fs, mount_path, mount_option);
+    // }
+
+    if (FR_OK == fr)
+    {
+        fb_dir_entry_count = get_dir_entry_count(); // open card, count entries on root level
+    }
+    return fr;
+}
+
+
+FRESULT umount_sdcard(void)
+{
+    char mount_path[] = {""};
+
+    return f_unmount(mount_path);
+}
+
+/////////////////////////////////////////////////////////////////////
+
 
 int64_t steppertimer_callback(alarm_id_t id, void *user_data)
 {
@@ -227,27 +260,6 @@ void check_stepper_signals(void)
 
 /////////////////////////////////////////////////////////////////////
 
-void check_motor_signal(void)
-{
-    if(!get_motor_status())
-    {
-        // Sollte der aktuelle Track noch veränderungen haben so wird hier erstmal gesichert.
-        if(track_is_written)
-        {
-            send_byte_ready = false;
-            stop_bytetimer();
-
-            track_is_written = false;
-            // write_disk_track(fd,akt_image_type,old_half_track>>1,gcr_track, &gcr_track_length);
-
-            start_bytetimer(akt_half_track);
-            send_byte_ready = true;
-        }
-    }
-}
-
-/////////////////////////////////////////////////////////////////////
-
 void init_key_inputs(void)
 {
     gpio_init(GPIO_BT1);
@@ -275,8 +287,8 @@ uint8_t get_key_from_buffer(void)
 
 void update_gui(void)
 {
-    static uint8_t old_half_track = 255;
-    static bool old_motor_status = false;
+    static uint8_t shown_half_track = 255;
+    static bool shown_motor_status = false;
     static uint32_t wait_counter0 = 0;
     bool new_motor_status;
     uint8_t key_code = get_key_from_buffer();
@@ -294,22 +306,21 @@ void update_gui(void)
             // exit_main = 0;
         }
 
-        if(old_half_track != akt_half_track)
+        if(shown_half_track != akt_half_track)
         {
+            shown_half_track = akt_half_track;
             display_setcursor(disp_trackno_p);
-            (void)dez2out((akt_half_track>>1)+1, 2, byte_str);  // much faster than sprintf
+            (void)dez2out((shown_half_track>>1)+1, 2, byte_str);
             display_data(byte_str[0]);
             display_data(byte_str[1]);
-            old_half_track = akt_half_track;
         }
 
-
         new_motor_status = get_motor_status();
-        if(old_motor_status != new_motor_status)
+        if(shown_motor_status != new_motor_status)
         {
-            old_motor_status = new_motor_status;
+            shown_motor_status = new_motor_status;
             display_setcursor(disp_motortxt_p);
-            if(new_motor_status)
+            if(shown_motor_status)
                 display_string(disp_motor_on_s);
             else
                 display_string(disp_motor_off_s);
@@ -374,6 +385,7 @@ void check_menu_events(const uint16_t menu_event)
     const uint8_t command = (uint8_t) ((menu_event >> 8) & 0xff);
     const uint8_t value = (uint8_t) (menu_event & 0xff);
     char byte_str[6];
+    int file_op_status;
 
     switch(command)
     {
@@ -388,48 +400,118 @@ void check_menu_events(const uint16_t menu_event)
 
                 /// Image Menü
                 case M_LOAD_IMAGE:
-                    set_gui_mode(GUI_FILE_BROWSER);
+                    fr = mount_sdcard();
+                    display_clear();
+                    display_home();
+                    if (FR_OK == fr)
+                    {
+                        set_gui_mode(GUI_FILE_BROWSER);
+                    } else {
+                        display_string("f_mount error:");
+                        display_data(fr+'A');
+                        const char* error_txt=FRESULT_str(fr);
+                        size_t err_str_len=strlen(error_txt);
+                        uint8_t err_str_offset=0;
+                        do
+                        {
+                            display_setcursor(0, 1);
+                            display_print(error_txt, err_str_offset++, 16);
+                            sleep_ms(500);
+                        }
+                        while ((err_str_offset+15)<err_str_len);
+                        while(irq_key_value != KEY2_DOWN) {};
+                        irq_key_value = NO_KEY;
+                        menu_refresh();
+                    }
                     break;
 
                 case M_SAVE_IMAGE:
                     if (is_image_mount)
                     {
-                        display_clear();
-                        display_home();
                         // todo: create save-file dialog, name, type
                         // for now: open a "standard-file" (G64)
+                        fr = mount_sdcard();
+                        display_clear();
+                        display_home();
+                        if (FR_OK != fr)
+                        {
+                            display_string("f_mount error:");
+                            display_data(fr+'A');
+                            const char* error_txt=FRESULT_str(fr);
+                            size_t err_str_len=strlen(error_txt);
+                            uint8_t err_str_offset=0;
+                            do
+                            {
+                                display_setcursor(0, 1);
+                                display_print(error_txt, err_str_offset++, 16);
+                                sleep_ms(500);
+                            }
+                            while ((err_str_offset+15)<err_str_len);
+                            while(irq_key_value != KEY2_DOWN) {};
+                            irq_key_value = NO_KEY;
+                            menu_refresh();
+                            break;
+                        }
                         fr = f_open(&fd, "1541-repico.g64", FA_CREATE_ALWAYS|FA_WRITE);
                         if (FR_OK == fr)
                         {
-                            display_string("file opened");
+                            display_string("G64 file opened");
                             display_setcursor(0,1);
-                            int8_t status = write_disk(&fd, G64_IMAGE, num_max_tracks);
-                            if (status>0)
+                            file_op_status = write_disk(&fd, G64_IMAGE, num_max_tracks);
+                            if (file_op_status>0)
                             {
-                                (void)dez2out(status+1,2,byte_str);
+                                (void)dez2out(file_op_status+1,2,byte_str);
                                 display_data(byte_str[0]);
                                 display_data(byte_str[1]);
-                                display_string(" Tracks out");
+                                display_string(" Tracks saved ");
                             } else {
                                 display_string("Error:");
-                                (void)dez2out(-status,2,byte_str);
+                                (void)dez2out(-file_op_status,2,byte_str);
                                 display_data(byte_str[0]);
                                 display_data(byte_str[1]);
                             }
-                            sleep_ms(5000);
                         } else {
-                            display_string("failed to open");
+                            display_string("G64 file open");
                             display_setcursor(0,1);
-                            display_string("file for writing");
-                            sleep_ms(5000);
+                            display_string("failed 4 writing");
                         }
                         f_close(&fd);
-                        set_gui_mode(GUI_INFO_MODE);
+                        sleep_ms(3000);
+                        display_clear();
+                        display_home();
+                        fr = f_open(&fd, "1541-repico.d64", FA_CREATE_ALWAYS|FA_WRITE);
+                        if (FR_OK == fr)
+                        {
+                            display_string("D64 file opened");
+                            display_setcursor(0,1);
+                            file_op_status = write_disk(&fd, D64_IMAGE, num_max_tracks);
+                            if (file_op_status>0)
+                            {
+                                (void)dez2out(file_op_status+1,2,byte_str);
+                                display_data(byte_str[0]);
+                                display_data(byte_str[1]);
+                                display_string(" Tracks saved ");
+                            } else {
+                                display_string("Error:");
+                                (void)dez2out(-file_op_status,2,byte_str);
+                                display_data(byte_str[0]);
+                                display_data(byte_str[1]);
+                            }
+                        } else {
+                            display_string("D64 file open");
+                            display_setcursor(0,1);
+                            display_string("failed 4 writing");
+                        }
+                        f_close(&fd);
+                        sleep_ms(3000);
+                        umount_sdcard();
+                        menu_refresh();
                     }
                     break;
 
                 case M_UNLOAD_IMAGE:
                     unmount_image();
+                    umount_sdcard();
                     set_gui_mode(GUI_INFO_MODE);
                     break;
 
@@ -440,7 +522,7 @@ void check_menu_events(const uint16_t menu_event)
                     } else {
                         disable_write_protection();
                     }
-                    menu_refresh();
+                    set_gui_mode(GUI_INFO_MODE);
                     break;
 
                 /// Settings Menü
@@ -451,12 +533,35 @@ void check_menu_events(const uint16_t menu_event)
 
                 /// Info Menü
                 case M_VERSION_INFO:
-                    //show_start_message();
+                    show_start_message();
+                    while(irq_key_value != KEY2_DOWN) {};
+                    irq_key_value = NO_KEY;
                     menu_refresh();
                     break;
 
                 case M_SDCARD_INFO:
-                    //show_sdcard_info_message();
+                    if (FR_OK == mount_sdcard())
+                    {
+                        show_sdcard_info_message();
+                    } else {
+                        display_clear();
+                        display_home();
+                        display_string("f_mount error:");
+                        display_data(fr+'A');
+                        const char* error_txt=FRESULT_str(fr);
+                        size_t err_str_len=strlen(error_txt);
+                        uint8_t err_str_offset=0;
+                        do
+                        {
+                            display_setcursor(0, 1);
+                            display_print(error_txt, err_str_offset++, 16);
+                            sleep_ms(500);
+                        }
+                        while ((err_str_offset+15)<err_str_len);
+                    }
+                    umount_sdcard();
+                    while(irq_key_value != KEY2_DOWN) {};
+                    irq_key_value = NO_KEY;
                     menu_refresh();
                     break;
 
@@ -474,74 +579,85 @@ void check_menu_events(const uint16_t menu_event)
 
 void set_gui_mode(const uint8_t gui_mode)
 {
-    uint8_t byte_str[6];
     current_gui_mode = gui_mode;
     switch(gui_mode)
     {
-    case GUI_INFO_MODE:
-        display_clear();
+        case GUI_INFO_MODE:
+            infomode_update();
+            break;
 
-        display_setcursor(disp_tracktxt_p);
-        display_string(disp_tracktxt_s);
+        case GUI_MENU_MODE:
+            menu_refresh();
+            break;
 
-        display_setcursor(disp_trackno_p);
-        (void)dez2out((akt_half_track>>1)+1, 2, byte_str);
-        display_data(byte_str[0]);
-        display_data(byte_str[1]);
-
-        if(get_motor_status())
-        {
-            display_setcursor(disp_motortxt_p);
-            display_string(disp_motor_on_s);
-        }
-
-        if(floppy_wp)
-        {
-            display_setcursor(disp_writeprottxt_p);
-            display_string(disp_writeprot_on_s);
-        }
-
-        display_setcursor(disp_scrollfilename_p);
-        if(is_image_mount)
-        {
-            display_print(image_filename,0,LCD_LINE_SIZE);
-
-            // Für Scrollenden Filename
-            int8_t var = (int8_t)strlen(image_filename) - LCD_LINE_SIZE;
-            if(var < 0)
-                gui_current_line_offset = 0;
-            else
-                gui_current_line_offset = var;
-            gui_line_scroll_pos = 0;
-            gui_line_scroll_direction = 0;
-            gui_line_scroll_end_begin_wait = 6;
-        } else {
-            display_string(disp_nofilemounted_s);
-        }
-
-        break;
-    case GUI_MENU_MODE:
-        menu_refresh();
-        break;
-    case GUI_FILE_BROWSER:
-        filebrowser_refresh();
-        break;
-    default:
-        break;
+        case GUI_FILE_BROWSER:
+            filebrowser_refresh();
+            break;
+        default:
+            break;
     }
 }
 
 void show_start_message(void)
 {
     display_clear();
+    display_setbright(true);
     display_setcursor(disp_versiontxt_p);
     display_string(disp_versiontxt_s);
+    display_setbright(false);
     display_setcursor(disp_firmwaretxt_p);
     display_string(disp_firmwaretxt_s);
     display_string(VERSION);
-    sleep_ms(START_MESSAGE_TIME);
+    display_setbright(true);
+}
+
+/////////////////////////////////////////////////////////////////////
+
+void infomode_update(void)
+{
+    uint8_t byte_str[3];
 
     display_clear();
+
+    display_setcursor(disp_tracktxt_p);
+    display_string(disp_tracktxt_s);
+
+    display_setcursor(disp_trackno_p);
+    (void)dez2out((akt_half_track>>1)+1, 2, byte_str);
+    display_data(byte_str[0]);
+    display_data(byte_str[1]);
+
+    if(get_motor_status())
+    {
+        display_setcursor(disp_motortxt_p);
+        display_string(disp_motor_on_s);
+    }
+
+    if(floppy_wp)
+    {
+        display_setcursor(disp_writeprottxt_p);
+        display_string(disp_writeprot_on_s);
+    }
+
+    display_setcursor(disp_scrollfilename_p);
+    if(is_image_mount)
+    {
+        display_print(image_filename,0,LCD_LINE_SIZE);
+
+        // Für Scrollenden Filename
+        int8_t var = (int8_t)strlen(image_filename) - LCD_LINE_SIZE;
+        if(var < 0)
+        {
+            var = 0;
+        }
+
+        gui_current_line_offset = var;
+        gui_line_scroll_pos = 0;
+        gui_line_scroll_direction = 0;
+        gui_line_scroll_end_begin_wait = 6;
+    } else {
+        display_string(disp_nofilemounted_s);
+    }
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -569,14 +685,14 @@ void filebrowser_update(uint8_t key_code)
         }
         break;
     case KEY1_DOWN:
-        if((fb_cursor_pos < LCD_LINE_COUNT-1) && (fb_cursor_pos < fb_dir_entry_count-1))
+        if((fb_cursor_pos < (LCD_LINE_COUNT-1)) && (fb_cursor_pos < (fb_dir_entry_count-1)))
         {
             ++fb_cursor_pos;
             filebrowser_refresh();
         }
         else
         {
-            if(fb_window_pos < fb_dir_entry_count - LCD_LINE_COUNT)
+            if(fb_window_pos < (fb_dir_entry_count - LCD_LINE_COUNT))
             {
                 ++fb_window_pos;
                 filebrowser_refresh();
@@ -607,9 +723,10 @@ void filebrowser_update(uint8_t key_code)
             display_setcursor(disp_unsupportedimg_p);
             display_string(disp_unsupportedimg_s);
             sleep_ms(1000);
+            fd.obj.fs = 0;
         }
 
-        if((0 == fd.obj.fs) || (UNDEF_IMAGE == akt_image_type))
+        if(0 == fd.obj.fs)
         {
             is_image_mount = false;
             filebrowser_refresh();
@@ -623,12 +740,16 @@ void filebrowser_update(uint8_t key_code)
         {
             close_disk_image(&fd);  // we can close the image - everything needed is in ram now.
             akt_track_pos = 0;
-            // selected_track = INIT_TRACK << 1;   // select directory-track as default (quicker access)
-            // akt_half_track = selected_track;
 
             send_byte_ready = true;         // enable VIA transfer
             is_image_mount = true;
             num_max_tracks = last_track_read+1;
+
+            enable_write_protection();      // this is the default
+            if (0 == (fb_dir_entry[fb_cursor_pos].fattrib & AM_RDO))
+            {
+                disable_write_protection();
+            }
 
             send_disk_change();
 
@@ -700,9 +821,6 @@ void filebrowser_refresh(void)
 {
     display_clear();
 
-    // fr = f_opendir(&dir_object, path);  /* Open the target directory */
-    // if (fr == FR_OK) {
-    // }
     seek_to_dir_entry(fb_window_pos);
 
     uint8_t i=0;
@@ -710,7 +828,7 @@ void filebrowser_refresh(void)
     while((i<LCD_LINE_COUNT) && ((fb_window_pos + i) < fb_dir_entry_count))
     {
         fr = f_readdir(&dir_object, &(fb_dir_entry[i]));
-        if((fb_dir_entry[i].fname[0]==0) || (fr != FR_OK))
+        if((0 == fb_dir_entry[i].fname[0]) || (FR_OK != fr))
         {
             break;
         }
@@ -777,7 +895,7 @@ uint16_t get_dir_entry_count(void)
             {
                 break;
             }
-            if(!(dir_entry.fattrib & (AM_SYS | AM_HID )))
+            // if(!(dir_entry.fattrib & (AM_SYS | AM_HID )))
             {
                 entry_count++;
             }
@@ -792,7 +910,6 @@ uint16_t seek_to_dir_entry(uint16_t entry_num)
 {
     uint16_t entry_count = 0;
 
-    //        fat_reset_dir(dd);
     f_closedir(&dir_object);
 
     char pattern[] = {"*"};
@@ -809,7 +926,7 @@ uint16_t seek_to_dir_entry(uint16_t entry_num)
             {
                 break;
             }
-            if(!(dir_entry.fattrib & (AM_SYS | AM_HID )))
+            // if(!(dir_entry.fattrib & (AM_SYS | AM_HID )))
             {
                 entry_count++;
             }
@@ -846,8 +963,6 @@ void open_disk_image(FIL* fd, FILINFO *file_entry, uint8_t* image_type)
         if (FR_OK == fr)
         {
             *image_type = G64_IMAGE;
-            open_g64_image(fd);
-            enable_write_protection();
         }
     }
     else if(!strcmp(extension,".d64"))
@@ -857,8 +972,6 @@ void open_disk_image(FIL* fd, FILINFO *file_entry, uint8_t* image_type)
         if (FR_OK == fr)
         {
             *image_type = D64_IMAGE;
-            open_d64_image(fd);
-            enable_write_protection();
         }
     }
 
@@ -880,39 +993,10 @@ void close_disk_image(FIL* fd)
 
 /////////////////////////////////////////////////////////////////////
 
-void open_g64_image(FIL* fd)
-{
-    return;
-}
-
-/////////////////////////////////////////////////////////////////////
-
-void open_d64_image(FIL* fd)
-{
-    // extract DiskID from $165A2+A3 .. better than nothing.
-    FSIZE_t offset = (((FSIZE_t) d64_track_offset[DIRECTORY_TRACK]) << 8) + 0xA2;
-    uint8_t buffer[2];
-    UINT byte_read;
-    FRESULT fr;
-    fr = f_lseek(fd, offset);
-    if (FR_OK == fr)
-    {
-        fr = f_read(fd, buffer, 2, &byte_read);
-        if ((FR_OK == fr) && (2 == byte_read))
-        {
-            id1 = buffer[0];
-            id2 = buffer[1];
-        }
-    }
-    return;
-}
-
-/////////////////////////////////////////////////////////////////////
-
 void init_writeprot(void)
 {
     gpio_init(GPIO_WPS);
-    gpio_set_dir(GPIO_WPS, GPIO_OUT);
+    gpio_set_dir(GPIO_WPS, GPIO_IN);
     gpio_set_pulls(GPIO_WPS, false, false);
     // remark:
     // 1541 schematics include a 74ls04 which drives WPS low by default
@@ -954,6 +1038,148 @@ void unmount_image(void)
     enable_write_protection();
     menu_set_entry_var1(&image_menu, M_WP_IMAGE, 1);
     send_disk_change();
+}
+
+/////////////////////////////////////////////////////////////////////
+
+void show_sdcard_info_message(void)
+{
+    if (0 != fs.fs_type)    // check for valid mounted file-system
+    {
+        display_clear();
+        display_home();
+
+        display_string(disp_sdinfo_size_s);
+        // sprintf(out_str, "%d MB", (uint16_t)(info.capacity / 1024 / 1024));
+        // display_string(out_str);
+
+        display_setcursor(0,1);
+        display_string(disp_sdinfo_part_s);
+
+        switch (fs.fs_type)
+        {
+            case FS_FAT12:
+                display_string("FAT12");
+                break;
+            case FS_FAT16:
+                display_string("FAT16");
+                break;
+            case FS_FAT32:
+                display_string("FAT32");
+                break;
+            case FS_EXFAT:
+                display_string("EXT FAT");
+                break;
+            default:
+                break;
+        }
+    }
+    sleep_ms(START_MESSAGE_TIME);
+
+    // struct sd_raw_info info;
+
+    // uint8_t counter = 5;
+    // uint8_t get_info_ok = 0;
+    // char out_str[21];
+
+    // while(counter != 0)
+    // {
+    //     if(0 != sd_raw_get_info(&info))
+    //     {
+    //         display_setcursor(disp_sdinfo_manuf_p);
+    //         display_string(disp_sdinfo_manuf_s);
+    //         sprintf(out_str, "%.x", info.manufacturer);
+    //         display_string(out_str);
+
+    //         display_setcursor(disp_sdinfo_oem_p);
+    //         display_string(disp_sdinfo_oem_s);
+    //         display_string((char*) info.oem);
+
+    //         display_setcursor(disp_sdinfo_prod_p);
+    //         display_string(disp_sdinfo_prod_s);
+    //         display_string((char*) info.product);
+
+    //         display_setcursor(disp_sdinfo_size_p);
+    //         display_string(disp_sdinfo_size_s);
+    //         sprintf(out_str, "%d MB", (uint16_t)(info.capacity / 1024 / 1024));
+    //         display_string(out_str);
+
+    //         get_info_ok = 1;
+
+    //         break;
+    //     }
+
+    //     release_sd_card();
+    //     (void) init_sd_card();
+
+    //     counter--;
+    // }
+
+    // if(!get_info_ok)
+    // {
+    //     display_clear();
+    //     display_setcursor(disp_geterr_failure_p);
+    //     display_string(disp_geterr_failure_s);
+    //     display_setcursor(disp_sdrawgetinfo_p);
+    //     display_string(disp_sdrawgetinfo_s);
+    //     return;
+    // }
+
+    // _delay_ms(START_MESSAGE_TIME);
+
+    // display_clear();
+
+    // display_setcursor(disp_sdinfo_rev_p);
+    // display_string(disp_sdinfo_rev_s);
+    // sprintf(out_str,"%c.%c",(info.revision>>4)+'0', (info.revision&0x0f)+'0');
+    // display_string(out_str);
+
+    // display_setcursor(disp_sdinfo_serial_p);
+    // display_string(disp_sdinfo_serial_s);
+    // sprintf(out_str,"%04X%04X",(unsigned int) (info.serial >> 16),(unsigned int) (info.serial & 0xffff));
+    // display_string(out_str);
+
+    // display_setcursor(disp_sdinfo_part_p);
+    // display_string(disp_sdinfo_part_s);
+    // switch(partition->type)
+    // {
+    //     case 0x01:
+    //         display_string("FAT12");
+    //         break;
+
+    //     case 0x04:
+    //         display_string("FAT16 <32MB");
+    //         break;
+
+    //     case 0x05:
+    //         display_string("EXTENDED");
+    //         break;
+
+    //     case 0x06:
+    //         display_string("FAT16");
+    //         break;
+
+    //     case 0x0b:
+    //         display_string("FAT32");
+    //         break;
+
+    //     case 0x0c:
+    //         display_string("FAT32 LBA");
+    //         break;
+
+    //     case 0x0e:
+    //         display_string("FAT16 LBA");
+    //         break;
+
+    //     case 0x0f:
+    //         display_string("EXT LBA");
+    //         break;
+
+    //     default:
+    //         display_string("UNKNOWN");
+    //         break;
+    // }
+    // _delay_ms(START_MESSAGE_TIME);
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -1020,9 +1246,11 @@ void init_control_signals(void)
     gpio_init(GPIO_SYNC);
     gpio_set_dir(GPIO_SYNC, GPIO_OUT);
 
+    gpio_set_drive_strength(GPIO_SYNC, GPIO_DRIVE_STRENGTH_12MA);
+
     // Als Eingang schalten
     gpio_init_mask(PAPORT_MASK);
-    gpio_set_pulls(GPIO_PAPORT, true, false);
+    gpio_set_pulls(GPIO_PAPORT  , true, false);
     gpio_set_pulls(GPIO_PAPORT+1, true, false);
     gpio_set_pulls(GPIO_PAPORT+2, true, false);
     gpio_set_pulls(GPIO_PAPORT+3, true, false);
@@ -1031,6 +1259,15 @@ void init_control_signals(void)
     gpio_set_pulls(GPIO_PAPORT+6, true, false);
     gpio_set_pulls(GPIO_PAPORT+7, true, false);
     gpio_set_dir_in_masked(PAPORT_MASK); // should set all 8 bits to input
+
+    gpio_set_drive_strength(GPIO_PAPORT  , GPIO_DRIVE_STRENGTH_12MA);
+    gpio_set_drive_strength(GPIO_PAPORT+1, GPIO_DRIVE_STRENGTH_12MA);
+    gpio_set_drive_strength(GPIO_PAPORT+2, GPIO_DRIVE_STRENGTH_12MA);
+    gpio_set_drive_strength(GPIO_PAPORT+3, GPIO_DRIVE_STRENGTH_12MA);
+    gpio_set_drive_strength(GPIO_PAPORT+4, GPIO_DRIVE_STRENGTH_12MA);
+    gpio_set_drive_strength(GPIO_PAPORT+5, GPIO_DRIVE_STRENGTH_12MA);
+    gpio_set_drive_strength(GPIO_PAPORT+6, GPIO_DRIVE_STRENGTH_12MA);
+    gpio_set_drive_strength(GPIO_PAPORT+7, GPIO_DRIVE_STRENGTH_12MA);
 
     gpio_init(GPIO_SOE);
     gpio_set_pulls(GPIO_SOE, true, false);

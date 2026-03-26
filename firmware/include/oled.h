@@ -44,6 +44,10 @@ void oled_print( const char *string, const uint8_t start, const uint8_t length);
 void oled_generatechar( const uint8_t code, const uint8_t *data );
 
 ////////////////////////////////////////////////////////////////////////////////
+// set "bright" mode or "light" mode for 128x64 display
+void oled_setbright( bool bright_on );
+
+////////////////////////////////////////////////////////////////////////////////
 // SSD1306 I2C Modes
 
 #define SSD1306_I2C_COMMAND         (0x80)

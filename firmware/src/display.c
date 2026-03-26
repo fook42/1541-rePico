@@ -37,6 +37,7 @@ uint8_t display_init(void)
         display_print       = &oled_print;
         display_setcursor   = &oled_setcursor;
         display_string      = &oled_string;
+        display_setbright   = &oled_setbright;
     } else {
         // -> we may have an LCD attached
         display_setup       = &lcd_setup;
@@ -47,6 +48,7 @@ uint8_t display_init(void)
         display_print       = &lcd_print;
         display_setcursor   = &lcd_setcursor;
         display_string      = &lcd_string;
+        display_setbright   = &lcd_setbright;
 
         // select which low-level routines to use for communication with the display
         if (0 != DEV_I2C_ADDR)

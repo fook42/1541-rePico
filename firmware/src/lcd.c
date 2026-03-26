@@ -203,3 +203,10 @@ void lcd_generatechar( const uint8_t code, const uint8_t *data )
         lcd_data( data[i] );
     }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// set "bright" mode or "light" mode for 128x64 display
+void lcd_setbright( bool bright_on )
+{
+    (void) bright_on;
+}

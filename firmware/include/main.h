@@ -2,7 +2,7 @@
  * header - main routines, defines, variables
  *
  * Author: F00K42
- * Last change: 2026/02/11
+ * Last change: 2026/02/16
 ***********************************/
 #include "hw_config.h"
 #include "f_util.h"
@@ -12,6 +12,9 @@
 
 // functions
 int64_t input_debounce_callback(alarm_id_t id, void *user_data);
+
+FRESULT mount_sdcard(void);
+FRESULT umount_sdcard(void);
 
 void check_stepper_signals(void);
 void check_motor_signal(void);
@@ -24,10 +27,13 @@ void set_gui_mode(const uint8_t gui_mode);
 void filebrowser_update(uint8_t key_code);
 void filebrowser_refresh(void);
 
+void infomode_update(void);
+
 uint16_t get_dir_entry_count(void);
 uint16_t seek_to_dir_entry(uint16_t entry_num);
 
 void show_start_message(void);
+void show_sdcard_info_message(void);
 
 void init_stepper(void);
 void stepper_inc(void);
@@ -38,10 +44,8 @@ void init_soe_gatearray(void);
 
 void open_disk_image(FIL* fd, FILINFO *file_entry, uint8_t* image_type);
 void close_disk_image(FIL* fd);
-void open_g64_image(FIL* fd);
-void open_d64_image(FIL* fd);
-
 void unmount_image(void);
+
 void init_writeprot(void);
 void send_disk_change(void);
 
@@ -64,8 +68,10 @@ void start_stepper_timer(void);
 #define set_soe_gatearray()     gpio_put(GPIO_SOE_GA,true)
 #define clear_soe_gatearray()   gpio_put(GPIO_SOE_GA,false)
 
-#define set_wps()           gpio_put(GPIO_WPS,true)     // 5V Level = WritePotect
-#define clear_wps()         gpio_put(GPIO_WPS,false)    // 0V Level = Writeable
+// WPS will be generated via inverter 74ls04 on 1541*-mainboard
+// ... thus we send the inverse here (clear_wps = "1" on WPS)
+#define clear_wps()          gpio_set_dir(GPIO_WPS,GPIO_IN)    // HiZ
+#define set_wps()           {gpio_set_dir(GPIO_WPS,GPIO_OUT);gpio_put(GPIO_WPS,false);}   // pull low
 
 #define get_motor_status()  gpio_get(GPIO_MTR)
 
@@ -89,10 +95,11 @@ FILINFO     file_entry;
 FILINFO     fb_dir_entry[LCD_LINE_COUNT];
 //
 //
-#define INPUT_DEBOUNCE_TIME (200)
+#define ROTARY_DEBOUNCE_TIME    (200)
+#define BUTTON_DEBOUNCE_TIME    (100)
+
 alarm_id_t input_debounce_alarm = 0;
-
-
+// timer_t key_longpress_timer;
 
 volatile uint16_t akt_track_pos = 0;
 

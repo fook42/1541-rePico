@@ -98,6 +98,10 @@ void lcd_generatechar( const uint8_t code, const uint8_t *data );
 void lcd_command( const uint8_t data );
 
 ////////////////////////////////////////////////////////////////////////////////
+// set "bright" mode or "light" mode for 128x64 display
+void lcd_setbright( bool bright_on );
+
+////////////////////////////////////////////////////////////////////////////////
 // LCD Befehle und Argumente.
 // Zur Verwendung in lcd_command
 
