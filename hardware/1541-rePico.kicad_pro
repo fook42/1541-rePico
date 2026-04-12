@@ -48,7 +48,7 @@
         "silk_text_thickness": 0.1,
         "silk_text_upright": false,
         "zones": {
-          "min_clearance": 0.5
+          "min_clearance": 0.3
         }
       },
       "diff_pair_dimensions": [],
@@ -629,6 +629,14 @@
       "version": 1
     },
     "net_format_name": "",
+    "ngspice": {
+      "fix_include_paths": true,
+      "meta": {
+        "version": 0
+      },
+      "model_mode": 4,
+      "workbook_filename": ""
+    },
     "page_layout_descr_file": "",
     "plot_directory": "",
     "space_save_all_events": true,
@@ -649,6 +657,38 @@
     [
       "00000000-0000-0000-0000-000055f9b22c",
       "VIA 6522 Sockel"
+    ],
+    [
+      "e070540c-2fe6-4eed-9fce-aff92b479d93",
+      "BSS138_1"
+    ],
+    [
+      "e62564d5-f813-4dec-84af-d3968973aa80",
+      "BSS138_2"
+    ],
+    [
+      "885ec6c8-2664-4471-9335-f467a1d279c9",
+      "BSS138_3"
+    ],
+    [
+      "f20b0aa4-1a90-4ba7-a2da-30bf2186b969",
+      "BSS138_4"
+    ],
+    [
+      "a729e1c9-4b00-4d67-b80f-a63a23c3e869",
+      "BSS138_5"
+    ],
+    [
+      "a8e98cbc-6eab-422c-ab89-20b6dfe10445",
+      "BSS138_6"
+    ],
+    [
+      "8950ad57-04af-4481-9678-ce73b3c1b651",
+      "BSS138_7"
+    ],
+    [
+      "246fc3b7-a537-41dd-a740-86b07c815380",
+      "BSS138_8"
     ]
   ],
   "text_variables": {}
