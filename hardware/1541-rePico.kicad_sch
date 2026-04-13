@@ -6,7 +6,7 @@
 	(paper "A4")
 	(title_block
 		(title "1541-rePico")
-		(date "2026-04-12")
+		(date "2026-04-13")
 		(rev "1.6")
 	)
 	(lib_symbols
