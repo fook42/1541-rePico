@@ -59,6 +59,6 @@ t.b.d.
 some basics about disk-image-formats can be found here: 
 <https://ist.uwaterloo.ca/~schepers/formats.html>
 
-focus on [D64](/docs/D64.TXT) and [G64](/docs/G64.TXT)
+focus on [D64](/doc/D64.TXT) and [G64](/doc/G64.TXT)
 
 
