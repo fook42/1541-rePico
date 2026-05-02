@@ -3,7 +3,7 @@ replacement of analog-part of Commodore 1541-Floppy devices based on Pi-Pico(2)
 
 ## preface ##
 this project was derived from the original 1541-rebuild from Thorsten Kattanek (https://github.com/ThKattanek/1541-rebuild) !
-parts of his code was taken from there and adopted for Raspberry Pico and modified to handle disk images differently. Thanks!
+parts of his code were taken from there and adopted for Raspberry Pico and modified to handle disk images differently. Thanks!
 
 
 ## how to build ##
@@ -48,5 +48,17 @@ picotool load -t uf2 1541-rePico.uf2 -x -f
 ```
 
 
+# documentation #
+
+## project documentation ##
+
+t.b.d.
+
+## supported disk formats ##
+
+some basics about disk-image-formats can be found here: 
+<https://ist.uwaterloo.ca/~schepers/formats.html>
+
+focus on [D64](/docs/D64.TXT) and [G64](/docs/G64.TXT)
 
 
