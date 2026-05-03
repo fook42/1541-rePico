@@ -56,9 +56,19 @@ t.b.d.
 
 ## supported disk formats ##
 
-some basics about disk-image-formats can be found here: 
+currently D64 and G64 disk images are supported
+currently [D64](/doc/D64.TXT) and [G64](/doc/G64.TXT) are supported as for reading and writing.
+additionaly a small tool [conv_x64](/tools) is provided that allows easy conversion from one to the other on you linux-pc.
+
+## Pictures ##
+
+impressions of current setup and PCB can be found [here](/doc/pictures).
+
+## Links ##
+
+- great collection of basics about disk-image-formats can be found here: 
 <https://ist.uwaterloo.ca/~schepers/formats.html>
 
-focus on [D64](/doc/D64.TXT) and [G64](/doc/G64.TXT)
-
+- forum64 project discussion thread (base of 1541-rebuild and 1541-rePico)
+<https://www.forum64.de/index.php?thread/59884-laufwerk-der-1541-emulieren>
 
