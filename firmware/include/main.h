@@ -28,6 +28,7 @@ void filebrowser_update(uint8_t key_code);
 void filebrowser_refresh(void);
 
 void infomode_update(void);
+void insert_menu_image(void);
 
 uint16_t get_dir_entry_count(void);
 uint16_t seek_to_dir_entry(uint16_t entry_num);

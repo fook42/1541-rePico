@@ -28,6 +28,7 @@
 #include "gui_constants.h"
 #include "globals.h"
 #include "rw_routines.h"
+#include "menu_image.h"
 
 #include "hw_config.h"
 #include "f_util.h"
@@ -152,6 +153,8 @@ int main()
     display_home();
 
     set_gui_mode(GUI_MENU_MODE);
+
+    insert_menu_image();
 
     while (true) {
         check_stepper_signals();
@@ -609,6 +612,62 @@ void show_start_message(void)
     display_string(disp_firmwaretxt_s);
     display_string(VERSION);
     display_setbright(true);
+}
+
+void insert_menu_image(void)
+{
+    fr = mount_sdcard();
+    if (FR_OK == fr)
+    {
+        f_closedir(&dir_object);
+
+        char pattern[] = {"*"};
+        char path[] = {""};
+
+        dir_object.pat = pattern;           /* Save pointer to pattern string */
+        fr = f_opendir(&dir_object, path);  /* Open the target directory */
+
+        if(FR_OK == fr)
+        {
+            send_byte_ready = false;         // disable VIA transfer
+
+            generate_empty_image('9','9');
+            generate_menu_bam("REPICO IMAGES",'9','9');
+            generate_menu_image(&dir_object);
+            convert_track2gcr(DIRECTORY_TRACK,'9','9');
+
+            akt_track_pos = 0;
+            selected_track = (INIT_TRACK << 1);
+            akt_half_track = selected_track;
+
+            send_byte_ready = true;         // enable VIA transfer
+            is_image_mount = true;
+            num_max_tracks = MAX_TRACKS;
+
+            enable_write_protection();      // this is the default
+
+            send_disk_change();
+
+            start_bytetimer(akt_half_track);    // start the track-spinning
+        }
+    } else {
+        display_clear();
+        display_home();
+        display_string("f_mount error:");
+        display_data(fr+'A');
+        const char* error_txt=FRESULT_str(fr);
+        size_t err_str_len=strlen(error_txt);
+        uint8_t err_str_offset=0;
+        do
+        {
+            display_setcursor(0, 1);
+            display_print(error_txt, err_str_offset++, 16);
+            sleep_ms(500);
+        }
+        while ((err_str_offset+15)<err_str_len);
+        while(irq_key_value != KEY2_DOWN) {};
+        irq_key_value = NO_KEY;
+    }
 }
 
 /////////////////////////////////////////////////////////////////////
