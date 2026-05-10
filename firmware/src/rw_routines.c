@@ -420,6 +420,7 @@ void convert_d64track2gcr(uint8_t track_nr, uint8_t image_id1, uint8_t image_id2
 
     for(uint8_t sector_nr=0; sector_nr < num_of_sectors; ++sector_nr)
     {
+        uint8_t old_byte0 = current_sector[0];
         current_sector[0] = 0x07;                   // data-marker for all sectors
 
         P[0] = GCR_SYNCMARK;								// SYNC
@@ -477,7 +478,7 @@ void convert_d64track2gcr(uint8_t track_nr, uint8_t image_id1, uint8_t image_id2
         // GCR Bytes als Lücken auffüllen (sorgt für eine Gleichverteilung)
         memset(P, 0x55, gap_size);
         P += gap_size;
-
+        current_sector[0] = old_byte0;
         current_sector += 256;
     }
     g64_tracklen[track_nr]=(uint16_t) (P - g64_tracks[track_nr]);
