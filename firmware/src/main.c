@@ -631,10 +631,10 @@ void insert_menu_image(void)
         {
             send_byte_ready = false;         // disable VIA transfer
 
-            generate_empty_image('9','9');
-            generate_menu_bam("REPICO IMAGES",'9','9');
+            generate_empty_image(0x32,0x30);
+            generate_menu_bam("REPICO IMAGES",0x3032,0x3632);
             generate_menu_image(&dir_object);
-            convert_track2gcr(DIRECTORY_TRACK,'9','9');
+            convert_d64track2gcr(DIRECTORY_TRACK,0x32,0x30);
 
             akt_track_pos = 0;
             selected_track = (INIT_TRACK << 1);

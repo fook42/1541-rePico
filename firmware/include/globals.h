@@ -23,6 +23,7 @@
 #define INIT_TRACK      DIRECTORY_TRACK
 // offset inside directory track of ID1+ID2
 #define DIR_ID_OFFSET   (0xA2)
+#define DIR_DOSTYPE_OFFSET (0xA5)
 
 #define MAX_TRACKS      (42)
 #define NUM_SPEEDZONES  (4)
