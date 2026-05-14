@@ -9,7 +9,6 @@
 #include "ff.h"
 #include "globals.h"
 
-
 // functions
 int64_t input_debounce_callback(alarm_id_t id, void *user_data);
 
@@ -28,6 +27,7 @@ void filebrowser_update(uint8_t key_code);
 void filebrowser_refresh(void);
 
 void infomode_update(void);
+void insert_menu_image(void);
 
 uint16_t get_dir_entry_count(void);
 uint16_t seek_to_dir_entry(uint16_t entry_num);

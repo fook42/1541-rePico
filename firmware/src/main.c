@@ -28,6 +28,7 @@
 #include "gui_constants.h"
 #include "globals.h"
 #include "rw_routines.h"
+#include "menu_image.h"
 
 #include "hw_config.h"
 #include "f_util.h"
@@ -153,11 +154,8 @@ int main()
 
     set_gui_mode(GUI_MENU_MODE);
 
-<<<<<<< Updated upstream
-=======
     //insert_menu_image();
  
->>>>>>> Stashed changes
     while (true) {
         check_stepper_signals();
         update_gui();
@@ -619,8 +617,6 @@ void show_start_message(void)
     display_setbright(true);
 }
 
-<<<<<<< Updated upstream
-=======
 void insert_menu_image(void)
 {
     fr = mount_sdcard();
@@ -691,7 +687,6 @@ void insert_menu_image(void)
     }
 }
 
->>>>>>> Stashed changes
 /////////////////////////////////////////////////////////////////////
 
 void infomode_update(void)
