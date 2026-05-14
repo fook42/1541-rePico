@@ -153,6 +153,11 @@ int main()
 
     set_gui_mode(GUI_MENU_MODE);
 
+<<<<<<< Updated upstream
+=======
+    //insert_menu_image();
+ 
+>>>>>>> Stashed changes
     while (true) {
         check_stepper_signals();
         update_gui();
@@ -399,6 +404,9 @@ void check_menu_events(const uint16_t menu_event)
                 /// Main Menü
 
                 /// Image Menü
+                case M_MENU_IMAGE:
+                    insert_menu_image();
+                    break;
                 case M_LOAD_IMAGE:
                     fr = mount_sdcard();
                     display_clear();
@@ -611,6 +619,79 @@ void show_start_message(void)
     display_setbright(true);
 }
 
+<<<<<<< Updated upstream
+=======
+void insert_menu_image(void)
+{
+    fr = mount_sdcard();
+    if (FR_OK == fr)
+    {
+        f_closedir(&dir_object);
+
+        char pattern[] = {"*"};
+        char path[] = {""};
+
+        dir_object.pat = pattern;           /* Save pointer to pattern string */
+        fr = f_opendir(&dir_object, path);  /* Open the target directory */
+
+        if(FR_OK == fr)
+        {
+            send_byte_ready = false;         // disable VIA transfer
+
+            uint8_t id_buffer[]={" F00K"};      // disk-id
+            id1 = id_buffer[0];
+            id2 = id_buffer[1];
+            generate_empty_image(id1,id2);
+
+            uint16_t sectors = generate_menu_file(&dir_object, MENU_TRACK, 10);
+            convert_d64track2gcr(MENU_TRACK,id1,id2);
+
+            memset(d64_sector_puffer, 0, sizeof(d64_sector_puffer));
+            strcpy(image_filename, "REPICO IMAGES");
+            generate_menu_bam(image_filename, id_buffer);
+            // create a file-entry in the directory...
+            generate_directory_entry("DATAFILE", 0x82, MENU_TRACK,0,sectors);
+            convert_d64track2gcr(DIRECTORY_TRACK,id1,id2);
+
+            akt_track_pos = 0;
+            selected_track = (INIT_TRACK << 1);
+            akt_half_track = selected_track;
+
+            send_byte_ready = true;         // enable VIA transfer
+            is_image_mount = true;
+            num_max_tracks = MAX_TRACKS;
+
+            disable_write_protection();      // we need to be able to receive the answer of menu-selector as "write"
+            
+            send_disk_change();
+
+            start_bytetimer(akt_half_track);    // start the track-spinning
+
+            menu_set_entry_var1(&image_menu, M_WP_IMAGE, floppy_wp);
+
+            set_gui_mode(GUI_INFO_MODE);
+        }
+    } else {
+        display_clear();
+        display_home();
+        display_string("f_mount error:");
+        display_data(fr+'A');
+        const char* error_txt=FRESULT_str(fr);
+        size_t err_str_len=strlen(error_txt);
+        uint8_t err_str_offset=0;
+        do
+        {
+            display_setcursor(0, 1);
+            display_print(error_txt, err_str_offset++, 16);
+            sleep_ms(500);
+        }
+        while ((err_str_offset+15)<err_str_len);
+        while(irq_key_value != KEY2_DOWN) {};
+        irq_key_value = NO_KEY;
+    }
+}
+
+>>>>>>> Stashed changes
 /////////////////////////////////////////////////////////////////////
 
 void infomode_update(void)
