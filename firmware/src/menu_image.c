@@ -13,13 +13,13 @@
 
 #define MAX_DIR_ENTRIES (128)
 
-void generate_empty_image(uint8_t image_id1, uint8_t image_id2)
+void generate_empty_image(uint8_t image_id1, uint8_t image_id2, uint8_t track_number)
 {
     memset(g64_jumptable,     0, sizeof(g64_jumptable));
     memset(g64_speedtable,    0, sizeof(g64_speedtable));
     memset(d64_sector_puffer, 0, sizeof(d64_sector_puffer));
 
-    for(uint8_t track_nr=0; track_nr<G64_TRACKCOUNT; ++track_nr)
+    for(uint8_t track_nr=0; track_nr<track_number; ++track_nr)
     {
         g64_jumptable[track_nr*2]  = (uint32_t) (G64_HEADERSIZE+track_nr*(G64_TRACKSIZE+sizeof(g64_tracklen[0])));
         g64_speedtable[track_nr*2] = (uint32_t) (g64_speedzones[d64_track_zone[track_nr]]);
@@ -28,13 +28,13 @@ void generate_empty_image(uint8_t image_id1, uint8_t image_id2)
     }
 }
 
-void generate_menu_bam(char* image_name, uint8_t* image_id_buffer)
+void generate_bam(char* image_name, uint8_t* image_id_buffer)
 {
     uint8_t* P = &d64_sector_puffer[1];
 
     memset(P, 0, 256);
-    // P[0]=DIRECTORY_TRACK+1;  // we fill this in, when populating the directory
-    // P[1]=0x01;
+    P[0]=DIRECTORY_TRACK+1;  // we fill this in, when populating the directory
+    P[1]=0x01;
     P[2]='A'; // DOS version = 0x41
 
     uint8_t j=0;
@@ -55,18 +55,19 @@ void generate_menu_bam(char* image_name, uint8_t* image_id_buffer)
 void generate_directory_entry(uint8_t* filename, uint8_t filetype, uint8_t des_track, uint8_t des_sector, uint16_t size)
 {
     // assumption: d64_sector_puffer holds entire DIRECTORY_TRACK 18!!
-    uint16_t    dir_sector_nr=0;
     uint8_t*    P;
     uint8_t*    dir_sector_P = &d64_sector_puffer[1];
 
     uint8_t i=0;
 
-    dir_sector_nr++;
-    dir_sector_P[0]=DIRECTORY_TRACK+1;
-    dir_sector_P[1]=dir_sector_nr;
     dir_sector_P += D64_SECTOR_SIZE;
     P = dir_sector_P;
-    memset(P, 0, 256);
+
+    while (P[2]!=0)
+    {
+        P+=0x20;
+    }  // skip existing entries
+
     P=&P[2]; // skip the "next-sector"-pointer
 
     P[0]=filetype;      // 0x82=PRG
@@ -181,7 +182,51 @@ uint16_t generate_menu_file(DIR* dir_obj, const uint8_t dest_track, const uint8_
     }
     while(true);
     file_sector_P[0]=0;
-    file_sector_P[1]=pos-2;
+    file_sector_P[1]=pos-1;
 
     return sector_amount;
+}
+
+size_t buffer_to_track(uint8_t* buffer, size_t buffer_len, uint8_t des_track, uint8_t* last_sector)
+{
+    size_t      remaining_size = buffer_len;
+    size_t      copy_size;
+    uint8_t*    Dest_P;
+    uint8_t*    Buffer_P = buffer;
+    uint8_t     sector_interleave;
+    const uint8_t num_of_sectors = d64_sector_count[d64_track_zone[des_track]];
+    uint8_t     current_sector, next_sector = 0;
+
+    sector_interleave = (d64_track_zone[des_track] == 2) ? 11 : 10; // set interleave to 10 by default, 11 for 18sector-tracks
+
+    memset(d64_sector_puffer, 0, sizeof(d64_sector_puffer));
+
+    do
+    {
+        current_sector = next_sector;
+        Dest_P = &d64_sector_puffer[1+current_sector*D64_SECTOR_SIZE];
+        copy_size = D64_SECTOR_SIZE-2;
+        if (remaining_size < copy_size)
+        {
+            copy_size = remaining_size;
+        }
+        memcpy(&Dest_P[2], Buffer_P, copy_size);
+
+        remaining_size -= copy_size;
+        if (remaining_size <= 0)
+        {
+            remaining_size = 0;
+            Dest_P[1] = copy_size+1;
+            break;
+        }
+        Buffer_P += copy_size;
+
+        next_sector = (current_sector+sector_interleave)%num_of_sectors;
+        Dest_P[0] = des_track+1;
+        Dest_P[1] = next_sector;
+    } while (next_sector != 0);
+
+    *last_sector = current_sector;
+
+    return remaining_size;
 }

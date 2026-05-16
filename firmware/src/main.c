@@ -29,6 +29,7 @@
 #include "globals.h"
 #include "rw_routines.h"
 #include "menu_image.h"
+#include "selector.h"
 
 #include "hw_config.h"
 #include "f_util.h"
@@ -637,16 +638,42 @@ void insert_menu_image(void)
             uint8_t id_buffer[]={" F00K"};      // disk-id
             id1 = id_buffer[0];
             id2 = id_buffer[1];
-            generate_empty_image(id1,id2);
+            num_max_tracks = 35;// MAX_TRACKS;
+            generate_empty_image(id1,id2,num_max_tracks);
 
-            uint16_t sectors = generate_menu_file(&dir_object, MENU_TRACK, 10);
+            // generates menu-file..
+            uint16_t menu_sectors = generate_menu_file(&dir_object, MENU_TRACK, 10);
             convert_d64track2gcr(MENU_TRACK,id1,id2);
+
+            // generates selector_file..
+            size_t buffer_size = menu_prg_len;
+            size_t buffer_left;
+            uint8_t file_track = SELECTOR_TRACK, next_file_track;
+            uint8_t* file_buffer_pointer = menu_prg;
+            uint8_t prev_sector;
+            do
+            {
+                buffer_left = buffer_to_track(file_buffer_pointer, buffer_size, file_track, &prev_sector);
+                if (buffer_left>0)
+                {
+                    next_file_track = (file_track+1)%num_max_tracks;
+                    file_buffer_pointer += (buffer_size-buffer_left);
+                    buffer_size = buffer_left;
+                    // last sector ?? -> update last sector-chain-pointer to new "file_track,0"...
+                    d64_sector_puffer[1+prev_sector*D64_SECTOR_SIZE]=next_file_track+1;
+                    d64_sector_puffer[1+prev_sector*D64_SECTOR_SIZE+1]=0;
+                }
+                convert_d64track2gcr(file_track, id1, id2);
+                file_track = next_file_track;
+                /* code */
+            } while (buffer_left>0);
 
             memset(d64_sector_puffer, 0, sizeof(d64_sector_puffer));
             strcpy(image_filename, "REPICO IMAGES");
-            generate_menu_bam(image_filename, id_buffer);
+            generate_bam(image_filename, id_buffer);
             // create a file-entry in the directory...
-            generate_directory_entry("DATAFILE", 0x82, MENU_TRACK,0,sectors);
+            generate_directory_entry("SELECTOR", 0x82, SELECTOR_TRACK,0,((uint16_t) (menu_prg_len/253))+1);
+            generate_directory_entry("DATAFILE", 0x82, MENU_TRACK,0,menu_sectors);
             convert_d64track2gcr(DIRECTORY_TRACK,id1,id2);
 
             akt_track_pos = 0;
@@ -655,7 +682,7 @@ void insert_menu_image(void)
 
             send_byte_ready = true;         // enable VIA transfer
             is_image_mount = true;
-            num_max_tracks = MAX_TRACKS;
+            num_max_tracks = 35;// MAX_TRACKS;
 
             disable_write_protection();      // we need to be able to receive the answer of menu-selector as "write"
             

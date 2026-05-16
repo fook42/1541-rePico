@@ -33,11 +33,21 @@ project(1541-rePico C CXX ASM)
 # Initialise the Raspberry Pi Pico SDK
 pico_sdk_init()
 
+add_custom_target(GenSelector
+  COMMAND echo \"\#ifndef _MENU_PRG_H_\\n\#define _MENU_PRG_H_\" > ${PROJECT_SOURCE_DIR}/include/selector.h
+  COMMAND xxd -i -n \"menu_prg\" ${CMAKE_CURRENT_SOURCE_DIR}/FileSelector/menu.prg >> ${PROJECT_SOURCE_DIR}/include/selector.h
+  COMMAND echo \"\#endif\" >> ${PROJECT_SOURCE_DIR}/include/selector.h
+)
+
+add_executable(1541-rePico)
+
+add_dependencies(1541-rePico GenSelector)
+
 # Add executable. Default name is the project name, version 0.1
 file(GLOB_RECURSE mysources  CONFIGURE_DEPENDS "src/*.c")
 file(GLOB_RECURSE myincludes CONFIGURE_DEPENDS "include/*.h")
 
-add_executable(1541-rePico ${mysources} ${myincludes})
+target_sources(1541-rePico PUBLIC ${mysources} ${myincludes})
 
 pico_set_program_name(1541-rePico "1541-rePico")
 pico_set_program_version(1541-rePico "0.1")
