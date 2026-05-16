@@ -27,6 +27,8 @@ void filebrowser_update(uint8_t key_code);
 void filebrowser_refresh(void);
 
 void infomode_update(void);
+
+void handle_selector_image(void);
 void insert_menu_image(void);
 
 uint16_t get_dir_entry_count(void);
@@ -41,6 +43,8 @@ void stepper_dec(void);
 void init_motor(void);
 void init_control_signals(void);
 void init_soe_gatearray(void);
+
+uint8_t open_dir_entry(FILINFO od_file_entry);
 
 void open_disk_image(FIL* fd, FILINFO *file_entry, uint8_t* image_type);
 void close_disk_image(FIL* fd);
@@ -133,7 +137,7 @@ uint8_t fb_line_scroll_end_begin_wait = 10;
 
 
 // floppydisk emulation
-uint8_t akt_image_type = UNDEF_IMAGE;     // 0=kein Image, 1=G64, 2=D64
+uint8_t akt_image_type = UNDEF_IMAGE;     // 0=kein Image, 1=G64, 2=D64, 3=Selector
 bool is_image_mount;
 
 bool floppy_wp = true;  // Hier wird der aktuelle WriteProtection Zustand gespeichert
@@ -149,4 +153,7 @@ alarm_id_t stepper_alarm = 0;
 
 volatile bool track_is_written   = false;
 volatile bool send_byte_ready    = true;
+
+uint8_t  track_write_nr;
+uint16_t track_write_pos;
 

@@ -155,7 +155,7 @@ int main()
 
     set_gui_mode(GUI_MENU_MODE);
 
-    insert_menu_image();
+//    insert_menu_image();
  
     while (true) {
         check_stepper_signals();
@@ -379,6 +379,10 @@ void update_gui(void)
         filebrowser_update(key_code);
         break;
 
+    case GUI_SELECTOR:
+        handle_selector_image();
+        break;
+
     default:
         break;
     }
@@ -404,7 +408,7 @@ void check_menu_events(const uint16_t menu_event)
 
                 /// Image Menü
                 case M_MENU_IMAGE:
-                    insert_menu_image();
+                    set_gui_mode(GUI_SELECTOR);
                     break;
                 case M_LOAD_IMAGE:
                     fr = mount_sdcard();
@@ -600,6 +604,11 @@ void set_gui_mode(const uint8_t gui_mode)
         case GUI_FILE_BROWSER:
             filebrowser_refresh();
             break;
+
+        case GUI_SELECTOR:
+            handle_selector_image();
+            break;
+
         default:
             break;
     }
@@ -616,6 +625,83 @@ void show_start_message(void)
     display_string(disp_firmwaretxt_s);
     display_string(VERSION);
     display_setbright(true);
+}
+
+/////////////////////////////////////////////////////////////////////
+
+void handle_selector_image(void)
+{
+    static uint32_t select_wait_counter0 = 0;
+    const uint8_t busy_txt[]={'-','+'};
+    static uint8_t busy_count=0;
+
+    if (SELECTOR_IMAGE != akt_image_type)
+    {
+        // insert the virtual menu-image
+        insert_menu_image();
+        display_clear();
+        display_home();
+        display_string("Select DiskImage");
+    } else {
+        // we have the selector inserted.. now handle the selection
+        if (track_is_written)
+        {
+            if (DIRECTORY_TRACK == track_write_nr)
+            {
+                // something was changed on the image.. lets fetch the image-number
+                display_clear();
+                display_home();
+                display_string("Selected:");
+
+                // simple approach: convert the complete track, all 19 sectors.. then select sector 2 and read 2 bytes
+                convert_gcr2d64track(DIRECTORY_TRACK);
+                uint16_t image_nr = *((uint16_t*) &d64_sector_puffer[1+2*D64_SECTOR_SIZE]);
+                display_data((uint8_t)((image_nr>>12)&0x0F)+'0');
+                display_data((uint8_t)((image_nr>>8) &0x0F)+'0');
+                display_data((uint8_t)((image_nr>>4) &0x0F)+'0');
+                display_data((uint8_t)((image_nr)    &0x0F)+'0');
+
+                seek_to_dir_entry(image_nr-1);
+
+                FILINFO hsi_dir_entry;
+                fr = f_readdir(&dir_object, &hsi_dir_entry);
+                if((0 == hsi_dir_entry.fname[0]) || (FR_OK != fr))
+                {
+                    //
+                } else {
+                    int odr_return = open_dir_entry(hsi_dir_entry);
+                    if (0 == odr_return)
+                    {
+                        // no valid image available / or we jumped into a folder
+                        is_image_mount=false;
+                        //rebuild the data-file
+                        insert_menu_image();
+                    } else
+                    {
+                        set_gui_mode(GUI_INFO_MODE);
+                    }
+                }
+
+                // with track_write_pos .. we may have the start of a sector to be decoded...
+                // only one sector needs to be decoded (ideally)
+
+            }
+            track_is_written = false;
+        } else {
+            if (0 == select_wait_counter0)
+            {
+                display_setcursor(0,1);
+                display_data(busy_txt[busy_count]);
+            }
+            if (select_wait_counter0 >= (uint32_t)100000)
+            {
+                busy_count = (busy_count+1)%(sizeof(busy_txt)/sizeof(busy_txt[0]));
+                select_wait_counter0 = 0;
+            } else {
+                select_wait_counter0++;
+            }
+        }
+    }
 }
 
 void insert_menu_image(void)
@@ -683,6 +769,8 @@ void insert_menu_image(void)
             send_byte_ready = true;         // enable VIA transfer
             is_image_mount = true;
             num_max_tracks = 35;// MAX_TRACKS;
+            akt_image_type = SELECTOR_IMAGE;    // to identify the write-back-channel handling
+            track_is_written = false;
 
             disable_write_protection();      // we need to be able to receive the answer of menu-selector as "write"
             
@@ -691,8 +779,6 @@ void insert_menu_image(void)
             start_bytetimer(akt_half_track);    // start the track-spinning
 
             menu_set_entry_var1(&image_menu, M_WP_IMAGE, floppy_wp);
-
-            set_gui_mode(GUI_INFO_MODE);
         }
     } else {
         display_clear();
@@ -768,7 +854,6 @@ void infomode_update(void)
 void filebrowser_update(uint8_t key_code)
 {
     static uint32_t fbup_wait_counter0 = 0;
-    int8_t last_track_read;
 
     switch (key_code)
     {
@@ -803,68 +888,16 @@ void filebrowser_update(uint8_t key_code)
         }
         break;
     case KEY2_UP:
-        stop_bytetimer();
-        send_byte_ready = false;      // this blocks current transfers to the VIA
-
-        close_disk_image(&fd);
-
-        if(fb_dir_entry[fb_cursor_pos].fattrib & AM_DIR)
+        //fn open dir_entry...
+        int odr_return = open_dir_entry(fb_dir_entry[fb_cursor_pos]);
+        if (0 == odr_return)
         {
-            // Eintrag ist ein Verzeichnis
-            f_chdir(fb_dir_entry[fb_cursor_pos].fname);
-            fb_cursor_pos = 0;
-            fb_window_pos = 0;
+            // no valid image available / or we jumped into a folder
+            is_image_mount=false;
             filebrowser_refresh();
-            return;
-        }
-
-        open_disk_image(&fd, &fb_dir_entry[fb_cursor_pos], &akt_image_type);
-
-        if(UNDEF_IMAGE == akt_image_type)
+        } else
         {
-            display_clear();
-            display_setcursor(disp_unsupportedimg_p);
-            display_string(disp_unsupportedimg_s);
-            sleep_ms(1000);
-            fd.obj.fs = 0;
-        }
-
-        if(0 == fd.obj.fs)
-        {
-            is_image_mount = false;
-            filebrowser_refresh();
-            return;
-        }
-
-        strcpy(image_filename, fb_dir_entry[fb_cursor_pos].fname);
-
-        //new: read complete image
-        if ((last_track_read=read_disk(&fd, akt_image_type))>0)
-        {
-            close_disk_image(&fd);  // we can close the image - everything needed is in ram now.
-            akt_track_pos = 0;
-
-            send_byte_ready = true;         // enable VIA transfer
-            is_image_mount = true;
-            num_max_tracks = last_track_read+1;
-
-            enable_write_protection();      // this is the default
-            if (0 == (fb_dir_entry[fb_cursor_pos].fattrib & AM_RDO))
-            {
-                disable_write_protection();
-            }
-
-            send_disk_change();
-
-            start_bytetimer(akt_half_track);    // start the track-spinning
-
-            menu_set_entry_var1(&image_menu, M_WP_IMAGE, floppy_wp);
-
             set_gui_mode(GUI_INFO_MODE);
-        } else {
-            close_disk_image(&fd);
-            akt_image_type = UNDEF_IMAGE;
-            is_image_mount = false;
         }
 
         break;
@@ -911,6 +944,72 @@ void filebrowser_update(uint8_t key_code)
         }
     }
 }
+
+uint8_t open_dir_entry(FILINFO od_file_entry)
+{
+    int8_t last_track_read;
+
+    stop_bytetimer();
+    send_byte_ready = false;      // this blocks current transfers to the VIA
+    close_disk_image(&fd);
+
+    if(od_file_entry.fattrib & AM_DIR)
+    {
+        // Eintrag ist ein Verzeichnis
+        f_chdir(od_file_entry.fname);
+        fb_cursor_pos = 0;
+        fb_window_pos = 0;
+        return 0;
+    }
+
+    open_disk_image(&fd, &od_file_entry, &akt_image_type);
+
+    if(UNDEF_IMAGE == akt_image_type)
+    {
+        display_clear();
+        display_setcursor(disp_unsupportedimg_p);
+        display_string(disp_unsupportedimg_s);
+        sleep_ms(1000);
+        fd.obj.fs = 0;
+    }
+
+    if(0 == fd.obj.fs)
+    {
+        return 0;
+    }
+
+    strcpy(image_filename, od_file_entry.fname);
+
+    // read complete image
+    if ((last_track_read=read_disk(&fd, akt_image_type))>0)
+    {
+        close_disk_image(&fd);  // we can close the image - everything needed is in ram now.
+        akt_track_pos = 0;
+
+        send_byte_ready = true;         // enable VIA transfer
+        is_image_mount = true;
+        num_max_tracks = last_track_read+1;
+
+        enable_write_protection();      // this is the default
+        if (0 == (od_file_entry.fattrib & AM_RDO))
+        {
+            disable_write_protection();
+        }
+
+        send_disk_change();
+
+        start_bytetimer(akt_half_track);    // start the track-spinning
+
+        menu_set_entry_var1(&image_menu, M_WP_IMAGE, floppy_wp);
+    } else {
+        close_disk_image(&fd);
+        akt_image_type = UNDEF_IMAGE;
+        is_image_mount = false;
+        return 0;
+    }
+    return 1;
+}
+
 
 /////////////////////////////////////////////////////////////////////
 // refresh filebrowser view:
@@ -1042,21 +1141,17 @@ uint16_t seek_to_dir_entry(uint16_t entry_num)
 
 void open_disk_image(FIL* fd, FILINFO *file_entry, uint8_t* image_type)
 {
-    const int namelen = strlen(file_entry->fname);
+    size_t namelen = strlen(file_entry->fname);
     if(namelen < 4) return;
 
     char extension[5];
-    int i;
     FRESULT fr = FR_NO_FILE;
 
     // Extension überprüfen --> g64 oder d64
-    strcpy(extension, file_entry->fname+(namelen - 4));
-
-    i=0;
-    while(extension[i] != '\0')
+    namelen -= 4; // move copy-pointer 4 backwards
+    for (int i=0; i<5; i++)
     {
-        extension[i] = tolower(extension[i]);
-        ++i;
+        extension[i] = tolower(file_entry->fname[namelen+i]);
     }
 
     if(!strcmp(extension,".g64"))
@@ -1498,6 +1593,11 @@ bool repeating_timer_callback(__unused struct repeating_timer *t)
             // Daten aus Ringpuffer senden wenn Motor an
             if(get_motor_status())
             {
+                if (!track_is_written)
+                {
+                    track_write_nr  = akt_half_track>>1;
+                    track_write_pos = akt_track_pos;
+                }
                 // Wenn Motor läuft
                 g64_tracks[akt_half_track>>1][akt_track_pos++] = akt_gcr_byte;  // Nächstes GCR Byte schreiben
                 track_is_written = true;

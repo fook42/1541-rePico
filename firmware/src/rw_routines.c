@@ -485,3 +485,123 @@ void convert_d64track2gcr(uint8_t track_nr, uint8_t image_id1, uint8_t image_id2
 
     memset(P, 0x55, G64_TRACKSIZE-(P - g64_tracks[track_nr]));
 }
+
+void convert_gcr2d64track(uint8_t track_nr)
+{
+    uint8_t* P = g64_tracks[track_nr];
+    uint8_t* P_end = &g64_tracks[track_nr][g64_tracklen[track_nr]];
+    uint8_t* Out_P;
+    uint8_t sector_nr = d64_sector_count[d64_track_zone[track_nr]];
+    uint8_t temp;
+    int32_t offset = 0;
+
+    uint8_t convert_puffer[5];
+
+    // find first track-marker .. FF FF 52 ... FF FF 55
+    do
+    {
+        // tricky thing.. while searching for first track-marker
+        //  copy all "wrapped" bytes of last sector to the end again.
+        while((temp = *P++) != GCR_SYNCMARK) { *P_end++ = temp; };
+        if (*P++ == GCR_SYNCMARK)
+        {
+            while(*P == GCR_SYNCMARK) { ++P; };
+            if (*P == 0x52)
+            {
+                break;
+            }
+        }
+    } while(1);
+    ConvertFromGCR(P, convert_puffer);
+    if ((track_nr+1) != convert_puffer[3])
+    {
+        return;
+    }
+    offset = (int32_t) convert_puffer[2]*D64_SECTOR_SIZE;
+    P += 5; // skip the header
+    P += 5; // skip the header-gap-bytes
+
+    // find sector-marker
+    do
+    {
+        while(*P++ != GCR_SYNCMARK) { };
+        if (*P++ == GCR_SYNCMARK)
+        {
+            while(*P == GCR_SYNCMARK) { ++P; };
+            if (*P == 0x55)
+            {
+                break;
+            }
+        }
+    } while(1);
+    // ----
+    convert_puffer[0] = d64_sector_puffer[offset];   // save first byte of the sector
+    convert_puffer[1] = d64_sector_puffer[offset+D64_SECTOR_SIZE+1];
+    convert_puffer[2] = d64_sector_puffer[offset+D64_SECTOR_SIZE+2];
+    convert_puffer[3] = d64_sector_puffer[offset+D64_SECTOR_SIZE+3];
+    Out_P = &d64_sector_puffer[offset];
+    for(int i=0; i<65; ++i)
+    {
+        ConvertFromGCR(P, Out_P);
+        P += 5;
+        Out_P += 4;
+    }
+    d64_sector_puffer[offset]=convert_puffer[0]; // restore destroyed bytes
+    d64_sector_puffer[offset+D64_SECTOR_SIZE+1] = convert_puffer[1];
+    d64_sector_puffer[offset+D64_SECTOR_SIZE+2] = convert_puffer[2];
+    d64_sector_puffer[offset+D64_SECTOR_SIZE+2] = convert_puffer[3];
+
+    for(int num=0; num<(sector_nr-1); ++num)
+    {
+        // find track-marker .. FF FF 52 ... FF FF 55
+        do
+        {
+            while(*P++ != GCR_SYNCMARK) { };
+            if (*P++ == GCR_SYNCMARK)
+            {
+                while(*P == GCR_SYNCMARK) { ++P; };
+                if (*P == 0x52)
+                {
+                    break;
+                }
+            }
+        } while(1);
+        ConvertFromGCR(P, convert_puffer);
+        if ((track_nr+1) != convert_puffer[3])
+        {
+            return;
+        }
+        P += 4;
+        offset = (int32_t) convert_puffer[2]*D64_SECTOR_SIZE;
+
+        // find sector-marker
+        do
+        {
+            while(*P++ != GCR_SYNCMARK) { };
+            if (*P++ == GCR_SYNCMARK)
+            {
+                while(*P == GCR_SYNCMARK) { ++P; };
+                if (*P == 0x55)
+                {
+                    break;
+                }
+            }
+        } while(1);
+        // ----
+        convert_puffer[0] = d64_sector_puffer[offset];   // save first byte of the sector
+        convert_puffer[1] = d64_sector_puffer[offset+D64_SECTOR_SIZE+1];
+        convert_puffer[2] = d64_sector_puffer[offset+D64_SECTOR_SIZE+2];
+        convert_puffer[3] = d64_sector_puffer[offset+D64_SECTOR_SIZE+3];
+        Out_P = &d64_sector_puffer[offset];
+        for(int i=0; i<65; ++i)
+        {
+            ConvertFromGCR(P, Out_P);
+            P += 5;
+            Out_P += 4;
+        }
+        d64_sector_puffer[offset]=convert_puffer[0]; // restore destroyed bytes
+        d64_sector_puffer[offset+D64_SECTOR_SIZE+1] = convert_puffer[1];
+        d64_sector_puffer[offset+D64_SECTOR_SIZE+2] = convert_puffer[2];
+        d64_sector_puffer[offset+D64_SECTOR_SIZE+2] = convert_puffer[3];
+    }
+}
