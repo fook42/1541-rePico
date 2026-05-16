@@ -21,7 +21,8 @@ const uint8_t customchars[][8] = {
                                     { 0, 0, 0, 0,31,14, 4, 0},  // Menü More Down
                                     { 0, 4, 6,31, 6, 4, 0, 0},  // Menü Position
                                     { 0,28,31,17,17,31, 0, 0},  // Directory Symbol
-                                    {15,27,17,27,31,27,27,31}   // Diskimage
+                                    {15,27,17,27,31,27,27,31},  // Diskimage
+                                    {63,63,63,63,63,63,63,63}   // Cursor
                                 };
 
 #define num_of_customchars  count_of(customchars)

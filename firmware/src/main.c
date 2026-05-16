@@ -632,7 +632,7 @@ void show_start_message(void)
 void handle_selector_image(void)
 {
     static uint32_t select_wait_counter0 = 0;
-    const uint8_t busy_txt[]={'-','+'};
+    const uint8_t busy_txt[]={display_cursor_char,' '};
     static uint8_t busy_count=0;
 
     if (SELECTOR_IMAGE != akt_image_type)
@@ -649,9 +649,8 @@ void handle_selector_image(void)
             if (DIRECTORY_TRACK == track_write_nr)
             {
                 // something was changed on the image.. lets fetch the image-number
-                display_clear();
-                display_home();
-                display_string("Selected:");
+                display_setcursor(0,1);
+                display_string("Selected: ");
 
                 // simple approach: convert the complete track, all 19 sectors.. then select sector 2 and read 2 bytes
                 convert_gcr2d64track(DIRECTORY_TRACK);
@@ -693,9 +692,9 @@ void handle_selector_image(void)
                 display_setcursor(0,1);
                 display_data(busy_txt[busy_count]);
             }
-            if (select_wait_counter0 >= (uint32_t)100000)
+            if (select_wait_counter0 >= (uint32_t)300000)
             {
-                busy_count = (busy_count+1)%(sizeof(busy_txt)/sizeof(busy_txt[0]));
+                busy_count = (busy_count+1)%count_of(busy_txt);
                 select_wait_counter0 = 0;
             } else {
                 select_wait_counter0++;
@@ -1049,7 +1048,7 @@ void filebrowser_refresh(void)
     }
 
     display_setcursor(0, fb_cursor_pos);
-    display_data(display_cursor_char);
+    display_data(display_pointer_char);
 
 
     if(fb_window_pos > 0)
