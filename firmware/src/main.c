@@ -155,7 +155,7 @@ int main()
 
     set_gui_mode(GUI_MENU_MODE);
 
-    //insert_menu_image();
+    insert_menu_image();
  
     while (true) {
         check_stepper_signals();
