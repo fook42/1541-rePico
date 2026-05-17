@@ -11,15 +11,37 @@ parts of his code were taken from there and adopted for Raspberry Pico and modif
 ### prepare tools (linux) ###
 
 ```
-sudo apt install cmake ninja-build
+sudo apt install cmake ninja-build libusb-1.0-0-dev build-essential pkg-config python3 xxd gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
 ```
 
+### pico-sdk ###
+
+from : <https://github.com/raspberrypi/pico-sdk>
+
+- clone this repo
+- create a environment variable called "PICO_SDK_PATH" which points to this repo
+- place a "export PICO_SDK_PATH= <path to your pico-sdk>" at the end of your .profile script
+- then cd into this repo-folder and initialize the mbedtls submodule (picotool mentiones this)
+
+all in one:
+```
+git clone https://github.com/raspberrypi/pico-sdk.git
+export PICO_SDK_PATH=$(pwd)/pico-sdk
+echo "export PICO_SDK_PATH=$PICO_SDK_PATH" >> ~/.profile"
+cd pico-sdk
+git submodule update --init lib/mbedtls
+```
 
 ### picotool ###
 
 from : <https://github.com/raspberrypi/picotool>
 
+- clone this repo
+- install the picotool as described in README.md and BUILDING.md file there
 
+```
+git clone https://github.com/raspberrypi/picotool.git
+```
 
 ### build steps ###
 
