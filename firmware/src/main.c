@@ -853,6 +853,7 @@ void infomode_update(void)
 void filebrowser_update(uint8_t key_code)
 {
     static uint32_t fbup_wait_counter0 = 0;
+    int odr_return = 0;
 
     switch (key_code)
     {
@@ -888,7 +889,7 @@ void filebrowser_update(uint8_t key_code)
         break;
     case KEY2_UP:
         //fn open dir_entry...
-        int odr_return = open_dir_entry(fb_dir_entry[fb_cursor_pos]);
+        odr_return = open_dir_entry(fb_dir_entry[fb_cursor_pos]);
         if (0 == odr_return)
         {
             // no valid image available / or we jumped into a folder
