@@ -6,11 +6,14 @@
  ***********************************/
 
 #include "rw_routines.h"
+#include "menu_image.h"
 #include "globals.h"
 #include "gcr.h"
 
+#define PRGFILE_TRACK (16)  // we have Tracks 0..16 to store a PRG file into
+#define SCRATCH_TRACK (18)  // we use Tracks 18..41 for reading the PRG
 
-int8_t read_disk(FIL* fd, const int image_type)
+int8_t read_disk(FIL* fd, const int image_type, FILINFO fileinfo)
 {
     uint8_t* P;
     uint8_t buffer[4];
@@ -181,10 +184,64 @@ int8_t read_disk(FIL* fd, const int image_type)
 
         case PRG_IMAGE: // PRG Datei
         {
-            // todo:
-            // create an empty disk image
-            // place "prg-file" from track 17 upwards to 0
-            // create bam & directory with 1 entry
+            uint8_t id_buffer[]={" 1541"};      // disk-id
+            id1 = id_buffer[0];
+            id2 = id_buffer[1];
+            const uint8_t num_max_tracks = MAX_TRACKS;
+            generate_empty_image(id1,id2,num_max_tracks);
+
+            // generates a prg_file starting from PRGFILE_TRACK
+            size_t buffer_size = fileinfo.fsize;
+            size_t buffer_left;
+            int8_t file_track = PRGFILE_TRACK, next_file_track;
+            uint8_t* file_buffer_pointer = g64_tracks[SCRATCH_TRACK];
+
+            fr = f_lseek(fd, 0);
+            if(FR_OK != fr)
+            {
+                break;
+            }
+            fr = f_read(fd, file_buffer_pointer, buffer_size, &bytes_read);
+            if ((FR_OK != fr) || (bytes_read!=buffer_size))
+            {
+                last_track = -bytes_read;
+                break;
+            }
+            uint8_t prev_sector;
+            do
+            {
+                buffer_left = buffer_to_track(file_buffer_pointer, buffer_size, file_track, &prev_sector);
+                if (buffer_left>0)
+                {
+                    next_file_track = file_track-1;
+                    file_buffer_pointer += (buffer_size-buffer_left);
+                    buffer_size = buffer_left;
+                    // last sector ?? -> update last sector-chain-pointer to new "file_track,0"...
+                    d64_sector_puffer[1+prev_sector*D64_SECTOR_SIZE]=next_file_track+1;
+                    d64_sector_puffer[1+prev_sector*D64_SECTOR_SIZE+1]=0;
+                }
+                convert_d64track2gcr(file_track, id1, id2);
+                file_track = next_file_track;
+                /* code */
+            } while ((buffer_left>0) && (file_track>=0));
+
+
+            memset(d64_sector_puffer, 0, sizeof(d64_sector_puffer));
+            for(uint8_t track_nr=SCRATCH_TRACK; track_nr<num_max_tracks; ++track_nr)
+            {
+                convert_d64track2gcr(track_nr, id1, id2);
+            }
+
+            generate_bam("PRG-LOADER", id_buffer);
+            // create a file-entry in the directory...
+            char FILENAME[16]={0xA0};
+            size_t namelen = strlen(fileinfo.fname)-4;  //remove the ".prg"
+            if (namelen>16) {namelen=16;}
+            memcpy(FILENAME,fileinfo.fname,namelen);
+            generate_directory_entry(FILENAME, 0x82, PRGFILE_TRACK,0,((uint16_t) (fileinfo.fsize/253))+1);
+            convert_d64track2gcr(DIRECTORY_TRACK,id1,id2);
+
+            last_track = num_max_tracks-1;
             // done
         }
         break;

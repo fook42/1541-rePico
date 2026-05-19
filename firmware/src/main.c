@@ -981,7 +981,7 @@ uint8_t open_dir_entry(FILINFO od_file_entry)
     strcpy(image_filename, od_file_entry.fname);
 
     // read complete image
-    if ((last_track_read=read_disk(&fd, akt_image_type))>0)
+    if ((last_track_read=read_disk(&fd, akt_image_type, od_file_entry ))>0)
     {
         close_disk_image(&fd);  // we can close the image - everything needed is in ram now.
         akt_track_pos = 0;
