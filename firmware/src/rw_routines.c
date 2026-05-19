@@ -179,6 +179,15 @@ int8_t read_disk(FIL* fd, const int image_type)
         }
         break;
 
+        case PRG_IMAGE: // PRG Datei
+        {
+            // todo:
+            // create an empty disk image
+            // place "prg-file" from track 17 upwards to 0
+            // create bam & directory with 1 entry
+            // done
+        }
+        break;
         default: break;
     }
     return last_track;
@@ -604,4 +613,46 @@ void convert_gcr2d64track(uint8_t track_nr)
         d64_sector_puffer[offset+D64_SECTOR_SIZE+2] = convert_puffer[2];
         d64_sector_puffer[offset+D64_SECTOR_SIZE+2] = convert_puffer[3];
     }
+}
+
+size_t buffer_to_track(uint8_t* buffer, size_t buffer_len, uint8_t track_nr, uint8_t* last_sector)
+{
+    size_t      remaining_size = buffer_len;
+    size_t      copy_size;
+    uint8_t*    Dest_P;
+    uint8_t*    Buffer_P = buffer;
+    uint8_t     current_sector, next_sector = 0;
+    const uint8_t sector_interleave = (d64_track_zone[track_nr] == 2) ? 11 : 10; // set interleave to 10 by default, 11 for 18sector-tracks
+    const uint8_t num_of_sectors = d64_sector_count[d64_track_zone[track_nr]];
+
+    memset(d64_sector_puffer, 0, sizeof(d64_sector_puffer));
+
+    do
+    {
+        current_sector = next_sector;
+        Dest_P = &d64_sector_puffer[1+current_sector*D64_SECTOR_SIZE];
+        copy_size = D64_SECTOR_SIZE-2;
+        if (remaining_size < copy_size)
+        {
+            copy_size = remaining_size;
+        }
+        memcpy(&Dest_P[2], Buffer_P, copy_size);
+
+        remaining_size -= copy_size;
+        if (remaining_size <= 0)
+        {
+            remaining_size = 0;
+            Dest_P[1] = copy_size+1;
+            break;
+        }
+        Buffer_P += copy_size;
+
+        next_sector = (current_sector+sector_interleave)%num_of_sectors;
+        Dest_P[0] = track_nr+1;
+        Dest_P[1] = next_sector;
+    } while (0 != next_sector);
+
+    *last_sector = current_sector;
+
+    return remaining_size;
 }

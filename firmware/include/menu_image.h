@@ -30,6 +30,5 @@ void generate_bam(char* image_name, uint8_t* image_id_buffer);
 void generate_directory_entry(uint8_t* filename, uint8_t filetype, uint8_t des_track, uint8_t des_sector, uint16_t size);
 uint16_t generate_menu_file(DIR* dir_obj, const uint8_t dest_track, const uint8_t sector_interleave);
 
-size_t buffer_to_track(uint8_t* buffer, size_t buffer_len, uint8_t des_track, uint8_t* last_sector);
 
 #endif

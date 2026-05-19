@@ -1172,6 +1172,15 @@ void open_disk_image(FIL* fd, FILINFO *file_entry, uint8_t* image_type)
             *image_type = D64_IMAGE;
         }
     }
+    else if(!strcmp(extension,".prg"))
+    {
+        // Laut Extension ein PRG
+        fr = f_open(fd, file_entry->fname, FA_READ);
+        if (FR_OK == fr)
+        {
+            *image_type = PRG_IMAGE;
+        }
+    }
 
     if (FR_OK != fr)
     {
