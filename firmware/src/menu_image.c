@@ -85,24 +85,30 @@ void generate_directory_entry(uint8_t* filename, uint8_t filetype, uint8_t des_t
     P[29]=(size>>8)&0xFF; // size high
 }
 
-uint16_t generate_menu_file(DIR* dir_obj, const uint8_t dest_track, const uint8_t sector_interleave)
+uint16_t generate_menu_file(DIR* dir_obj, uint8_t* dir_path, const uint8_t dest_track)
 {
     FILINFO     fb_dir_menu_entry;
     FRESULT     fr;
-    uint8_t     sector_start   = 0;
-    uint8_t     file_sector_nr = 0;
-    uint8_t     sector_amount  = 1;
 
     uint8_t*    P;
-    uint8_t*    file_sector_P  = &d64_sector_puffer[1];
-    const uint8_t num_of_sectors = d64_sector_count[d64_track_zone[dest_track]];
+    uint8_t*    file_sector_P  = g64_tracks[dest_track];
+
     char        file_extension[5]={0};
 
-    uint16_t    dir_entry=0;
-    uint8_t     pos = 4;    // skip track+sector & start-adr
+    P = file_sector_P;
+    // create file-entry header
+    *P++ = 0x01;
+    *P++ = 0x08;
 
-    file_sector_P[2]=0x01;
-    file_sector_P[3]=0x08;
+    //store current path to menu-file
+    *P++ = '/';
+    uint8_t c = *dir_path++;
+    while (c != '\0')
+    {
+        *P++ = c;
+        c = *dir_path++;
+    }
+    *P++ = 0;
 
     do
     {
@@ -111,11 +117,10 @@ uint16_t generate_menu_file(DIR* dir_obj, const uint8_t dest_track, const uint8_
         {
             break;
         }
-        dir_entry++;
 
         if(fb_dir_menu_entry.fattrib & AM_DIR)
         {
-            file_sector_P[pos] = TYPE_DIR;   // directory
+            *P++ = TYPE_DIR;   // directory
         } else {
             size_t namelen = strlen(fb_dir_menu_entry.fname);
             strcpy(file_extension, fb_dir_menu_entry.fname+(namelen - 4));
@@ -128,34 +133,21 @@ uint16_t generate_menu_file(DIR* dir_obj, const uint8_t dest_track, const uint8_
             }
             if(!strcmp(file_extension,".d64"))
             {
-                file_sector_P[pos] = TYPE_D64;   // D64 file
+                *P++ = TYPE_D64;   // D64 file
             }
             else if(!strcmp(file_extension,".g64"))
             {
-                file_sector_P[pos] = TYPE_G64;   // G64 file
+                *P++ = TYPE_G64;   // G64 file
             }
             else if(!strcmp(file_extension,".prg"))
             {
-                file_sector_P[pos] = TYPE_PRG;   // PRG file
+                *P++ = TYPE_PRG;   // PRG file
             }
             else
             {
-                file_sector_P[pos] = TYPE_UNKNOWN;// unknown file
+                *P++ = TYPE_UNKNOWN;// unknown file
             }
         }
-        if(255 == pos) {
-            sector_amount++;
-            file_sector_nr = (file_sector_nr+sector_interleave)%num_of_sectors; // for interleaving and "fast reading"
-
-            file_sector_P[0]=dest_track+1;
-            file_sector_P[1]=file_sector_nr;
-            file_sector_P = &d64_sector_puffer[1+file_sector_nr*D64_SECTOR_SIZE];
-            memset(file_sector_P, 0, 256);
-            pos=2;  // skip the sector header (track+sector or 00+length)
-        } else {
-            pos++;
-        }
-
 
         uint8_t c = 0;
         int j;
@@ -163,27 +155,13 @@ uint16_t generate_menu_file(DIR* dir_obj, const uint8_t dest_track, const uint8_
         do
         {
             c = fb_dir_menu_entry.fname[j];
-            file_sector_P[pos] = tolower(c);
-            if(255 == pos) {
-                sector_amount++;
-                file_sector_nr = (file_sector_nr+sector_interleave)%num_of_sectors; // for interleaving and "fast reading"
-
-                file_sector_P[0]=dest_track+1;
-                file_sector_P[1]=file_sector_nr;
-                file_sector_P = &d64_sector_puffer[1+file_sector_nr*D64_SECTOR_SIZE];
-                memset(file_sector_P, 0, 256);
-                pos=2;  // skip the sector header (track+sector or 00+length)
-            } else {
-                pos++;
-            }
+            *P++ = tolower(c);
             j++;
         }
         while (0 != c);
     }
     while(true);
-    file_sector_P[0]=0;
-    file_sector_P[1]=pos-1;
 
-    return sector_amount;
+    return (uint16_t)(P-file_sector_P);
 }
 

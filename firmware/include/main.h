@@ -154,6 +154,6 @@ alarm_id_t stepper_alarm = 0;
 volatile bool track_is_written   = false;
 volatile bool send_byte_ready    = true;
 
-uint8_t  track_write_nr;
-uint16_t track_write_pos;
+volatile uint8_t  track_write_nr;
+volatile uint16_t track_write_pos;
 

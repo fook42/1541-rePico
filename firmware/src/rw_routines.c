@@ -10,9 +10,6 @@
 #include "globals.h"
 #include "gcr.h"
 
-#define PRGFILE_TRACK (16)  // we have Tracks 0..16 to store a PRG file into
-#define SCRATCH_TRACK (18)  // we use Tracks 18..41 for reading the PRG
-
 int8_t read_disk(FIL* fd, const int image_type, FILINFO fileinfo)
 {
     uint8_t* P;

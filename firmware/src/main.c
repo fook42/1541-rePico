@@ -381,6 +381,26 @@ void update_gui(void)
 
     case GUI_SELECTOR:
         handle_selector_image();
+
+        if(shown_half_track != akt_half_track)
+        {
+            shown_half_track = akt_half_track;
+            display_setcursor(disp_trackno_p);
+            (void)dez2out((shown_half_track>>1)+1, 2, byte_str);
+            display_data(byte_str[0]);
+            display_data(byte_str[1]);
+        }
+
+        new_motor_status = get_motor_status();
+        if(shown_motor_status != new_motor_status)
+        {
+            shown_motor_status = new_motor_status;
+            display_setcursor(disp_motortxt_p);
+            if(shown_motor_status)
+                display_string(disp_motor_on_s);
+            else
+                display_string(disp_motor_off_s);
+        }
         break;
 
     default:
@@ -639,9 +659,7 @@ void handle_selector_image(void)
     {
         // insert the virtual menu-image
         insert_menu_image();
-        display_clear();
-        display_home();
-        display_string("Select DiskImage");
+        infomode_update();
     } else {
         // we have the selector inserted.. now handle the selection
         if (track_is_written)
@@ -649,31 +667,29 @@ void handle_selector_image(void)
             if (DIRECTORY_TRACK == track_write_nr)
             {
                 // something was changed on the image.. lets fetch the image-number
-                display_setcursor(0,1);
-                display_string("Selected: ");
+                // display_setcursor(0,2);
+                // display_string("Selected: ");
 
                 // simple approach: convert the complete track, all 19 sectors.. then select sector 2 and read 2 bytes
                 convert_gcr2d64track(DIRECTORY_TRACK);
                 uint16_t image_nr = *((uint16_t*) &d64_sector_puffer[1+2*D64_SECTOR_SIZE]);
-                display_data((uint8_t)((image_nr>>12)&0x0F)+'0');
-                display_data((uint8_t)((image_nr>>8) &0x0F)+'0');
-                display_data((uint8_t)((image_nr>>4) &0x0F)+'0');
-                display_data((uint8_t)((image_nr)    &0x0F)+'0');
+                // display_data((uint8_t)((image_nr>>12)&0x0F)+'0');
+                // display_data((uint8_t)((image_nr>>8) &0x0F)+'0');
+                // display_data((uint8_t)((image_nr>>4) &0x0F)+'0');
+                // display_data((uint8_t)((image_nr)    &0x0F)+'0');
 
                 seek_to_dir_entry(image_nr-1);
 
                 FILINFO hsi_dir_entry;
                 fr = f_readdir(&dir_object, &hsi_dir_entry);
-                if((0 == hsi_dir_entry.fname[0]) || (FR_OK != fr))
+                if((0 != hsi_dir_entry.fname[0]) && (FR_OK == fr))
                 {
-                    //
-                } else {
                     int odr_return = open_dir_entry(hsi_dir_entry);
                     if (0 == odr_return)
                     {
-                        // no valid image available / or we jumped into a folder
-                        is_image_mount=false;
-                        //rebuild the data-file
+    //                     // no valid image available / or we jumped into a folder
+    //                     is_image_mount=false;
+    //                     //rebuild the data-file
                         insert_menu_image();
                     } else
                     {
@@ -681,24 +697,24 @@ void handle_selector_image(void)
                     }
                 }
 
-                // with track_write_pos .. we may have the start of a sector to be decoded...
-                // only one sector needs to be decoded (ideally)
+    //             // with track_write_pos .. we may have the start of a sector to be decoded...
+    //             // only one sector needs to be decoded (ideally)
 
             }
             track_is_written = false;
-        } else {
-            if (0 == select_wait_counter0)
-            {
-                display_setcursor(0,1);
-                display_data(busy_txt[busy_count]);
-            }
-            if (select_wait_counter0 >= (uint32_t)300000)
-            {
-                busy_count = (busy_count+1)%count_of(busy_txt);
-                select_wait_counter0 = 0;
-            } else {
-                select_wait_counter0++;
-            }
+    //     } else {
+    //         if (0 == select_wait_counter0)
+    //         {
+    //             display_setcursor(0,1);
+    //             display_data(busy_txt[busy_count]);
+    //         }
+    //         if (select_wait_counter0 >= (uint32_t)300000)
+    //         {
+    //             busy_count = (busy_count+1)%count_of(busy_txt);
+    //             select_wait_counter0 = 0;
+    //         } else {
+    //             select_wait_counter0++;
+    //         }
         }
     }
 }
@@ -718,6 +734,7 @@ void insert_menu_image(void)
 
         if(FR_OK == fr)
         {
+            stop_bytetimer();
             send_byte_ready = false;         // disable VIA transfer
 
             uint8_t id_buffer[]={" F00K"};      // disk-id
@@ -727,15 +744,40 @@ void insert_menu_image(void)
             generate_empty_image(id1,id2,num_max_tracks);
 
             // generates menu-file..
-            uint16_t menu_sectors = generate_menu_file(&dir_object, MENU_TRACK, 10);
-            convert_d64track2gcr(MENU_TRACK,id1,id2);
+            uint16_t menu_file_len = generate_menu_file(&dir_object, "floppy/geschwurbel", SCRATCH_TRACK);
+            size_t buffer_size = menu_file_len;
+            size_t buffer_left;
+            uint8_t file_track = MENU_DATA_TRACK, next_file_track;
+            uint8_t* file_buffer_pointer = g64_tracks[SCRATCH_TRACK];
+            uint8_t prev_sector = 0;
+            do
+            {
+                buffer_left = buffer_to_track(file_buffer_pointer, buffer_size, file_track, &prev_sector);
+                if (buffer_left>0)
+                {
+                    next_file_track = file_track-1;
+                    file_buffer_pointer += (buffer_size-buffer_left);
+                    buffer_size = buffer_left;
+                    // last sector ?? -> update last sector-chain-pointer to new "file_track,0"...
+                    d64_sector_puffer[1+prev_sector*D64_SECTOR_SIZE]=next_file_track+1;
+                    d64_sector_puffer[1+prev_sector*D64_SECTOR_SIZE+1]=0;
+                }
+                convert_d64track2gcr(file_track, id1, id2);
+                file_track = next_file_track;
+                /* code */
+            } while ((buffer_left>0) && (file_track>=0));
+
+            memset(d64_sector_puffer, 0, sizeof(d64_sector_puffer));
+            for(uint8_t track_nr=SCRATCH_TRACK; track_nr<num_max_tracks; ++track_nr)
+            {
+                convert_d64track2gcr(track_nr, id1, id2);
+            }
 
             // generates selector_file..
-            size_t buffer_size = menu_prg_len;
-            size_t buffer_left;
-            uint8_t file_track = SELECTOR_TRACK, next_file_track;
-            uint8_t* file_buffer_pointer = menu_prg;
-            uint8_t prev_sector;
+            buffer_size = menu_prg_len;
+            file_track = SELECTOR_TRACK;
+            file_buffer_pointer = (uint8_t*) &menu_prg[0];
+            prev_sector = 0;
             do
             {
                 buffer_left = buffer_to_track(file_buffer_pointer, buffer_size, file_track, &prev_sector);
@@ -757,9 +799,9 @@ void insert_menu_image(void)
             strcpy(image_filename, "REPICO IMAGES");
             generate_bam(image_filename, id_buffer);
             // create a file-entry in the directory...
-            generate_directory_entry("SELECTOR", 0x82, SELECTOR_TRACK,0,((uint16_t) (menu_prg_len/253))+1);
-            generate_directory_entry("DATAFILE", 0x82, MENU_TRACK,0,menu_sectors);
-            convert_d64track2gcr(DIRECTORY_TRACK,id1,id2);
+            generate_directory_entry("SELECTOR", 0x82, SELECTOR_TRACK ,0,((uint16_t) (menu_prg_len/254))+1);
+            generate_directory_entry("DATAFILE", 0x82, MENU_DATA_TRACK,0,((uint16_t) (menu_file_len/254))+1);
+            convert_d64track2gcr(DIRECTORY_TRACK, id1, id2);
 
             akt_track_pos = 0;
             selected_track = (INIT_TRACK << 1);
@@ -767,7 +809,7 @@ void insert_menu_image(void)
 
             send_byte_ready = true;         // enable VIA transfer
             is_image_mount = true;
-            num_max_tracks = 35;// MAX_TRACKS;
+
             akt_image_type = SELECTOR_IMAGE;    // to identify the write-back-channel handling
             track_is_written = false;
 

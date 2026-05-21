@@ -13,7 +13,6 @@
 #include "f_util.h"
 #include "ff.h"
 
-#define MENU_TRACK (16)
 enum {
     TYPE_NONE = 0,
     TYPE_DIR = 1,
@@ -22,13 +21,11 @@ enum {
     TYPE_PRG = 4,
     TYPE_UNKNOWN = 255
 };
-#define SELECTOR_TRACK (18)
 
 void generate_empty_image(uint8_t image_id1, uint8_t image_id2, uint8_t track_number);
 void generate_bam(char* image_name, uint8_t* image_id_buffer);
 
 void generate_directory_entry(uint8_t* filename, uint8_t filetype, uint8_t des_track, uint8_t des_sector, uint16_t size);
-uint16_t generate_menu_file(DIR* dir_obj, const uint8_t dest_track, const uint8_t sector_interleave);
-
+uint16_t generate_menu_file(DIR* dir_obj, uint8_t* dir_path, const uint8_t dest_track);
 
 #endif

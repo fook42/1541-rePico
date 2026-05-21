@@ -21,6 +21,12 @@
 // Track 17 --> Directory (Tracks 0..41 !)
 #define DIRECTORY_TRACK (17)
 #define INIT_TRACK      DIRECTORY_TRACK
+#define MENU_DATA_TRACK (16)
+#define SELECTOR_TRACK  (18)
+
+#define PRGFILE_TRACK   (16)  // we have Tracks 0..16 to store a PRG file into
+#define SCRATCH_TRACK   (18)  // we use Tracks 18..41 for preparing the PRG data
+
 // offset inside directory track of ID1+ID2
 #define DIR_ID_OFFSET   (0xA2)
 

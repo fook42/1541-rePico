@@ -36,6 +36,7 @@ pico_sdk_init()
 add_custom_target(GenSelector
   COMMAND echo \"\#ifndef _MENU_PRG_H_\\n\#define _MENU_PRG_H_\" > ${PROJECT_SOURCE_DIR}/include/selector.h
   COMMAND xxd -i -n \"menu_prg\" ${CMAKE_CURRENT_SOURCE_DIR}/FileSelector/menu.prg >> ${PROJECT_SOURCE_DIR}/include/selector.h
+  COMMAND sed -i \"s!unsigned!const unsigned!g\" ${PROJECT_SOURCE_DIR}/include/selector.h
   COMMAND echo \"\#endif\" >> ${PROJECT_SOURCE_DIR}/include/selector.h
 )
 
