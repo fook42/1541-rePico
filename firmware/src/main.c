@@ -684,6 +684,8 @@ void handle_selector_image(void)
                 fr = f_readdir(&dir_object, &hsi_dir_entry);
                 if((0 != hsi_dir_entry.fname[0]) && (FR_OK == fr))
                 {
+                    sleep_ms(1000);
+
                     int odr_return = open_dir_entry(hsi_dir_entry);
                     if (0 == odr_return)
                     {
