@@ -155,7 +155,7 @@ int main()
 
     set_gui_mode(GUI_MENU_MODE);
 
-//    insert_menu_image();
+    // insert_menu_image("");
  
     while (true) {
         check_stepper_signals();
@@ -1214,6 +1214,12 @@ void open_disk_image(FIL* fd, FILINFO *file_entry, uint8_t* image_type)
         return;
     }
 
+    fr = f_chdir(current_path);
+    if (FR_OK != fr)
+    {
+        *image_type = UNDEF_IMAGE;
+        return;
+    }
     fr = f_open(fd, file_entry->fname, FA_READ);
     if (FR_OK != fr)
     {
