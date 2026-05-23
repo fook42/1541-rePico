@@ -29,10 +29,10 @@ void filebrowser_refresh(void);
 void infomode_update(void);
 
 void handle_selector_image(void);
-void insert_menu_image(void);
+void insert_menu_image(char* menu_path);
 
-uint16_t get_dir_entry_count(void);
-uint16_t seek_to_dir_entry(uint16_t entry_num);
+uint16_t get_dir_entry_count(char* entrycount_path);
+uint16_t seek_to_dir_entry(uint16_t entry_num, char* seek_path);
 
 void show_start_message(void);
 void show_sdcard_info_message(void);
@@ -117,6 +117,7 @@ struct repeating_timer bytetimer;
 
 
 char image_filename[256]; //Maximal 256 Zeichen
+char current_path[512];
 
 uint8_t current_gui_mode;
 

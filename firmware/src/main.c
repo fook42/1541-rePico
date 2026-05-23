@@ -167,7 +167,7 @@ int main()
 
 FRESULT mount_sdcard(void)
 {
-    char mount_path[] = {""};
+    char mount_path[] = {"/"};
     BYTE mount_option = 1; /* 0=Do not mount (delayed mount), 1=Mount immediately */
 
     fr = f_mount(&fs, mount_path, mount_option);
@@ -181,7 +181,7 @@ FRESULT mount_sdcard(void)
 
     if (FR_OK == fr)
     {
-        fb_dir_entry_count = get_dir_entry_count(); // open card, count entries on root level
+        fb_dir_entry_count = get_dir_entry_count(mount_path); // open card, count entries on root level
     }
     return fr;
 }
@@ -654,11 +654,14 @@ void handle_selector_image(void)
     static uint32_t select_wait_counter0 = 0;
     const uint8_t busy_txt[]={display_cursor_char,' '};
     static uint8_t busy_count=0;
+    char char_buffer[8];
+    FILINFO hsi_dir_entry;
+    uint16_t selected_image_nr;
 
     if (SELECTOR_IMAGE != akt_image_type)
     {
         // insert the virtual menu-image
-        insert_menu_image();
+        insert_menu_image(current_path);
         infomode_update();
     } else {
         // we have the selector inserted.. now handle the selection
@@ -667,35 +670,32 @@ void handle_selector_image(void)
             if (DIRECTORY_TRACK == track_write_nr)
             {
                 // something was changed on the image.. lets fetch the image-number
-                // display_setcursor(0,2);
-                // display_string("Selected: ");
 
                 // simple approach: convert the complete track, all 19 sectors.. then select sector 2 and read 2 bytes
                 convert_gcr2d64track(DIRECTORY_TRACK);
-                uint16_t image_nr = *((uint16_t*) &d64_sector_puffer[1+2*D64_SECTOR_SIZE]);
-                // display_data((uint8_t)((image_nr>>12)&0x0F)+'0');
-                // display_data((uint8_t)((image_nr>>8) &0x0F)+'0');
-                // display_data((uint8_t)((image_nr>>4) &0x0F)+'0');
-                // display_data((uint8_t)((image_nr)    &0x0F)+'0');
+                selected_image_nr = *((uint16_t*) &d64_sector_puffer[1+2*D64_SECTOR_SIZE]);
 
-                seek_to_dir_entry(image_nr-1);
-
-                FILINFO hsi_dir_entry;
-                fr = f_readdir(&dir_object, &hsi_dir_entry);
-                if((0 != hsi_dir_entry.fname[0]) && (FR_OK == fr))
+                if (selected_image_nr > 0)
                 {
-                    sleep_ms(1000);
+                    seek_to_dir_entry(selected_image_nr-1, current_path);
 
-                    int odr_return = open_dir_entry(hsi_dir_entry);
-                    if (0 == odr_return)
+                    fr = f_readdir(&dir_object, &hsi_dir_entry);
+                    if((0 != hsi_dir_entry.fname[0]) && (FR_OK == fr))
                     {
-    //                     // no valid image available / or we jumped into a folder
-    //                     is_image_mount=false;
-    //                     //rebuild the data-file
-                        insert_menu_image();
-                    } else
-                    {
-                        set_gui_mode(GUI_INFO_MODE);
+                        sleep_ms(1000);
+
+                        int odr_return = open_dir_entry(hsi_dir_entry);
+                        if (1 != odr_return)
+                        {
+                            // no valid image available / or we jumped into a folder
+                            is_image_mount=false;
+                            //rebuild the data-file
+                            insert_menu_image(current_path);
+                            infomode_update();                            
+                        } else
+                        {
+                            set_gui_mode(GUI_INFO_MODE);
+                        }
                     }
                 }
 
@@ -721,7 +721,7 @@ void handle_selector_image(void)
     }
 }
 
-void insert_menu_image(void)
+void insert_menu_image(char* menu_path)
 {
     fr = mount_sdcard();
     if (FR_OK == fr)
@@ -729,10 +729,9 @@ void insert_menu_image(void)
         f_closedir(&dir_object);
 
         char pattern[] = {"*"};
-        char path[] = {""};
 
         dir_object.pat = pattern;           /* Save pointer to pattern string */
-        fr = f_opendir(&dir_object, path);  /* Open the target directory */
+        fr = f_opendir(&dir_object, menu_path);  /* Open the target directory */
 
         if(FR_OK == fr)
         {
@@ -746,7 +745,7 @@ void insert_menu_image(void)
             generate_empty_image(id1,id2,num_max_tracks);
 
             // generates menu-file..
-            uint16_t menu_file_len = generate_menu_file(&dir_object, "floppy/geschwurbel", SCRATCH_TRACK);
+            uint16_t menu_file_len = generate_menu_file(&dir_object, menu_path, SCRATCH_TRACK);
             size_t buffer_size = menu_file_len;
             size_t buffer_left;
             uint8_t file_track = MENU_DATA_TRACK, next_file_track;
@@ -798,7 +797,7 @@ void insert_menu_image(void)
             } while (buffer_left>0);
 
             memset(d64_sector_puffer, 0, sizeof(d64_sector_puffer));
-            strcpy(image_filename, "REPICO IMAGES");
+            strcpy(image_filename, "-ONSCREEN MENU-");
             generate_bam(image_filename, id_buffer);
             // create a file-entry in the directory...
             generate_directory_entry("SELECTOR", 0x82, SELECTOR_TRACK ,0,((uint16_t) (menu_prg_len/254))+1);
@@ -897,7 +896,7 @@ void infomode_update(void)
 void filebrowser_update(uint8_t key_code)
 {
     static uint32_t fbup_wait_counter0 = 0;
-    int odr_return = 0;
+    uint8_t odr_return = 0;
 
     switch (key_code)
     {
@@ -934,7 +933,7 @@ void filebrowser_update(uint8_t key_code)
     case KEY2_UP:
         //fn open dir_entry...
         odr_return = open_dir_entry(fb_dir_entry[fb_cursor_pos]);
-        if (0 == odr_return)
+        if (1 != odr_return) 
         {
             // no valid image available / or we jumped into a folder
             is_image_mount=false;
@@ -1000,10 +999,13 @@ uint8_t open_dir_entry(FILINFO od_file_entry)
     if(od_file_entry.fattrib & AM_DIR)
     {
         // Eintrag ist ein Verzeichnis
-        f_chdir(od_file_entry.fname);
+        strcpy(current_path, od_file_entry.fname);
+        f_chdir(current_path);
+        fb_dir_entry_count = get_dir_entry_count(current_path);
+
         fb_cursor_pos = 0;
         fb_window_pos = 0;
-        return 0;
+        return 2;
     }
 
     open_disk_image(&fd, &od_file_entry, &akt_image_type);
@@ -1067,7 +1069,7 @@ void filebrowser_refresh(void)
 {
     display_clear();
 
-    seek_to_dir_entry(fb_window_pos);
+    seek_to_dir_entry(fb_window_pos, current_path);
 
     uint8_t i=0;
 
@@ -1122,17 +1124,16 @@ void filebrowser_refresh(void)
 
 /////////////////////////////////////////////////////////////////////
 
-uint16_t get_dir_entry_count(void)
+uint16_t get_dir_entry_count(char* entrycount_path)
 {
     uint16_t entry_count = 0;
 
-//    f_closedir(&dir_object);
+    f_closedir(&dir_object);
 
     char pattern[] = {"*"};
-    char path[] = {""};
 
     dir_object.pat = pattern;           /* Save pointer to pattern string */
-    fr = f_opendir(&dir_object, path);  /* Open the target directory */
+    fr = f_opendir(&dir_object, entrycount_path);  /* Open the target directory */
     if (FR_OK == fr)
     {
         while(FR_OK == f_readdir(&dir_object, &dir_entry))
@@ -1141,10 +1142,7 @@ uint16_t get_dir_entry_count(void)
             {
                 break;
             }
-            // if(!(dir_entry.fattrib & (AM_SYS | AM_HID )))
-            {
-                entry_count++;
-            }
+            entry_count++;
         }
     }
     return entry_count;
@@ -1152,30 +1150,29 @@ uint16_t get_dir_entry_count(void)
 
 /////////////////////////////////////////////////////////////////////
 
-uint16_t seek_to_dir_entry(uint16_t entry_num)
+uint16_t seek_to_dir_entry(uint16_t entry_num, char* seek_path)
 {
     uint16_t entry_count = 0;
-
     f_closedir(&dir_object);
 
     char pattern[] = {"*"};
-    char path[] = {""};
 
     dir_object.pat = pattern;           /* Save pointer to pattern string */
-    fr = f_opendir(&dir_object, path);  /* Open the target directory */
-
-    if((FR_OK == fr) || (entry_num != 0))
+    fr = f_opendir(&dir_object, seek_path);  /* Open the target directory */
+    if(FR_OK == fr)
     {
-        while(FR_OK == f_readdir(&dir_object, &dir_entry) && (entry_count < (entry_num-1)))
+        f_readdir(&dir_object, 0);  // rewind the directory
+        if (entry_num > 0)
         {
-            if(0 == dir_entry.fname[0])
+            do
             {
-                break;
-            }
-            // if(!(dir_entry.fattrib & (AM_SYS | AM_HID )))
-            {
+                fr == f_readdir(&dir_object, &dir_entry);
+                if((FR_OK != fr) || (0 == dir_entry.fname[0]))
+                {
+                    break;
+                }
                 entry_count++;
-            }
+            } while (entry_count < entry_num);
         }
     }
     return entry_count;
@@ -1185,11 +1182,14 @@ uint16_t seek_to_dir_entry(uint16_t entry_num)
 
 void open_disk_image(FIL* fd, FILINFO *file_entry, uint8_t* image_type)
 {
-    size_t namelen = strlen(file_entry->fname);
-    if(namelen < 4) return;
-
+    size_t namelen;
     char extension[5];
     FRESULT fr = FR_NO_FILE;
+
+    *image_type = UNDEF_IMAGE;  // image-type is undefined by default
+
+    namelen = strlen(file_entry->fname);
+    if(namelen < 4) return;
 
     // Extension überprüfen --> g64 oder d64
     namelen -= 4; // move copy-pointer 4 backwards
@@ -1200,32 +1200,21 @@ void open_disk_image(FIL* fd, FILINFO *file_entry, uint8_t* image_type)
 
     if(!strcmp(extension,".g64"))
     {
-        // Laut Extension ein G64
-        fr = f_open(fd, file_entry->fname, FA_READ);
-        if (FR_OK == fr)
-        {
-            *image_type = G64_IMAGE;
-        }
+        *image_type = G64_IMAGE;
     }
     else if(!strcmp(extension,".d64"))
     {
-        // Laut Extension ein D64
-        fr = f_open(fd, file_entry->fname, FA_READ);
-        if (FR_OK == fr)
-        {
-            *image_type = D64_IMAGE;
-        }
+        *image_type = D64_IMAGE;
     }
     else if(!strcmp(extension,".prg"))
     {
-        // Laut Extension ein PRG
-        fr = f_open(fd, file_entry->fname, FA_READ);
-        if (FR_OK == fr)
-        {
-            *image_type = PRG_IMAGE;
-        }
+        *image_type = PRG_IMAGE;
+    } else {
+        // extension unknown -> we wont try to open the file at all..
+        return;
     }
 
+    fr = f_open(fd, file_entry->fname, FA_READ);
     if (FR_OK != fr)
     {
         // Nicht unterstützt
