@@ -92,6 +92,7 @@ uint16_t generate_menu_file(DIR* dir_obj, uint8_t* dir_path, const uint8_t dest_
 
     uint8_t*    P;
     uint8_t*    file_sector_P  = g64_tracks[dest_track];
+    uint8_t*    charP;
 
     char        file_extension[5]={0};
 
@@ -101,12 +102,17 @@ uint16_t generate_menu_file(DIR* dir_obj, uint8_t* dir_path, const uint8_t dest_
     *P++ = 0x08;
 
     //store current path to menu-file
-    *P++ = '/';
-    uint8_t c = *dir_path++;
-    while (c != '\0')
+    uint8_t dirname_len = strlen(dir_path);
+    charP = dir_path;
+    if (dirname_len>38)
     {
-        *P++ = c;
-        c = *dir_path++;
+        *P++ = '.';
+        *P++ = '.';
+        charP = &dir_path[dirname_len-38];
+    }
+    while (charP[0] != 0)
+    {
+        *P++ = *charP++;
     }
     *P++ = 0;
 

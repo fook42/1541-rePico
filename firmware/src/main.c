@@ -999,7 +999,8 @@ uint8_t open_dir_entry(FILINFO od_file_entry)
     if(od_file_entry.fattrib & AM_DIR)
     {
         // Eintrag ist ein Verzeichnis
-        strcpy(current_path, od_file_entry.fname);
+        strcat(current_path, "/");
+        strcat(current_path, od_file_entry.fname);
         f_chdir(current_path);
         fb_dir_entry_count = get_dir_entry_count(current_path);
 
