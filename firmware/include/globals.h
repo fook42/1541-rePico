@@ -79,4 +79,5 @@ extern const uint8_t d64_sector_gap[NUM_SPEEDZONES];
 
 extern bool block_data_changes;
 
+extern const char* version_str;
 #endif

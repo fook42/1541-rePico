@@ -693,7 +693,7 @@ void handle_selector_image(void)
 
                 if (selected_image_nr > 0)
                 {
-                    sleep_ms(1000);
+                    sleep_ms(500);
                     uint8_t pathlen=strlen(current_path);
                     if (pathlen>1)
                     {

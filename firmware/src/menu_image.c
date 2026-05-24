@@ -110,6 +110,11 @@ uint16_t generate_menu_file(DIR* dir_obj, uint8_t* dir_path, const uint8_t dest_
         *P++ = '.';
         charP = &dir_path[dirname_len-38];
     }
+    if (dirname_len == 0)
+    {
+        charP = (uint8_t*) version_str;
+    }
+
     while (charP[0] != 0)
     {
         *P++ = *charP++;
