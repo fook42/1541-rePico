@@ -46,6 +46,7 @@ volatile bool input_block = false;
 
 uint64_t key2_down_time=0;
 uint8_t num_max_tracks;
+uint16_t selected_image_nr = 0xFFFF;
 
 // ---------------------------------------------------------------
 
@@ -80,12 +81,15 @@ void gpio_callback(uint gpio, uint32_t events)
                         key2_down_time -= (now_time+1);
                         now_time = ((uint64_t)-1);
                     }
-                    if (key2_down_time < (now_time-TIMEOUT1_KEY2))
-                    { irq_key_value = KEY2_TIMEOUT1; }
-                    else if (key2_down_time < (now_time-TIMEOUT2_KEY2))
+
+                    
+                    if ((now_time-key2_down_time) > TIMEOUT2_KEY2)
                     { irq_key_value = KEY2_TIMEOUT2; }
+                    else if ((now_time-key2_down_time) > TIMEOUT1_KEY2)
+                    { irq_key_value = KEY2_TIMEOUT1; }
                     else
                     { irq_key_value = KEY2_UP; }
+            
                     key2_down_time = now_time;
                     input_debounce_alarm = add_alarm_in_ms(BUTTON_DEBOUNCE_TIME, input_debounce_callback, NULL, false);
                 }
@@ -153,10 +157,8 @@ int main()
     display_clear();
     display_home();
 
-    set_gui_mode(GUI_MENU_MODE);
+    set_gui_mode(GUI_SELECTOR);
 
-    // insert_menu_image("");
- 
     while (true) {
         check_stepper_signals();
         update_gui();
@@ -194,6 +196,26 @@ FRESULT umount_sdcard(void)
     return f_unmount(mount_path);
 }
 
+void show_fs_error(FRESULT error_code)
+{
+    // display_string("f_mount error:");
+    // display_data(error_code+'A');
+    const char* error_txt=FRESULT_str(error_code);
+    size_t err_str_len=strlen(error_txt);
+    uint8_t err_str_offset=0;
+    irq_key_value = NO_KEY;
+    do
+    {
+        display_setcursor(0, 1);
+        display_print(error_txt, err_str_offset++, 16);
+        sleep_ms(333);
+    }
+    while (((err_str_offset+15)<err_str_len) && (irq_key_value != KEY2_DOWN));
+
+    while(irq_key_value != KEY2_DOWN) {};
+    irq_key_value = NO_KEY;
+    return;
+}
 /////////////////////////////////////////////////////////////////////
 
 
@@ -297,6 +319,7 @@ void update_gui(void)
     bool new_motor_status;
     uint8_t key_code = get_key_from_buffer();
     char byte_str[16];
+    FILINFO next_dir_entry;
 
     switch (current_gui_mode)
     {
@@ -307,7 +330,23 @@ void update_gui(void)
             set_gui_mode(GUI_MENU_MODE);
         } else if(KEY2_TIMEOUT2 == key_code)
         {
-            // exit_main = 0;
+            // next image...
+            if (selected_image_nr!=0xFFFF)
+            {
+                seek_to_dir_entry(selected_image_nr, current_path);
+                fr = f_readdir(&dir_object, &next_dir_entry);
+                if((0 != next_dir_entry.fname[0]) && (FR_OK == fr))
+                {
+                    if(!(next_dir_entry.fattrib & AM_DIR))
+                    {
+                        int odr_return = open_dir_entry(next_dir_entry);
+                        {
+                            selected_image_nr++;
+                            set_gui_mode(GUI_INFO_MODE);
+                        }
+                    }
+                }
+            }
         }
 
         if(shown_half_track != akt_half_track)
@@ -380,6 +419,15 @@ void update_gui(void)
         break;
 
     case GUI_SELECTOR:
+        if(KEY2_UP == key_code)
+        {
+            unmount_image();
+            set_gui_mode(GUI_MENU_MODE);
+        } else if(KEY2_TIMEOUT2 == key_code)
+        {
+            // exit_main = 0;
+        }
+
         handle_selector_image();
 
         if(shown_half_track != akt_half_track)
@@ -440,18 +488,7 @@ void check_menu_events(const uint16_t menu_event)
                     } else {
                         display_string("f_mount error:");
                         display_data(fr+'A');
-                        const char* error_txt=FRESULT_str(fr);
-                        size_t err_str_len=strlen(error_txt);
-                        uint8_t err_str_offset=0;
-                        do
-                        {
-                            display_setcursor(0, 1);
-                            display_print(error_txt, err_str_offset++, 16);
-                            sleep_ms(500);
-                        }
-                        while ((err_str_offset+15)<err_str_len);
-                        while(irq_key_value != KEY2_DOWN) {};
-                        irq_key_value = NO_KEY;
+                        show_fs_error(fr);
                         menu_refresh();
                     }
                     break;
@@ -468,18 +505,7 @@ void check_menu_events(const uint16_t menu_event)
                         {
                             display_string("f_mount error:");
                             display_data(fr+'A');
-                            const char* error_txt=FRESULT_str(fr);
-                            size_t err_str_len=strlen(error_txt);
-                            uint8_t err_str_offset=0;
-                            do
-                            {
-                                display_setcursor(0, 1);
-                                display_print(error_txt, err_str_offset++, 16);
-                                sleep_ms(500);
-                            }
-                            while ((err_str_offset+15)<err_str_len);
-                            while(irq_key_value != KEY2_DOWN) {};
-                            irq_key_value = NO_KEY;
+                            show_fs_error(fr);
                             menu_refresh();
                             break;
                         }
@@ -574,25 +600,16 @@ void check_menu_events(const uint16_t menu_event)
                     if (FR_OK == mount_sdcard())
                     {
                         show_sdcard_info_message();
+                        while(irq_key_value != KEY2_DOWN) {};
+                        irq_key_value = NO_KEY;
                     } else {
                         display_clear();
                         display_home();
                         display_string("f_mount error:");
                         display_data(fr+'A');
-                        const char* error_txt=FRESULT_str(fr);
-                        size_t err_str_len=strlen(error_txt);
-                        uint8_t err_str_offset=0;
-                        do
-                        {
-                            display_setcursor(0, 1);
-                            display_print(error_txt, err_str_offset++, 16);
-                            sleep_ms(500);
-                        }
-                        while ((err_str_offset+15)<err_str_len);
+                        show_fs_error(fr);
                     }
                     umount_sdcard();
-                    while(irq_key_value != KEY2_DOWN) {};
-                    irq_key_value = NO_KEY;
                     menu_refresh();
                     break;
 
@@ -656,7 +673,6 @@ void handle_selector_image(void)
     static uint8_t busy_count=0;
     char char_buffer[8];
     FILINFO hsi_dir_entry;
-    uint16_t selected_image_nr;
 
     if (SELECTOR_IMAGE != akt_image_type)
     {
@@ -677,24 +693,47 @@ void handle_selector_image(void)
 
                 if (selected_image_nr > 0)
                 {
-                    seek_to_dir_entry(selected_image_nr-1, current_path);
-
-                    fr = f_readdir(&dir_object, &hsi_dir_entry);
-                    if((0 != hsi_dir_entry.fname[0]) && (FR_OK == fr))
+                    sleep_ms(1000);
+                    uint8_t pathlen=strlen(current_path);
+                    if (pathlen>1)
                     {
-                        sleep_ms(1000);
+                        selected_image_nr--;
+                    }
+                    if (0 == selected_image_nr)
+                    {
+                        // now we go up..
+                        char* last_slash = strrchr(current_path,'/');
+                        if (last_slash!=NULL)
+                        {
+                            *last_slash = 0;
+                        }
 
-                        int odr_return = open_dir_entry(hsi_dir_entry);
-                        if (1 != odr_return)
+                        f_chdir(current_path);
+                        fb_dir_entry_count = get_dir_entry_count(current_path);
+                        is_image_mount=false;
+                        //rebuild the data-file
+                        insert_menu_image(current_path);
+                        infomode_update();                            
+
+                    } else {
+                    
+                        seek_to_dir_entry(selected_image_nr-1, current_path);
+
+                        fr = f_readdir(&dir_object, &hsi_dir_entry);
+                        if((0 != hsi_dir_entry.fname[0]) && (FR_OK == fr))
                         {
-                            // no valid image available / or we jumped into a folder
-                            is_image_mount=false;
-                            //rebuild the data-file
-                            insert_menu_image(current_path);
-                            infomode_update();                            
-                        } else
-                        {
-                            set_gui_mode(GUI_INFO_MODE);
+                            int odr_return = open_dir_entry(hsi_dir_entry);
+                            if (1 != odr_return)
+                            {
+                                // no valid image available / or we jumped into a folder
+                                is_image_mount=false;
+                                //rebuild the data-file
+                                insert_menu_image(current_path);
+                                infomode_update();                            
+                            } else
+                            {
+                                set_gui_mode(GUI_INFO_MODE);
+                            }
                         }
                     }
                 }
@@ -827,18 +866,7 @@ void insert_menu_image(char* menu_path)
         display_home();
         display_string("f_mount error:");
         display_data(fr+'A');
-        const char* error_txt=FRESULT_str(fr);
-        size_t err_str_len=strlen(error_txt);
-        uint8_t err_str_offset=0;
-        do
-        {
-            display_setcursor(0, 1);
-            display_print(error_txt, err_str_offset++, 16);
-            sleep_ms(500);
-        }
-        while ((err_str_offset+15)<err_str_len);
-        while(irq_key_value != KEY2_DOWN) {};
-        irq_key_value = NO_KEY;
+        show_fs_error(fr);
     }
 }
 

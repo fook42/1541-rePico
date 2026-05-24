@@ -116,6 +116,14 @@ uint16_t generate_menu_file(DIR* dir_obj, uint8_t* dir_path, const uint8_t dest_
     }
     *P++ = 0;
 
+    if (dirname_len > 1)
+    {
+        *P++ = TYPE_DIR;
+        *P++ = '.';
+        *P++ = '.';
+        *P++ = 0;
+    }
+
     do
     {
         fr = f_readdir(dir_obj, &fb_dir_menu_entry);

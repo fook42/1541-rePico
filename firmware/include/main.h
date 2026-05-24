@@ -14,6 +14,7 @@ int64_t input_debounce_callback(alarm_id_t id, void *user_data);
 
 FRESULT mount_sdcard(void);
 FRESULT umount_sdcard(void);
+void show_fs_error(FRESULT error_code);
 
 void check_stepper_signals(void);
 void check_motor_signal(void);
