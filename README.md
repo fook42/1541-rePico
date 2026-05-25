@@ -1,9 +1,49 @@
 # 1541-rePico
 replacement of analog-part of Commodore 1541-Floppy devices based on Pi-Pico(2)
 
-## preface ##
+## preface/credits ##
 this project was derived from the original 1541-rebuild from Thorsten Kattanek (https://github.com/ThKattanek/1541-rebuild) !
 parts of his code were taken from there and adopted for Raspberry Pico and modified to handle disk images differently. Thanks!
+
+the C64 selector-programm was developed and implemented by Peiselulli !
+
+## Features ##
+
+latest version:
+- software: 1.5.0
+- hardware: 1.6
+
+### Hardware ###
+
+single board, size 59mm x 60 mm
+
+- Raspberry Pico2 socket/solder-pads
+- VIA 40pin socket
+- levelshifter (BSS138 & 74LVC4245) for stable signals
+- connectors for
+  - I2C Display
+  - SPI SD-Card adapter
+  - Rotary-Encoder + Switch (KY-040 compatible)
+  - Write-Protect-Signal
+
+one size fits for all 1541 models.
+
+### Software ###
+
+#### Pico2 Firmware ####
+
+- mounting of D64 & G64 & PRG Files
+- 35 & 42 track image files supported
+- read and write access for both D64 & G64
+- sd-card hotswap feature (refresh of directory content)
+
+#### C64 Image Selector ####
+
+- browsing through sd-card content via "virtual disk-image"
+  - subdirectory support
+  - 4 way scrolling
+- highlighting and selecting of different file-types (D64,G64,PRG,Folder)
+- simple mounting and also fastloading of selected entry
 
 
 ## how to build ##
@@ -79,6 +119,8 @@ t.b.d.
 ## supported disk formats ##
 
 currently [D64](/doc/D64.TXT) and [G64](/doc/G64.TXT) are supported as for reading and writing.  
+as bonus, **PRG** files can be loaded by an on-the-fly routine that creates a valid D64 image out of it.
+
 additionaly a small tool [conv_x64](/tools) is provided that allows easy conversion from one to the other on you linux-pc.
 
 ## Pictures ##

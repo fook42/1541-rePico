@@ -12,7 +12,7 @@ MENU_STRUCT settings_menu;
 MENU_STRUCT info_menu;
 
 enum  MENU_IDS{M_BACK, M_IMAGE, M_SETTINGS, M_INFO, \
-               M_BACK_IMAGE, M_LOAD_IMAGE, M_SAVE_IMAGE, M_UNLOAD_IMAGE, M_WP_IMAGE, M_NEW_IMAGE, \
+               M_BACK_IMAGE, M_MENU_IMAGE, M_LOAD_IMAGE, M_SAVE_IMAGE, M_UNLOAD_IMAGE, M_WP_IMAGE, M_NEW_IMAGE, \
                M_BACK_SETTINGS, M_RESTART, \
                M_BACK_INFO, M_VERSION_INFO, M_SDCARD_INFO};
 
@@ -22,6 +22,7 @@ MENU_ENTRY main_menu_entrys[] = {{"Disk Menu", M_IMAGE,ENTRY_MENU,   0,&image_me
                                  {"Info",      M_INFO,ENTRY_MENU,    0,&info_menu}};
 /// Image Menü
 MENU_ENTRY image_menu_entrys[] = {{"..",           M_BACK_IMAGE,ENTRY_TO_PARENT},
+                                  {"Load Selector",M_MENU_IMAGE},
                                   {"Load Image",   M_LOAD_IMAGE},
                                   {"Save Image",   M_SAVE_IMAGE},
                                   {"Unload Image", M_UNLOAD_IMAGE},

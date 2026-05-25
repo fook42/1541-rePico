@@ -21,6 +21,12 @@
 // Track 17 --> Directory (Tracks 0..41 !)
 #define DIRECTORY_TRACK (17)
 #define INIT_TRACK      DIRECTORY_TRACK
+#define MENU_DATA_TRACK (16)
+#define SELECTOR_TRACK  (18)
+
+#define PRGFILE_TRACK   (16)  // we have Tracks 0..16 to store a PRG file into
+#define SCRATCH_TRACK   (18)  // we use Tracks 18..41 for preparing the PRG data
+
 // offset inside directory track of ID1+ID2
 #define DIR_ID_OFFSET   (0xA2)
 
@@ -58,7 +64,7 @@ extern uint8_t g64_tracks[G64_TRACKCOUNT][G64_TRACKSIZE];
 extern uint8_t id1;    // id1 and id2 identify a floppy-disk
 extern uint8_t id2;    // - these need to change to .. signal a disk-change or after a format...
 
-enum {UNDEF_IMAGE, G64_IMAGE, D64_IMAGE};
+enum {UNDEF_IMAGE, G64_IMAGE, D64_IMAGE, PRG_IMAGE, SELECTOR_IMAGE};
 
 extern const int64_t bytetimer_values[NUM_SPEEDZONES];
 
@@ -73,4 +79,5 @@ extern const uint8_t d64_sector_gap[NUM_SPEEDZONES];
 
 extern bool block_data_changes;
 
+extern const char* version_str;
 #endif

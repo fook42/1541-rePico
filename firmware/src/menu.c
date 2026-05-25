@@ -21,7 +21,7 @@ void menu_init(MENU_STRUCT* menu, MENU_ENTRY *menu_entrys, const uint8_t menu_en
     menu->lcd_cursor_pos = 0;
     menu->lcd_window_pos = 0;
 
-    menu->lcd_cursor_char    = display_cursor_char;  // 126 Standard Pfeil
+    menu->lcd_cursor_char    = display_pointer_char;  // 126 Standard Pfeil
     menu->lcd_more_top_char  = display_more_top_char;
     menu->lcd_more_down_char = display_more_down_char;
 

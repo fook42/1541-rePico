@@ -9,12 +9,12 @@
 #include "ff.h"
 #include "globals.h"
 
-
 // functions
 int64_t input_debounce_callback(alarm_id_t id, void *user_data);
 
 FRESULT mount_sdcard(void);
 FRESULT umount_sdcard(void);
+void show_fs_error(FRESULT error_code);
 
 void check_stepper_signals(void);
 void check_motor_signal(void);
@@ -29,8 +29,11 @@ void filebrowser_refresh(void);
 
 void infomode_update(void);
 
-uint16_t get_dir_entry_count(void);
-uint16_t seek_to_dir_entry(uint16_t entry_num);
+void handle_selector_image(void);
+void insert_menu_image(char* menu_path);
+
+uint16_t get_dir_entry_count(char* entrycount_path);
+uint16_t seek_to_dir_entry(uint16_t entry_num, char* seek_path);
 
 void show_start_message(void);
 void show_sdcard_info_message(void);
@@ -41,6 +44,8 @@ void stepper_dec(void);
 void init_motor(void);
 void init_control_signals(void);
 void init_soe_gatearray(void);
+
+uint8_t open_dir_entry(FILINFO od_file_entry);
 
 void open_disk_image(FIL* fd, FILINFO *file_entry, uint8_t* image_type);
 void close_disk_image(FIL* fd);
@@ -113,6 +118,7 @@ struct repeating_timer bytetimer;
 
 
 char image_filename[256]; //Maximal 256 Zeichen
+char current_path[512];
 
 uint8_t current_gui_mode;
 
@@ -133,7 +139,7 @@ uint8_t fb_line_scroll_end_begin_wait = 10;
 
 
 // floppydisk emulation
-uint8_t akt_image_type = UNDEF_IMAGE;     // 0=kein Image, 1=G64, 2=D64
+uint8_t akt_image_type = UNDEF_IMAGE;     // 0=kein Image, 1=G64, 2=D64, 3=Selector
 bool is_image_mount;
 
 bool floppy_wp = true;  // Hier wird der aktuelle WriteProtection Zustand gespeichert
@@ -149,4 +155,7 @@ alarm_id_t stepper_alarm = 0;
 
 volatile bool track_is_written   = false;
 volatile bool send_byte_ready    = true;
+
+volatile uint8_t  track_write_nr;
+volatile uint16_t track_write_pos;
 

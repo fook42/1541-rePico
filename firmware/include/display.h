@@ -15,9 +15,10 @@ enum {
     display_none_char = 0,
     display_more_top_char = 1,
     display_more_down_char,
-    display_cursor_char,
+    display_pointer_char,
     display_dir_char,
-    display_disk_char
+    display_disk_char,
+    display_cursor_char
  };
 
 

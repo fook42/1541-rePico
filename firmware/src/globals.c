@@ -6,7 +6,7 @@
  ***********************************/
 
 #include "globals.h"
-
+#include "version.h"
 
 const uint16_t d64_track_offset[MAX_TRACKS] = { 0x0000,0x0015,0x002A,0x003F,0x0054,0x0069,0x007E,0x0093,
                                                 0x00A8,0x00BD,0x00D2,0x00E7,0x00FC,0x0111,0x0126,0x013B,
@@ -54,3 +54,5 @@ const int64_t bytetimer_values[NUM_SPEEDZONES] = {26, 28, 30, 32};
 const uint8_t d64_sector_gap[NUM_SPEEDZONES] = {12, 21, 16, 13}; // von GPZ Code übernommen imggen
 
 bool block_data_changes = false;
+
+const char* version_str = "1541-REPICO " VERSION " BY FOOK42 & PEISELULLI";
