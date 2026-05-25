@@ -110,6 +110,82 @@ picotool load -t uf2 1541-rePico.uf2 -x -f
 ```
 
 
+## debugging with OpenOCD ##
+
+### prerequisites ###
+
+- **CMSIS-DAP Compatible Debugger** (e.g., Raspberry Pi Debug Probe, STLink, or SEGGER J-Link) 
+get binaries for a pico here : https://github.com/raspberrypi/debugprobe
+- **OpenOCD** installed ( built in devcontainer or  with "build_openocd.sh")
+- **gdb-multiarch** for GDB debugging ( preinstalled in devcontainer )
+
+### setup ###
+
+1. Connect your debugger to the Pico using the SWD pins:
+   - SWCLK → GPIO 24 (or pin 20)
+   - SWDIO → GPIO 25 (or pin 21)
+   - GND → GND
+
+2. Ensure the debugger is connected via USB to your development machine
+
+### starting OpenOCD ###
+
+Start OpenOCD in a terminal:
+
+```
+openocd -f interface/cmsis-dap.cfg -f target/rp2350.cfg
+```
+
+OpenOCD will listen on port 3333 for GDB connections.
+
+### debugging in VS Code ###
+
+VS Code launch configurations are available:
+
+**Pico Debug (Cortex-Debug)** - Integrated debugging with OpenOCD
+
+#### using Cortex-Debug (recommended) ####
+
+Press `F5` or select "Pico Debug (Cortex-Debug)" from the Run menu. This will:
+- Start OpenOCD automatically
+- Load your firmware
+- Break at `main()`
+- Allow step debugging, breakpoints, and variable inspection
+
+#### using external OpenOCD ####
+
+1. Start OpenOCD in a terminal (see above)
+2. Select "Pico Debug (Cortex-Debug with external OpenOCD)" from Run menu
+3. VS Code will connect to the running OpenOCD instance
+
+### useful GDB commands ###
+
+When debugging, common GDB commands include:
+
+```
+continue         # Resume execution
+step             # Step into function
+next             # Step over function
+break <func>     # Set breakpoint at function
+break <file>:<line>  # Set breakpoint at file:line
+print <var>      # Print variable value
+display <var>    # Show variable on each step
+backtrace        # Show call stack
+```
+
+### troubleshooting ###
+
+**"Device not found"**: 
+- Check CMSIS-DAP debugger is connected
+- Verify SWD pin connections
+- Try `openocd -d` for debug output
+- Connect the USB for the targetdevice, then the USB for debugprobe
+( to keep correct order of /dev/ttyACMx )
+
+**GDB connection failed**: 
+- Ensure OpenOCD is running on port 3333
+- Check firewall settings
+
 # documentation #
 
 ## project documentation ##

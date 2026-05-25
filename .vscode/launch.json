@@ -1,0 +1,28 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Pico Debug (Cortex-Debug)",
+            "cwd": "${workspaceRoot}",
+            "executable": "./build/1541-rePico.elf",
+            "request": "launch",
+            "type": "cortex-debug",
+            "servertype": "openocd",
+            "serverpath": "/usr/local/bin/openocd",
+            "gdbPath": "gdb-multiarch",
+            "device": "${command:raspberry-pi-pico.getChipUppercase}",
+            "configFiles": [
+                "interface/cmsis-dap.cfg",
+                "target/${command:raspberry-pi-pico.getTarget}.cfg"
+            ],
+            "runToEntryPoint": "main",
+            "overrideLaunchCommands": [
+                "monitor reset init",
+                "load \"./build/1541-rePico.elf\""
+            ],
+            "openOCDLaunchCommands": [
+                "adapter speed 5000"
+            ]
+        }
+    ]
+}
