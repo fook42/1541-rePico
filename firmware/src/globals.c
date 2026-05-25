@@ -55,4 +55,4 @@ const uint8_t d64_sector_gap[NUM_SPEEDZONES] = {12, 21, 16, 13}; // von GPZ Code
 
 bool block_data_changes = false;
 
-const char* version_str = "<<REPICO " VERSION " BY FOOK42 & PEISELULLI >>";
+const char* version_str = "1541-REPICO " VERSION " BY FOOK42 & PEISELULLI";

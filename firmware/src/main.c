@@ -81,7 +81,6 @@ void gpio_callback(uint gpio, uint32_t events)
                         key2_down_time -= (now_time+1);
                         now_time = ((uint64_t)-1);
                     }
-
                     
                     if ((now_time-key2_down_time) > TIMEOUT2_KEY2)
                     { irq_key_value = KEY2_TIMEOUT2; }
@@ -423,6 +422,7 @@ void update_gui(void)
         {
             unmount_image();
             set_gui_mode(GUI_MENU_MODE);
+            break;
         } else if(KEY2_TIMEOUT2 == key_code)
         {
             // exit_main = 0;
