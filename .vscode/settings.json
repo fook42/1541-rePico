@@ -1,0 +1,35 @@
+{
+    "cmake.sourceDirectory": "/workspaces/1541-rePico/firmware",
+    "cmake.options.statusBarVisibility": "visible",
+    "cmake.options.advanced": {
+        "build": {
+            "statusBarVisibility": "visible"
+        },
+        "launch": {
+            "statusBarVisibility": "visible"
+        },
+        "debug": {
+            "statusBarVisibility": "visible"
+        }
+    },
+    "cmake.configureOnEdit": false,
+    "cmake.automaticReconfigure": false,
+    "cmake.configureOnOpen": false,
+    "cmake.generator": "Ninja",
+    "C_Cpp.debugShortcut": false,
+    "terminal.integrated.env.linux": {
+        "PICO_SDK_FETCH_FROM_GIT": "ON",
+        "PICOTOOL_FETCH_FROM_GIT_PATH": "../build/_deps"
+    },
+    "raspberry-pi-pico.cmakeAutoConfigure": true,
+    "raspberry-pi-pico.useCmakeTools": false,
+    "files.associations": {
+        "i2c.h": "c",
+        "font_c64_ascii.h": "c",
+        "oled.h": "c",
+        "cstring": "cpp",
+        "variant": "cpp",
+        "lcd.h": "c",
+        "stdlib.h": "c"
+    }
+}

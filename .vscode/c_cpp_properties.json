@@ -1,0 +1,20 @@
+{
+    "configurations": [
+        {
+            "name": "Pico",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/build/_deps/**"
+            ],
+            "defines": [
+                "PICO_PLATFORM=rp2040"
+            ],
+            "compilerPath": "/usr/bin/arm-none-eabi-gcc",
+            "compileCommands": "${workspaceFolder}/build/compile_commands.json",
+            "cStandard": "c17",
+            "cppStandard": "c++14",
+            "intelliSenseMode": "linux-gcc-arm"
+        }
+    ],
+    "version": 4
+}
