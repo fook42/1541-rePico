@@ -14,15 +14,13 @@ sudo apt install -y --no-install-recommends \
   python3 \
   python3-venv \
   python3-pip \
-  cc65 \
-  cpmtools \
   gcc-arm-none-eabi \
   libnewlib-arm-none-eabi \
   libstdc++-arm-none-eabi-dev \
   libstdc++-arm-none-eabi-newlib \
   gdb-multiarch \
   binutils-multiarch \
-  minicom
+  xxd
 
 
 # Enable profile for zsh

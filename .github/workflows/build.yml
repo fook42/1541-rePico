@@ -5,13 +5,23 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-24.04
+    
+    permissions:
+      contents: read
+      packages: write
+      attestations: write
+      id-token: write 
+
     steps:    
 
       - name: Checkout code
         uses: actions/checkout@v5
+        with:
+          submodules: recursive
+        
 
       - name: login to GHCR
-        uses: docker/login-action@v2
+        uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -20,23 +30,25 @@ jobs:
       - name: Create devcontainer      
         uses: devcontainers/ci@v0.3
         with:
-          imageName: ghcr.io/${{ github.repository_owner }}/rePico_devcontainer:latest
-          cacheFrom: ghcr.io/${{ github.repository_owner }}/rePico_devcontainer:latest
+          configFile: .devcontainer/.devcontainer.json
+          imageName: ghcr.io/${{ github.repository_owner }}/repico_devcontainer
+          cacheFrom: ghcr.io/${{ github.repository_owner }}/repico_devcontainer
           push: always
 
       - name: Build rePico
         uses: devcontainers/ci@v0.3
         with:
-          imageName: ghcr.io/${{ github.repository_owner }}/rePico_devcontainer:latest
+          configFile: .devcontainer/.devcontainer.json
+          imageName: ghcr.io/${{ github.repository_owner }}/repico_devcontainer
           runCmd: |
             cd /workspaces/1541-rePico
             mkdir -p build
             cd build
-            cmake .. -DCMAKE_BUILD_TYPE=Release
+            cmake -DCMAKE_BUILD_TYPE:STRING=Release -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=TRUE --no-warn-unused-cli -S /workspaces/1541-rePico/firmware -B /workspaces/1541-rePico/build -G Ninja
             cmake --build . --config Release
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: rePico-binaries 
           path: |

@@ -12,14 +12,25 @@ sudo usermod -aG plugdev vscode
 WS=`pwd`
 echo "Working in $WS"
 sudo cp $WS/.devcontainer/install/*.rules /etc/udev/rules.d/
+
+echo "checking for picoSDK"
+if [[ ! -d build/pico-sdk ]]; then
+    echo "Cloning picoSDK"
+    git clone https://github.com/raspberrypi/pico-sdk.git build/pico-sdk
+    export PICO_SDK_PATH=$(pwd)/build/pico-sdk
+    echo "export PICO_SDK_PATH=$PICO_SDK_PATH" >> ~/.profile
+    cd build/pico-sdk
+    git submodule update --init lib/mbedtls
+fi   
+
 echo "checking for openocd for RP2350"
-if [[ ! -f build/openocd_rp2350 ]]; then
+if [[ ! -f build/openocd_rp2350 ]]  && [[ ${BUILD_OPENOCD} == "ON" ]]; then
     echo "Installing OpenOCD for RP2350"
     $WS/.devcontainer/install/build_openocd.sh 
     touch build/openocd_rp2350
 fi
-cd /usr/bin
 
+cd /usr/bin
 echo "checking for picotool with load function"
 if [[ ! -f picotool ]]; then
     sudo cp $WS/.devcontainer/install/picotool .
@@ -31,4 +42,5 @@ if [[ ! -e objdump-multiarch ]]; then
     sudo ln -s /usr/bin/objdump objdump-multiarch  
     sudo ln -s /usr/bin/nm nm-multiarch 
 fi
+ 
 cd -
