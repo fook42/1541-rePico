@@ -1,2 +1,4 @@
 build/*
 firmware/include/selector.h
+analysis-reports/*
+build-analysis/*
