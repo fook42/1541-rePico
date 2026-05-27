@@ -19,8 +19,7 @@ sudo apt install -y --no-install-recommends \
   libstdc++-arm-none-eabi-dev \
   libstdc++-arm-none-eabi-newlib \
   gdb-multiarch \
-  binutils-multiarch \
-  xxd
+  binutils-multiarch 
 
 
 # Enable profile for zsh
