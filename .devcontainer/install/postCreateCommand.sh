@@ -21,6 +21,7 @@ if [[ ! -d build/pico-sdk ]]; then
     echo "export PICO_SDK_PATH=$PICO_SDK_PATH" >> ~/.profile
     cd build/pico-sdk
     git submodule update --init lib/mbedtls
+    cd ${WS}
 fi   
 
 echo "checking for openocd for RP2350"
@@ -28,6 +29,17 @@ if [[ ! -f build/openocd_rp2350 ]]  && [[ ${BUILD_OPENOCD} == "ON" ]]; then
     echo "Installing OpenOCD for RP2350"
     $WS/.devcontainer/install/build_openocd.sh 
     touch build/openocd_rp2350
+    cd ${WS}
+fi
+
+if [[ ! -f /usr/bin/xxd ]]; then
+    cd build
+    wget https://github.com/ckormanyos/xxd/releases/download/v1.2/xxd-x86_64-linux-gnu.tar.gz
+    tar -xzf xxd-x86_64-linux-gnu.tar.gz
+    sudo mv xxd-x86_64-linux-gnu/xxd /usr/bin/xxd
+    rm -rf xxd-x86_64-linux-gnu
+    rm xxd-x86_64-linux-gnu.tar.gz
+    cd ${WS}
 fi
 
 cd /usr/bin
@@ -35,6 +47,8 @@ echo "checking for picotool with load function"
 if [[ ! -f picotool ]]; then
     sudo cp $WS/.devcontainer/install/picotool .
 fi
+
+
 
 echo "checking for multiarch binaries"
 if [[ ! -e objdump-multiarch ]]; then
