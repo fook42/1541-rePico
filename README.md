@@ -7,6 +7,8 @@ parts of his code were taken from there and adopted for Raspberry Pico and modif
 
 the C64 selector-programm was developed and implemented by Peiselulli !
 
+thanks to [BensonRSI](https://github.com/BensonRSI) for adding debugging documentation, dev-containers and github-magic !
+
 ## Features ##
 
 latest version:
