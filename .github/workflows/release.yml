@@ -1,0 +1,81 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  release:
+    name: Prepare Release
+    runs-on: ubuntu-24.04
+    
+    permissions:
+      contents: write
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          
+      - name: Generate Changelog
+        id: changelog
+        run: |
+          RELEASE_TAG=${{ github.ref_name }}
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 $RELEASE_TAG^ 2>/dev/null || echo "")
+          
+          if [ -z "$PREVIOUS_TAG" ]; then
+            # Kein vorheriger Tag - zeige alle Commits
+            CHANGELOG=$(git log --pretty=format:"- %h: %s" --no-merges 2>/dev/null)
+          else
+            # Zeige Commits zwischen vorherigem Tag und diesem Release
+            CHANGELOG=$(git log ${PREVIOUS_TAG}..${RELEASE_TAG} --pretty=format:"- %h: %s" --no-merges 2>/dev/null)
+          fi
+          
+          # Ersetze Newlines in der Ausgabe für GITHUB_OUTPUT
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          
+      - name: Update Release Notes
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const release = context.payload.release;
+            
+            let body = release.body || '';
+            
+            // Changelog hinzufügen wenn nicht bereits vorhanden
+            if (!body.includes('## Changelog')) {
+              const changelog = `${{ steps.changelog.outputs.changelog }}`;
+              if (changelog) {
+                body = body + '\n\n## Changelog\n\n' + changelog;
+              }
+            }
+            
+            // Update release
+            await github.rest.repos.updateRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id: release.id,
+              body: body
+            });
+            
+      - name: Download Build Artifacts
+        id: download
+        continue-on-error: true
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          workflow: build.yml
+          workflow_conclusion: success
+          branch: main
+          skip_unpack: false
+          
+      - name: Upload Artifacts to Release
+        if: steps.download.outcome == 'success'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            rePico-binaries/**/*
+          append_body: true

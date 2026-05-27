@@ -1,8 +1,10 @@
+// Special stripped down devcontainer configuration for GitHub actions. 
+// For more details, see: https://aka.ms/vscode-remote/devcontainer.json
+
 {
-  "name": "1541-repico-devenv",
+  "name": "repico-github-devenv",
   "image": "mcr.microsoft.com/vscode/devcontainers/base:ubuntu-24.04",
   "appPort": [],
-  "forwardPorts": [8000],
   "customizations": {
     "vscode": {
       // Set *default* container specific settings.json values on container create.
@@ -21,28 +23,13 @@
       },
       // Add the IDs of extensions you want installed when the container is created.
       "extensions": [
-        "asciidoctor.asciidoctor-vscode",
-        "esbenp.prettier-vscode",
-        "ms-azuretools.vscode-docker",
-        "ms-python.black-formatter",
-        "ms-vscode.makefile-tools",
-        "ms-vscode.cmake-tools",
-        "rpdswtk.vsmqtt",
-        "marus25.cortex-debug",
-        "debug-tracker-vscode"
         ]
   },
   "onCreateCommand": "bash .devcontainer/install/onCreateCommand.sh",
   "postStartCommand": "bash .devcontainer/install/postCreateCommand.sh",
   "remoteUser": "vscode",
   "containerEnv": {
-    "BUILD_OPENOCD": "ON"
-  },
-  "mounts": ["type=bind,source=/dev/bus/usb,target=/dev/bus/usb"],
-  "runArgs": [
-    "--privileged"
-    //,"--device=/dev/ttyACM0"
-    //,"--device=/dev/ttyACM1"
-    // uncomment if you have picoprobe installed and ports are not automatically forwarded"
-  ]
+    "BUILD_OPENOCD": "OFF"
+  }
 }
+   
