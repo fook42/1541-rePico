@@ -28,9 +28,9 @@
         "PATH": "${env:HOME}/.pico-sdk/toolchain/14_2_Rel1/bin:${env:HOME}/.pico-sdk/picotool/2.1.1/picotool:${env:HOME}/.pico-sdk/cmake/v3.31.5/bin:${env:HOME}/.pico-sdk/ninja/v1.12.1:${env:PATH}"
     },
     "terminal.integrated.env.linux": {
-        "PICO_SDK_PATH": "${env:HOME}/.pico-sdk/sdk/2.1.1",
-        "PICO_TOOLCHAIN_PATH": "${env:HOME}/.pico-sdk/toolchain/14_2_Rel1",
-        "PATH": "${env:HOME}/.pico-sdk/toolchain/14_2_Rel1/bin:${env:HOME}/.pico-sdk/picotool/2.1.1/picotool:${env:HOME}/.pico-sdk/cmake/v3.31.5/bin:${env:HOME}/.pico-sdk/ninja/v1.12.1:${env:PATH}"
+        "PICO_SDK_PATH": "${env:PICO_SDK_PATH}",
+        "PICO_TOOLCHAIN_PATH": "${env:PICO_SDK_PATH}",
+        "PATH": "${env:PATH}"
     },
     "raspberry-pi-pico.cmakeAutoConfigure": true,
     "raspberry-pi-pico.useCmakeTools": false,

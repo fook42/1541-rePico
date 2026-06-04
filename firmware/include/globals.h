@@ -23,6 +23,7 @@
 #define INIT_TRACK      DIRECTORY_TRACK
 #define MENU_DATA_TRACK (16)
 #define SELECTOR_TRACK  (18)
+#define INTRO_TRACK     (19)
 
 #define PRGFILE_TRACK   (16)  // we have Tracks 0..16 to store a PRG file into
 #define SCRATCH_TRACK   (18)  // we use Tracks 18..41 for preparing the PRG data

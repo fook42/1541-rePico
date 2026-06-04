@@ -34,15 +34,21 @@ project(1541-rePico C CXX ASM)
 pico_sdk_init()
 
 add_custom_target(GenSelector
-  COMMAND echo \"\#ifndef _MENU_PRG_H_\\n\#define _MENU_PRG_H_\" > ${PROJECT_SOURCE_DIR}/include/selector.h
-  COMMAND xxd -i -n \"menu_prg\" ${CMAKE_CURRENT_SOURCE_DIR}/FileSelector/menu.prg >> ${PROJECT_SOURCE_DIR}/include/selector.h
-  COMMAND sed -i \"s!unsigned!const unsigned!g\" ${PROJECT_SOURCE_DIR}/include/selector.h
-  COMMAND echo \"\#endif\" >> ${PROJECT_SOURCE_DIR}/include/selector.h
+  COMMAND echo \"\#ifndef _MENU_PRG_H_\\n\#define _MENU_PRG_H_\" > ${PROJECT_SOURCE_DIR}/include/c64_selector.h
+  COMMAND xxd -i -n \"menu_prg\" ${CMAKE_CURRENT_SOURCE_DIR}/SoftwareC64/menu.prg >> ${PROJECT_SOURCE_DIR}/include/c64_selector.h
+  COMMAND sed -i \"s!unsigned!const unsigned!g\" ${PROJECT_SOURCE_DIR}/include/c64_selector.h
+  COMMAND echo \"\#endif\" >> ${PROJECT_SOURCE_DIR}/include/c64_selector.h
+)
+add_custom_target(GenIntro
+  COMMAND echo \"\#ifndef _INTRO_PRG_H_\\n\#define _INTRO_PRG_H_\" > ${PROJECT_SOURCE_DIR}/include/c64_intro.h
+  COMMAND xxd -i -n \"intro_prg\" ${CMAKE_CURRENT_SOURCE_DIR}/SoftwareC64/intro.prg >> ${PROJECT_SOURCE_DIR}/include/c64_intro.h
+  COMMAND sed -i \"s!unsigned!const unsigned!g\" ${PROJECT_SOURCE_DIR}/include/c64_intro.h
+  COMMAND echo \"\#endif\" >> ${PROJECT_SOURCE_DIR}/include/c64_intro.h
 )
 
 add_executable(1541-rePico)
 
-add_dependencies(1541-rePico GenSelector)
+add_dependencies(1541-rePico GenSelector GenIntro)
 
 # Add executable. Default name is the project name, version 0.1
 file(GLOB_RECURSE mysources  CONFIGURE_DEPENDS "src/*.c")

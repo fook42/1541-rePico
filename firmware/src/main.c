@@ -29,7 +29,8 @@
 #include "globals.h"
 #include "rw_routines.h"
 #include "menu_image.h"
-#include "selector.h"
+#include "c64_selector.h"
+#include "c64_intro.h"
 
 #include "hw_config.h"
 #include "f_util.h"
@@ -657,11 +658,9 @@ void show_start_message(void)
     display_setbright(true);
     display_setcursor(disp_versiontxt_p);
     display_string(disp_versiontxt_s);
-    display_setbright(false);
     display_setcursor(disp_firmwaretxt_p);
     display_string(disp_firmwaretxt_s);
     display_string(VERSION);
-    display_setbright(true);
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -835,12 +834,37 @@ void insert_menu_image(char* menu_path)
                 /* code */
             } while (buffer_left>0);
 
+            // generates intro file..
+            buffer_size = intro_prg_len;
+            file_track = INTRO_TRACK;
+            file_buffer_pointer = (uint8_t*) &intro_prg[0];
+            prev_sector = 0;
+            do
+            {
+                buffer_left = buffer_to_track(file_buffer_pointer, buffer_size, file_track, &prev_sector);
+                if (buffer_left>0)
+                {
+                    next_file_track = (file_track+1)%num_max_tracks;
+                    file_buffer_pointer += (buffer_size-buffer_left);
+                    buffer_size = buffer_left;
+                    // last sector ?? -> update last sector-chain-pointer to new "file_track,0"...
+                    d64_sector_puffer[1+prev_sector*D64_SECTOR_SIZE]=next_file_track+1;
+                    d64_sector_puffer[1+prev_sector*D64_SECTOR_SIZE+1]=0;
+                }
+                convert_d64track2gcr(file_track, id1, id2);
+                file_track = next_file_track;
+                /* code */
+            } while (buffer_left>0);
+
+
+
             memset(d64_sector_puffer, 0, sizeof(d64_sector_puffer));
-            strcpy(image_filename, "-ONSCREEN MENU-");
-            generate_bam(image_filename, id_buffer);
+            strcpy(image_filename, "\06 ONSCREEN MENU");
+            generate_bam("- 1541 REPICO -", id_buffer);
             // create a file-entry in the directory...
             generate_directory_entry("SELECTOR", 0x82, SELECTOR_TRACK ,0,((uint16_t) (menu_prg_len/254))+1);
             generate_directory_entry("DATAFILE", 0x82, MENU_DATA_TRACK,0,((uint16_t) (menu_file_len/254))+1);
+            generate_directory_entry("INTRO", 0x82, INTRO_TRACK,0,((uint16_t) (intro_prg_len/254))+1);
             convert_d64track2gcr(DIRECTORY_TRACK, id1, id2);
 
             akt_track_pos = 0;
