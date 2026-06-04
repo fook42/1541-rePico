@@ -71,7 +71,6 @@ uint8_t display_init(void)
 char* dez2out(int32_t value, uint8_t digits, char* dest)
 {
     const int32_t   _dez[]={1,10,100,1000,10000,100000,1000000,10000000};
-    uint8_t         c;
     bool            show = true;
 
     if ((0 == digits) || (7 < digits))
@@ -86,7 +85,7 @@ char* dez2out(int32_t value, uint8_t digits, char* dest)
     }
     while (digits--)
     {
-        c = value/_dez[digits];
+        uint8_t c = value/_dez[digits];
         if ((true == show) || (0 != c) || (0 == digits))
         {
             show = true;
@@ -100,7 +99,6 @@ char* dez2out(int32_t value, uint8_t digits, char* dest)
 
 char* hex2out(uint32_t dez, uint8_t digits, char* dest)
 {
-    uint8_t c;
     bool show = true;
     if (0 == digits)
     {
@@ -109,7 +107,7 @@ char* hex2out(uint32_t dez, uint8_t digits, char* dest)
     }
     while (digits--)
     {
-        c=(dez>>(digits<<2))&0x0F;
+        uint8_t c=(dez>>(digits<<2))&0x0F;
         if ((true == show) || (0 != c) || (0 == digits))
         {
             show = true;

@@ -154,10 +154,9 @@ void lcd_home( void )
 
 void lcd_setcursor( const uint8_t x, const uint8_t y )
 {
-    uint8_t offset;
     if (LCD_ROWS > y)
     {
-        offset = (lcd_rowoffset[y] + x) & 0x7F;
+        uint8_t offset = (lcd_rowoffset[y] + x) & 0x7F;
         lcd_command( LCD_SET_DDADR | offset );
     }
 }
@@ -165,7 +164,7 @@ void lcd_setcursor( const uint8_t x, const uint8_t y )
 ////////////////////////////////////////////////////////////////////////////////
 // Schreibt einen String auf das LCD
 
-void lcd_string( char *data )
+void lcd_string( char* data )
 {
     while( *data != '\0' )
     {

@@ -786,7 +786,7 @@ void insert_menu_image(char* menu_path)
             uint16_t menu_file_len = generate_menu_file(&dir_object, menu_path, SCRATCH_TRACK);
             size_t buffer_size = menu_file_len;
             size_t buffer_left;
-            uint8_t file_track = MENU_DATA_TRACK, next_file_track;
+            int8_t file_track = MENU_DATA_TRACK, next_file_track = file_track;
             uint8_t* file_buffer_pointer = g64_tracks[SCRATCH_TRACK];
             uint8_t prev_sector = 0;
             do
@@ -815,6 +815,7 @@ void insert_menu_image(char* menu_path)
             // generates selector_file..
             buffer_size = menu_prg_len;
             file_track = SELECTOR_TRACK;
+            next_file_track = file_track;
             file_buffer_pointer = (uint8_t*) &menu_prg[0];
             prev_sector = 0;
             do
@@ -836,7 +837,8 @@ void insert_menu_image(char* menu_path)
 
             // generates intro file..
             buffer_size = intro_prg_len;
-            file_track = INTRO_TRACK;
+            file_track++;   // we just take the next track after the last selector-file-track
+            uint8_t intro_track = file_track;   //store for directory-creation
             file_buffer_pointer = (uint8_t*) &intro_prg[0];
             prev_sector = 0;
             do
@@ -864,7 +866,7 @@ void insert_menu_image(char* menu_path)
             // create a file-entry in the directory...
             generate_directory_entry("SELECTOR", 0x82, SELECTOR_TRACK ,0,((uint16_t) (menu_prg_len/254))+1);
             generate_directory_entry("DATAFILE", 0x82, MENU_DATA_TRACK,0,((uint16_t) (menu_file_len/254))+1);
-            generate_directory_entry("INTRO", 0x82, INTRO_TRACK,0,((uint16_t) (intro_prg_len/254))+1);
+            generate_directory_entry("INTRO", 0x82, intro_track,0,((uint16_t) (intro_prg_len/254))+1);
             convert_d64track2gcr(DIRECTORY_TRACK, id1, id2);
 
             akt_track_pos = 0;

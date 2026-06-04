@@ -190,7 +190,7 @@ int8_t read_disk(FIL* fd, const int image_type, FILINFO fileinfo)
             // generates a prg_file starting from PRGFILE_TRACK
             size_t buffer_size = fileinfo.fsize;
             size_t buffer_left;
-            int8_t file_track = PRGFILE_TRACK, next_file_track;
+            int8_t file_track = PRGFILE_TRACK, next_file_track = PRGFILE_TRACK;
             uint8_t* file_buffer_pointer = g64_tracks[SCRATCH_TRACK];
 
             fr = f_lseek(fd, 0);
