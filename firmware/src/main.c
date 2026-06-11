@@ -573,6 +573,27 @@ void check_menu_events(const uint16_t menu_event)
                     set_gui_mode(GUI_INFO_MODE);
                     break;
 
+                case M_RELOAD_DISK:
+                    if (is_image_mount)
+                    {
+                        is_image_mount = false;
+                        for(uint8_t i=0; i<LCD_LINE_SIZE; i++)
+                        {
+                            display_setcursor(i,0);
+                            display_data(display_cursor_char);
+                            sleep_ms(50);
+                        }
+                        for(uint8_t i=0; i<LCD_LINE_SIZE; i++)
+                        {
+                            display_setcursor(i,0);
+                            display_data(' ');
+                            sleep_ms(50);
+                        }
+                        is_image_mount = true;
+                        set_gui_mode(GUI_INFO_MODE);
+                    }
+                    break;
+
                 case M_WP_IMAGE:
                     if(menu_get_entry_var1(&image_menu, M_WP_IMAGE))
                     {
@@ -692,7 +713,20 @@ void handle_selector_image(void)
 
                 if (selected_image_nr > 0)
                 {
-                    sleep_ms(500);
+                    for(uint8_t i=0; i<LCD_LINE_SIZE; i++)
+                    {
+                        display_setcursor(i,1);
+                        display_data(display_cursor_char);
+                        sleep_ms(20);
+                    }
+                    for(uint8_t i=0; i<LCD_LINE_SIZE; i++)
+                    {
+                        display_setcursor(i,1);
+                        display_data(' ');
+                        sleep_ms(20);
+                    }
+
+                    // sleep_ms(500);
                     uint8_t pathlen=strlen(current_path);
                     if (pathlen>1)
                     {
@@ -857,8 +891,6 @@ void insert_menu_image(char* menu_path)
                 file_track = next_file_track;
                 /* code */
             } while (buffer_left>0);
-
-
 
             memset(d64_sector_puffer, 0, sizeof(d64_sector_puffer));
             strcpy(image_filename, "\06 ONSCREEN MENU");
