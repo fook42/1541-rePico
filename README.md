@@ -53,7 +53,7 @@ one size fits for all 1541 models.
 ### prepare tools (linux) ###
 
 ```
-sudo apt install cmake ninja-build libusb-1.0-0-dev build-essential pkg-config python3 xxd gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
+sudo apt install cmake ninja-build libusb-1.0-0-dev build-essential pkg-config python3 xxd gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib acme
 ```
 
 ### pico-sdk ###
@@ -93,8 +93,10 @@ prepare build-folder / configure Ninja for build the cmake project
 cd firmware
 mkdir build
 cd build
-cmake -G Ninja ..
+cmake -G Ninja .. -D BUILD_MENUPRG=OFF
 ```
+
+Hint: you may change the option "BUILD_MENUPRG" to "ON" if you want to let ACME compile the provided menu.asm-code. Otherwise the shipped, precompiled "menu.prg" will be used.
 
 now trigger a build
 
