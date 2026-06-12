@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.13)
 
 set(PROJECT_INCLUDE ${PROJECT_SOURCE_DIR}/include)
 
-find_program(ACME_BINARY "acme" PATHS "/usr/local/bin;/usr/bin;/bin" NOCACHE )
+find_program(ACME_BINARY "acme" PATHS "/usr/local/bin;/usr/bin;/bin" NO_CACHE )
 
 option(BUILD_MENUPRG "Enable compiling of menu.prg" ON)
 
