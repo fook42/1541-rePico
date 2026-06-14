@@ -713,17 +713,17 @@ void handle_selector_image(void)
 
                 if (selected_image_nr > 0)
                 {
+                    display_setcursor(disp_scrollfilename_p);
                     for(uint8_t i=0; i<LCD_LINE_SIZE; i++)
                     {
-                        display_setcursor(i,1);
                         display_data(display_cursor_char);
-                        sleep_ms(20);
+                        sleep_ms(250/LCD_LINE_SIZE);
                     }
+                    display_setcursor(disp_scrollfilename_p);
                     for(uint8_t i=0; i<LCD_LINE_SIZE; i++)
                     {
-                        display_setcursor(i,1);
                         display_data(' ');
-                        sleep_ms(20);
+                        sleep_ms(250/LCD_LINE_SIZE);
                     }
 
                     // sleep_ms(500);
