@@ -250,7 +250,7 @@ void check_stepper_signals(void)
     // und auswerten
     if(stepper_signal_r_pos != stepper_signal_w_pos)    // Prüfen ob sich was neues im Ringpuffer für die Steppersignale befindet
     {
-        stepper  = stepper_signal_puffer[stepper_signal_r_pos-1]<<2;
+        stepper  = stepper_signal_puffer[(stepper_signal_r_pos+255)&0xFF]<<2;
         stepper |= stepper_signal_puffer[stepper_signal_r_pos];
         stepper_signal_r_pos++;
 
