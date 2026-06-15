@@ -181,7 +181,7 @@ int8_t read_disk(FIL* fd, const int image_type, FILINFO fileinfo)
 
         case PRG_IMAGE: // PRG Datei
         {
-            uint8_t id_buffer[]={" 1541"};      // disk-id
+            const uint8_t id_buffer[]={" 1541"};      // disk-id
             id1 = id_buffer[0];
             id2 = id_buffer[1];
             const uint8_t num_max_tracks = MAX_TRACKS;
@@ -235,7 +235,7 @@ int8_t read_disk(FIL* fd, const int image_type, FILINFO fileinfo)
             size_t namelen = strlen(fileinfo.fname)-4;  //remove the ".prg"
             if (namelen>16) {namelen=16;}
             memcpy(FILENAME,fileinfo.fname,namelen);
-            generate_directory_entry(FILENAME, 0x82, PRGFILE_TRACK,0,((uint16_t) (fileinfo.fsize/253))+1);
+            generate_directory_entry(FILENAME, CBMDOS_TYPE_PRG, PRGFILE_TRACK,0,((uint16_t) (fileinfo.fsize/253))+1);
             convert_d64track2gcr(DIRECTORY_TRACK,id1,id2);
 
             last_track = num_max_tracks-1;
@@ -250,13 +250,13 @@ int8_t read_disk(FIL* fd, const int image_type, FILINFO fileinfo)
 int8_t write_disk(FIL* fd, const int image_type, const uint8_t num_tracks)
 {
     UINT bytes_write;
-    uint8_t* P;
-    uint8_t* Out_P;
-    uint8_t sector_nr;
-    uint8_t num;
-    uint8_t temp;
-    int32_t offset = 0;
-    int32_t offset_track = 0;
+    // uint8_t* P;
+    // uint8_t* Out_P;
+    // uint8_t sector_nr;
+    // uint8_t num;
+    // uint8_t temp;
+    // int32_t offset = 0;
+    // int32_t offset_track = 0;
 
     int8_t last_track = -1;
     FRESULT fr;
@@ -323,13 +323,16 @@ int8_t write_disk(FIL* fd, const int image_type, const uint8_t num_tracks)
         }
         case D64_IMAGE:
         {
+            uint8_t* Out_P;
+            uint8_t temp;
+
             for (int track_nr=0; track_nr<num_tracks; track_nr++)
             {
-                P = g64_tracks[track_nr];
-                sector_nr = d64_sector_count[d64_track_zone[track_nr]];
-                uint8_t *P_end = &g64_tracks[track_nr][g64_tracklen[track_nr]];
+                uint8_t* P = g64_tracks[track_nr];
+                uint8_t sector_nr = d64_sector_count[d64_track_zone[track_nr]];
+                uint8_t* P_end = &g64_tracks[track_nr][g64_tracklen[track_nr]];
 
-                offset_track = ((int32_t) d64_track_offset[track_nr]) << 8;   // we store only 16bit values;
+                int32_t offset_track = ((int32_t) d64_track_offset[track_nr]) << 8;   // we store only 16bit values;
 
                 // find first track-marker .. FF FF 52 ... FF FF 55
                 do
@@ -352,7 +355,7 @@ int8_t write_disk(FIL* fd, const int image_type, const uint8_t num_tracks)
                     break;
                 }
                 P += 5; // skip the header
-                offset = offset_track + (d64_sector_puffer[2]*D64_SECTOR_SIZE);
+                int32_t offset = offset_track + (d64_sector_puffer[2]*D64_SECTOR_SIZE);
                 if(FR_OK == (fr=f_lseek(fd, offset)))
                 {
                     // lets extract the given FloppyID for further readback of GCR...
@@ -392,7 +395,7 @@ int8_t write_disk(FIL* fd, const int image_type, const uint8_t num_tracks)
                     break;
                 }
 
-                for(num=0; num<(sector_nr-1); ++num)
+                for(uint8_t num=0; num<(sector_nr-1); ++num)
                 {
                     // find track-marker .. FF FF 52 ... FF FF 55
                     do
@@ -465,7 +468,6 @@ void convert_d64track2gcr(uint8_t track_nr, uint8_t image_id1, uint8_t image_id2
     uint8_t buffer[4];
     uint8_t header_bytes[5];
     uint8_t* current_sector;
-    uint8_t SUM;
 
     const uint8_t num_of_sectors = d64_sector_count[d64_track_zone[track_nr]];
     const uint8_t chksum_trackid = (track_nr+1) ^ image_id2 ^ image_id1;
@@ -518,7 +520,7 @@ void convert_d64track2gcr(uint8_t track_nr, uint8_t image_id1, uint8_t image_id2
         *P++ = GCR_SYNCMARK;								// SYNC
         *P++ = GCR_SYNCMARK;								// SYNC
 
-        SUM = 0x07;     // checksum is prefilled with data-marker
+        uint8_t SUM = 0x07;     // checksum is prefilled with data-marker
                         // -> the complete buffer can be processed
         for (int i=0; i<257; ++i)
         {
@@ -693,9 +695,8 @@ size_t buffer_to_track(uint8_t* buffer, size_t buffer_len, uint8_t track_nr, uin
         memcpy(&Dest_P[2], Buffer_P, copy_size);
 
         remaining_size -= copy_size;
-        if (remaining_size <= 0)
+        if (0 == remaining_size)
         {
-            remaining_size = 0;
             Dest_P[1] = copy_size+1;
             break;
         }

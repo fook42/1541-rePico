@@ -28,7 +28,7 @@ void generate_empty_image(uint8_t image_id1, uint8_t image_id2, uint8_t track_nu
     }
 }
 
-void generate_bam(char* image_name, uint8_t* image_id_buffer)
+void generate_bam(const char* const image_name, const uint8_t* const image_id_buffer)
 {
     uint8_t* P = &d64_sector_puffer[1];
 
@@ -40,7 +40,7 @@ void generate_bam(char* image_name, uint8_t* image_id_buffer)
     uint8_t j=0;
     for(uint8_t i=0x90; i<0xAB; i++)
     {
-        if (image_name[j]!=0)
+        if (0 != image_name[j])
             P[i] = toupper(image_name[j++]);
         else
             P[i] = 0xA0;
@@ -52,31 +52,29 @@ void generate_bam(char* image_name, uint8_t* image_id_buffer)
     P[DIR_ID_OFFSET+4] = image_id_buffer[4];
 }
 
-void generate_directory_entry(uint8_t* filename, uint8_t filetype, uint8_t des_track, uint8_t des_sector, uint16_t size)
+void generate_directory_entry(uint8_t* const filename, const uint8_t filetype, const uint8_t des_track, const uint8_t des_sector, const uint16_t size)
 {
     // assumption: d64_sector_puffer holds entire DIRECTORY_TRACK 18!!
     uint8_t*    P;
     uint8_t*    dir_sector_P = &d64_sector_puffer[1];
 
-    uint8_t i=0;
-
     dir_sector_P += D64_SECTOR_SIZE;
     P = dir_sector_P;
 
-    while (P[2]!=0)
+    while (0 != P[2])
     {
         P+=0x20;
     }  // skip existing entries
 
     P=&P[2]; // skip the "next-sector"-pointer
 
-    P[0]=filetype;      // 0x82=PRG
+    P[0]=filetype;      // 0x82 = CBMDOS_TYPE_PRG
     P[1]=des_track+1;   // track
     P[2]=des_sector;    // sector
     uint8_t j=0;
     for(uint8_t k=3; k<19; k++)
     {
-        if (filename[j]!=0)
+        if (0 != filename[j])
             P[k] = toupper(filename[j++]);
         else
             P[k] = 0xA0;
@@ -92,7 +90,7 @@ uint16_t generate_menu_file(DIR* dir_obj, uint8_t* dir_path, const uint8_t dest_
 
     uint8_t*    P;
     uint8_t*    file_sector_P  = g64_tracks[dest_track];
-    uint8_t*    charP;
+    uint8_t*    charP = dir_path;
 
     char        file_extension[5]={0};
 
@@ -103,25 +101,23 @@ uint16_t generate_menu_file(DIR* dir_obj, uint8_t* dir_path, const uint8_t dest_
 
     //store current path to menu-file
     uint8_t dirname_len = strlen(dir_path);
-    charP = dir_path;
-    if (dirname_len>38)
+    if (0 == dirname_len)
+    {
+        charP = (uint8_t*) version_str;
+    } else if (38 < dirname_len)
     {
         *P++ = '.';
         *P++ = '.';
         charP = &dir_path[dirname_len-38];
     }
-    if (dirname_len == 0)
-    {
-        charP = (uint8_t*) version_str;
-    }
 
-    while (charP[0] != 0)
+    while (0 != charP[0])
     {
         *P++ = *charP++;
     }
     *P++ = 0;
 
-    if (dirname_len > 1)
+    if (1 < dirname_len)
     {
         *P++ = TYPE_DIR;
         *P++ = '.';
@@ -145,7 +141,7 @@ uint16_t generate_menu_file(DIR* dir_obj, uint8_t* dir_path, const uint8_t dest_
             strcpy(file_extension, fb_dir_menu_entry.fname+(namelen - 4));
 
             int i=0;
-            while(file_extension[i] != '\0')
+            while(0 != file_extension[i])
             {
                 file_extension[i] = tolower(file_extension[i]);
                 ++i;
@@ -169,8 +165,7 @@ uint16_t generate_menu_file(DIR* dir_obj, uint8_t* dir_path, const uint8_t dest_
         }
 
         uint8_t c = 0;
-        int j;
-        j = 0;
+        int j = 0;
         do
         {
             c = fb_dir_menu_entry.fname[j];

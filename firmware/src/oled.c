@@ -169,10 +169,10 @@ void oled_setcursor( const uint8_t spalte, const uint8_t zeile )
 // write 1 character
 void oled_data( const uint8_t data )
 {
+    if (0 == data) { return; }
+
     uint8_t buffer[FONT_HEIGHT+1];
     buffer[0] = SSD1306_I2C_DATA;
-
-    if (0 == data) { return; }
 
     if (num_of_customchars >= data)
     {
@@ -201,9 +201,9 @@ void oled_data( const uint8_t data )
 
 ////////////////////////////////////////////////////////////////////////////////
 // write a string
-void oled_string( char *data )
+void oled_string( char* data )
 {
-    while( *data != '\0' )
+    while( 0 != data[0] )
     {
         oled_data( *data++ );
     }
@@ -216,7 +216,7 @@ void oled_print( const char *string, const uint8_t start, const uint8_t length)
     uint8_t char_counter = 1;
     uint8_t current_char = string[start];
 
-    while((current_char != '\0') && ((char_counter-1) < length))
+    while((0 != current_char) && ((char_counter-1) < length))
     {
         oled_data(current_char);
         current_char = string[start+char_counter++];

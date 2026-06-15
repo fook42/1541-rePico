@@ -141,8 +141,6 @@ int main()
     init_writeprot();
     disable_write_protection();
 
-    uint8_t dsp_zeile = 0;
-
     // setup menus
     menu_init(&main_menu,     main_menu_entrys,     count_of(main_menu_entrys),     LCD_LINE_SIZE, LCD_LINE_COUNT);
     menu_init(&image_menu,    image_menu_entrys,    count_of(image_menu_entrys),    LCD_LINE_SIZE, LCD_LINE_COUNT);
@@ -245,12 +243,11 @@ void start_stepper_timer(void)
 
 void check_stepper_signals(void)
 {
-    uint8_t stepper;
     // Auf Steppermotor aktivität prüfen
     // und auswerten
     if(stepper_signal_r_pos != stepper_signal_w_pos)    // Prüfen ob sich was neues im Ringpuffer für die Steppersignale befindet
     {
-        stepper  = stepper_signal_puffer[(stepper_signal_r_pos+255)&0xFF]<<2;
+        uint8_t stepper = stepper_signal_puffer[(stepper_signal_r_pos+255)&0xFF]<<2;
         stepper |= stepper_signal_puffer[stepper_signal_r_pos];
         stepper_signal_r_pos++;
 
@@ -340,6 +337,7 @@ void update_gui(void)
                     if(!(next_dir_entry.fattrib & AM_DIR))
                     {
                         int odr_return = open_dir_entry(next_dir_entry);
+                        if (1 == odr_return)
                         {
                             selected_image_nr++;
                             set_gui_mode(GUI_INFO_MODE);
@@ -461,8 +459,6 @@ void check_menu_events(const uint16_t menu_event)
 {
     const uint8_t command = (uint8_t) ((menu_event >> 8) & 0xff);
     const uint8_t value = (uint8_t) (menu_event & 0xff);
-    char byte_str[6];
-    int file_op_status;
 
     switch(command)
     {
@@ -497,6 +493,8 @@ void check_menu_events(const uint16_t menu_event)
                 case M_SAVE_IMAGE:
                     if (is_image_mount)
                     {
+                        char byte_str[6];
+                        int file_op_status;
                         // todo: create save-file dialog, name, type
                         // for now: open a "standard-file" (G64)
                         fr = mount_sdcard();
@@ -688,10 +686,6 @@ void show_start_message(void)
 
 void handle_selector_image(void)
 {
-    static uint32_t select_wait_counter0 = 0;
-    const uint8_t busy_txt[]={display_cursor_char,' '};
-    static uint8_t busy_count=0;
-    char char_buffer[8];
     FILINFO hsi_dir_entry;
 
     if (SELECTOR_IMAGE != akt_image_type)
@@ -726,7 +720,6 @@ void handle_selector_image(void)
                         sleep_ms(250/LCD_LINE_SIZE);
                     }
 
-                    // sleep_ms(500);
                     uint8_t pathlen=strlen(current_path);
                     if (pathlen>1)
                     {
@@ -776,19 +769,6 @@ void handle_selector_image(void)
 
             }
             track_is_written = false;
-    //     } else {
-    //         if (0 == select_wait_counter0)
-    //         {
-    //             display_setcursor(0,1);
-    //             display_data(busy_txt[busy_count]);
-    //         }
-    //         if (select_wait_counter0 >= (uint32_t)300000)
-    //         {
-    //             busy_count = (busy_count+1)%count_of(busy_txt);
-    //             select_wait_counter0 = 0;
-    //         } else {
-    //             select_wait_counter0++;
-    //         }
         }
     }
 }
@@ -810,7 +790,7 @@ void insert_menu_image(char* menu_path)
             stop_bytetimer();
             send_byte_ready = false;         // disable VIA transfer
 
-            uint8_t id_buffer[]={" F00K"};      // disk-id
+            const uint8_t id_buffer[]={" F00K"};      // disk-id
             id1 = id_buffer[0];
             id2 = id_buffer[1];
             num_max_tracks = 35;// MAX_TRACKS;
@@ -896,9 +876,9 @@ void insert_menu_image(char* menu_path)
             strcpy(image_filename, "\06 ONSCREEN MENU");
             generate_bam("- 1541 REPICO -", id_buffer);
             // create a file-entry in the directory...
-            generate_directory_entry("SELECTOR", 0x82, SELECTOR_TRACK ,0,((uint16_t) (menu_prg_len/254))+1);
-            generate_directory_entry("DATAFILE", 0x82, MENU_DATA_TRACK,0,((uint16_t) (menu_file_len/254))+1);
-            generate_directory_entry("INTRO", 0x82, intro_track,0,((uint16_t) (intro_prg_len/254))+1);
+            generate_directory_entry("SELECTOR", CBMDOS_TYPE_PRG, SELECTOR_TRACK ,0,((uint16_t) (menu_prg_len/254))+1);
+            generate_directory_entry("DATAFILE", CBMDOS_TYPE_PRG, MENU_DATA_TRACK,0,((uint16_t) (menu_file_len/254))+1);
+            generate_directory_entry("INTRO",    CBMDOS_TYPE_PRG, intro_track    ,0,((uint16_t) (intro_prg_len/254))+1);
             convert_d64track2gcr(DIRECTORY_TRACK, id1, id2);
 
             akt_track_pos = 0;
@@ -1653,11 +1633,11 @@ bool repeating_timer_callback(__unused struct repeating_timer *t)
     // Je nach dem welche Spur gerade aktiv ist
 
     uint8_t akt_gcr_byte;
-    static uint8_t old_gcr_byte = 0;
-    uint8_t is_sync;
 
     if(get_so_status())
     {
+        static uint8_t old_gcr_byte = 0;
+        uint8_t is_sync;
         // LESE MODUS
         // Daten aus Ringpuffer senden wenn Motor an und ein Image gemountet ist
         if(get_motor_status() && is_image_mount)

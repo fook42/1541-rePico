@@ -27,6 +27,8 @@
 #define PRGFILE_TRACK   (16)  // we have Tracks 0..16 to store a PRG file into
 #define SCRATCH_TRACK   (18)  // we use Tracks 18..41 for preparing the PRG data
 
+#define CBMDOS_TYPE_PRG (0x82)
+
 // offset inside directory track of ID1+ID2
 #define DIR_ID_OFFSET   (0xA2)
 

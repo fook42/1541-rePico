@@ -219,7 +219,6 @@ uint8_t menu_get_entry_var1(MENU_STRUCT *menu, const uint8_t id)
         if(menu->entry_list[i].id == id)
         {
             return menu->entry_list[i].var1;
-            break;
         }
     }
     return 0;
