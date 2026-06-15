@@ -12,10 +12,8 @@
 
 int8_t read_disk(FIL* fd, const int image_type, FILINFO fileinfo)
 {
-    uint8_t* P;
     uint8_t buffer[4];
     uint32_t offset = 0;
-    uint8_t SUM;
     int8_t  last_track = -99;
     UINT    bytes_read;
     FRESULT fr;
@@ -28,7 +26,7 @@ int8_t read_disk(FIL* fd, const int image_type, FILINFO fileinfo)
         ///////////////////////////////////////////////////////////////////////////
         case G64_IMAGE: // G64
         {
-            P = d64_sector_puffer; // use this d64_buffer as temporary storage
+            uint8_t* P = d64_sector_puffer; // use this d64_buffer as temporary storage
             fr = f_read(fd, P, sizeof(g64_head), &bytes_read);
             if((FR_OK != fr) || (sizeof(g64_head) != bytes_read))
             {
@@ -57,19 +55,17 @@ int8_t read_disk(FIL* fd, const int image_type, FILINFO fileinfo)
                 break;
             }
 
-            SUM = 0; // used to count the existing track data
             for(uint8_t track_nr=0; track_nr<G64_TRACKCOUNT; track_nr++)
             {
                 offset = g64_jumptable[track_nr<<1];
-                if(0 == offset)
+                if (0 == offset)
                 {
                     // we clean existing data in case there is no trackdata stored.
                     memset(g64_tracks[track_nr], 0x00, G64_TRACKSIZE);
                     continue;
                 }
                 // found some track-offset .. now read the track itself
-                fr = f_lseek(fd, offset);
-                if(FR_OK != fr)
+                if (FR_OK != f_lseek(fd, offset))
                 {
                     last_track = -5;
                     break;
@@ -77,7 +73,7 @@ int8_t read_disk(FIL* fd, const int image_type, FILINFO fileinfo)
 
                 // read track length and store it.
                 fr = f_read(fd, &g64_tracklen[track_nr], sizeof(g64_tracklen[0]), &bytes_read);
-                if((FR_OK != fr) || (sizeof(g64_tracklen[0]) != bytes_read))
+                if ((FR_OK != fr) || (sizeof(g64_tracklen[0]) != bytes_read))
                 {
                     last_track = -6;
                     break;
@@ -85,7 +81,7 @@ int8_t read_disk(FIL* fd, const int image_type, FILINFO fileinfo)
 
                 // read track data itself
                 fr = f_read(fd, g64_tracks[track_nr], g64_tracklen[track_nr], &bytes_read);
-                if((FR_OK != fr) || (g64_tracklen[track_nr] != bytes_read))
+                if ((FR_OK != fr) || (g64_tracklen[track_nr] != bytes_read))
                 {
                     last_track = -7;
                     break;
@@ -94,14 +90,13 @@ int8_t read_disk(FIL* fd, const int image_type, FILINFO fileinfo)
                 // fill up the remaining bytes
                 memset(&g64_tracks[track_nr][g64_tracklen[track_nr]], 0x55, G64_TRACKSIZE-g64_tracklen[track_nr]);
 
-                ++SUM;
                 last_track=track_nr;
             }
             if (0<last_track)
             {
                 // extract id2+id1 from GCR stream...
                 P = g64_tracks[last_track];
-                uint8_t *P_end = &g64_tracks[last_track][g64_tracklen[last_track]];
+                const uint8_t *P_end = &g64_tracks[last_track][g64_tracklen[last_track]];
 
                 // find first track-marker .. FF FF 52 ... FF FF 55
                 do
@@ -139,7 +134,7 @@ int8_t read_disk(FIL* fd, const int image_type, FILINFO fileinfo)
             // extract id-fields from directory track for checksum calculation
             // assumption, disk has a dir in track 18 in DOS-format where ID fiels are populated
             offset = (((uint32_t) d64_track_offset[DIRECTORY_TRACK]) << 8) + DIR_ID_OFFSET;
-            if (FR_OK == (fr = f_lseek(fd, offset)))
+            if (FR_OK == f_lseek(fd, offset))
             {
                 fr = f_read(fd, buffer, 2, &bytes_read);
                 if ((FR_OK == fr) && (2 == bytes_read))
@@ -157,14 +152,13 @@ int8_t read_disk(FIL* fd, const int image_type, FILINFO fileinfo)
                 offset = ((uint32_t) d64_track_offset[track_nr]) << 8;   // we store only 16bit values;
                 uint8_t num_of_sectors = d64_sector_count[d64_track_zone[track_nr]];
 
-                fr = f_lseek(fd, offset);
-                if(FR_OK != fr)
+                if (FR_OK != f_lseek(fd, offset))
                 {
                     break;
                 }
 
                 fr = f_read(fd, &d64_sector_puffer[1], num_of_sectors*D64_SECTOR_SIZE, &bytes_read);
-                if((FR_OK != fr) || ((num_of_sectors*D64_SECTOR_SIZE) != bytes_read))
+                if ((FR_OK != fr) || ((num_of_sectors*D64_SECTOR_SIZE) != bytes_read))
                 {
                     break;
                 }
@@ -193,8 +187,7 @@ int8_t read_disk(FIL* fd, const int image_type, FILINFO fileinfo)
             int8_t file_track = PRGFILE_TRACK, next_file_track = PRGFILE_TRACK;
             uint8_t* file_buffer_pointer = g64_tracks[SCRATCH_TRACK];
 
-            fr = f_lseek(fd, 0);
-            if(FR_OK != fr)
+            if (FR_OK != f_lseek(fd, 0))
             {
                 break;
             }
@@ -270,7 +263,7 @@ int8_t write_disk(FIL* fd, const int image_type, const uint8_t num_tracks)
         {
             // GCR-1541 header
             fr = f_write(fd, g64_head, sizeof(g64_head),&bytes_write);
-            if((FR_OK != fr) || (sizeof(g64_head) != bytes_write))
+            if ((FR_OK != fr) || (sizeof(g64_head) != bytes_write))
             {
                 last_track = -fr-20;
                 break;
@@ -278,7 +271,7 @@ int8_t write_disk(FIL* fd, const int image_type, const uint8_t num_tracks)
 
             // jumptable
             fr = f_write(fd, g64_jumptable, sizeof(g64_jumptable),&bytes_write);
-            if((FR_OK != fr) || (sizeof(g64_jumptable) != bytes_write))
+            if ((FR_OK != fr) || (sizeof(g64_jumptable) != bytes_write))
             {
                 last_track = -fr-40;
                 break;
@@ -286,7 +279,7 @@ int8_t write_disk(FIL* fd, const int image_type, const uint8_t num_tracks)
 
             // speedtable
             fr = f_write(fd, g64_speedtable, sizeof(g64_speedtable),&bytes_write);
-            if((FR_OK != fr) || (sizeof(g64_speedtable) != bytes_write))
+            if ((FR_OK != fr) || (sizeof(g64_speedtable) != bytes_write))
             {
                 last_track = -fr-60;
                 break;
@@ -296,7 +289,7 @@ int8_t write_disk(FIL* fd, const int image_type, const uint8_t num_tracks)
             for (int track_nr=0; track_nr<num_tracks; track_nr++)
             {
                 fr = f_write(fd, &g64_tracklen[track_nr], sizeof(g64_tracklen[0]),&bytes_write);
-                if((FR_OK != fr) || (sizeof(g64_tracklen[0]) != bytes_write))
+                if ((FR_OK != fr) || (sizeof(g64_tracklen[0]) != bytes_write))
                 {
                     last_track = -fr-80;
                     break;
@@ -312,7 +305,7 @@ int8_t write_disk(FIL* fd, const int image_type, const uint8_t num_tracks)
                 }
 
                 fr = f_write(fd, &g64_tracks[track_nr], track_write_len,&bytes_write);
-                if((FR_OK != fr) || (track_write_len != bytes_write))
+                if ((FR_OK != fr) || (track_write_len != bytes_write))
                 {
                     last_track = -fr-80;
                     break;
@@ -356,7 +349,7 @@ int8_t write_disk(FIL* fd, const int image_type, const uint8_t num_tracks)
                 }
                 P += 5; // skip the header
                 int32_t offset = offset_track + (d64_sector_puffer[2]*D64_SECTOR_SIZE);
-                if(FR_OK == (fr=f_lseek(fd, offset)))
+                if (FR_OK == (fr=f_lseek(fd, offset)))
                 {
                     // lets extract the given FloppyID for further readback of GCR...
                     // ConvertFromGCR(P, d64_sector_puffer);
@@ -385,7 +378,7 @@ int8_t write_disk(FIL* fd, const int image_type, const uint8_t num_tracks)
                         Out_P += 4;
                     }
                     fr = f_write(fd, &d64_sector_puffer[1], D64_SECTOR_SIZE,&bytes_write);
-                    if((FR_OK != fr) || (D64_SECTOR_SIZE != bytes_write))
+                    if ((FR_OK != fr) || (D64_SECTOR_SIZE != bytes_write))
                     {
                         last_track = -fr-60;
                         break;
@@ -417,7 +410,7 @@ int8_t write_disk(FIL* fd, const int image_type, const uint8_t num_tracks)
                     }
                     P += 4;
                     offset = offset_track + (d64_sector_puffer[2]*D64_SECTOR_SIZE);
-                    if(FR_OK == (fr=f_lseek(fd, offset)))
+                    if (FR_OK == (fr=f_lseek(fd, offset)))
                     {
                         // find sector-marker
                         do
@@ -441,7 +434,7 @@ int8_t write_disk(FIL* fd, const int image_type, const uint8_t num_tracks)
                             Out_P += 4;
                         }
                         fr = f_write(fd, &d64_sector_puffer[1], D64_SECTOR_SIZE,&bytes_write);
-                        if((FR_OK != fr) || (D64_SECTOR_SIZE != bytes_write))
+                        if ((FR_OK != fr) || (D64_SECTOR_SIZE != bytes_write))
                         {
                             last_track = -fr;
                             break;
@@ -557,7 +550,6 @@ void convert_gcr2d64track(uint8_t track_nr)
     uint8_t* P_end = &g64_tracks[track_nr][g64_tracklen[track_nr]];
     uint8_t* Out_P;
     uint8_t sector_nr = d64_sector_count[d64_track_zone[track_nr]];
-    uint8_t temp;
     int32_t offset = 0;
 
     uint8_t convert_puffer[5];
@@ -567,6 +559,7 @@ void convert_gcr2d64track(uint8_t track_nr)
     {
         // tricky thing.. while searching for first track-marker
         //  copy all "wrapped" bytes of last sector to the end again.
+        uint8_t temp;
         while((temp = *P++) != GCR_SYNCMARK) { *P_end++ = temp; };
         if (*P++ == GCR_SYNCMARK)
         {
@@ -674,7 +667,6 @@ void convert_gcr2d64track(uint8_t track_nr)
 size_t buffer_to_track(uint8_t* buffer, size_t buffer_len, uint8_t track_nr, uint8_t* last_sector)
 {
     size_t      remaining_size = buffer_len;
-    size_t      copy_size;
     uint8_t*    Dest_P;
     uint8_t*    Buffer_P = buffer;
     uint8_t     current_sector, next_sector = 0;
@@ -687,7 +679,7 @@ size_t buffer_to_track(uint8_t* buffer, size_t buffer_len, uint8_t track_nr, uin
     {
         current_sector = next_sector;
         Dest_P = &d64_sector_puffer[1+current_sector*D64_SECTOR_SIZE];
-        copy_size = D64_SECTOR_SIZE-2;
+        size_t copy_size = D64_SECTOR_SIZE-2;
         if (remaining_size < copy_size)
         {
             copy_size = remaining_size;
