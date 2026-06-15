@@ -19,8 +19,8 @@ sudo apt install -y --no-install-recommends \
   libstdc++-arm-none-eabi-dev \
   libstdc++-arm-none-eabi-newlib \
   gdb-multiarch \
-  binutils-multiarch \ 
-  acme
+  binutils-multiarch 
+
 
 # Enable profile for zsh
 echo "[[ -e $PROFILE_FILE ]] && emulate sh -c 'source $PROFILE_FILE'" >> $HOME/.zshrc
