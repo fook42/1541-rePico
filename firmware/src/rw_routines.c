@@ -607,7 +607,7 @@ void convert_gcr2d64track(uint8_t track_nr)
     d64_sector_puffer[offset]=convert_puffer[0]; // restore destroyed bytes
     d64_sector_puffer[offset+D64_SECTOR_SIZE+1] = convert_puffer[1];
     d64_sector_puffer[offset+D64_SECTOR_SIZE+2] = convert_puffer[2];
-    d64_sector_puffer[offset+D64_SECTOR_SIZE+2] = convert_puffer[3];
+    d64_sector_puffer[offset+D64_SECTOR_SIZE+3] = convert_puffer[3];
 
     for(int num=0; num<(sector_nr-1); ++num)
     {
@@ -660,7 +660,7 @@ void convert_gcr2d64track(uint8_t track_nr)
         d64_sector_puffer[offset]=convert_puffer[0]; // restore destroyed bytes
         d64_sector_puffer[offset+D64_SECTOR_SIZE+1] = convert_puffer[1];
         d64_sector_puffer[offset+D64_SECTOR_SIZE+2] = convert_puffer[2];
-        d64_sector_puffer[offset+D64_SECTOR_SIZE+2] = convert_puffer[3];
+        d64_sector_puffer[offset+D64_SECTOR_SIZE+3] = convert_puffer[3];
     }
 }
 
