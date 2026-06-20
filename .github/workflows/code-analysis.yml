@@ -42,6 +42,7 @@ jobs:
             cppcheck --enable=all --suppress=missingIncludeSystem \
                      --output-file=cppcheck-report.xml \
                      --xml --xml-version=2 \
+                     -I firmware/include \
                      firmware/src firmware/include || true
             
             # Generate detailed HTML report from XML
