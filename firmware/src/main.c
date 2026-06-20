@@ -175,7 +175,7 @@ FRESULT mount_sdcard(void)
     char mount_path[] = {"/"};
     BYTE mount_option = 1; /* 0=Do not mount (delayed mount), 1=Mount immediately */
 
-    fr = f_mount(&fs, mount_path, mount_option);
+    FRESULT fr = f_mount(&fs, mount_path, mount_option);
     // uint8_t retry_count = 3;
 
     // while ((FR_OK != fr) && (retry_count > 0)) {
@@ -336,7 +336,7 @@ void update_gui(void)
             if (selected_image_nr!=0xFFFF)
             {
                 seek_to_dir_entry(selected_image_nr, current_path);
-                fr = f_readdir(&dir_object, &next_dir_entry);
+                FRESULT fr = f_readdir(&dir_object, &next_dir_entry);
                 if((0 != next_dir_entry.fname[0]) && (FR_OK == fr))
                 {
                     if(!(next_dir_entry.fattrib & AM_DIR))
@@ -465,6 +465,8 @@ void check_menu_events(const uint16_t menu_event)
     const uint8_t command = (uint8_t) ((menu_event >> 8) & 0xff);
     const uint8_t value = (uint8_t) (menu_event & 0xff);
 
+    FRESULT fr;
+
     switch(command)
     {
         case MC_EXIT_MENU:
@@ -513,8 +515,7 @@ void check_menu_events(const uint16_t menu_event)
                             menu_refresh();
                             break;
                         }
-                        fr = f_open(&fd, "1541-repico.g64", FA_CREATE_ALWAYS|FA_WRITE);
-                        if (FR_OK == fr)
+                        if (FR_OK == f_open(&fd, "1541-repico.g64", FA_CREATE_ALWAYS|FA_WRITE))
                         {
                             display_string("G64 file opened");
                             display_setcursor(0,1);
@@ -540,8 +541,7 @@ void check_menu_events(const uint16_t menu_event)
                         sleep_ms(3000);
                         display_clear();
                         display_home();
-                        fr = f_open(&fd, "1541-repico.d64", FA_CREATE_ALWAYS|FA_WRITE);
-                        if (FR_OK == fr)
+                        if (FR_OK == f_open(&fd, "1541-repico.d64", FA_CREATE_ALWAYS|FA_WRITE))
                         {
                             display_string("D64 file opened");
                             display_setcursor(0,1);
@@ -750,7 +750,7 @@ void handle_selector_image(void)
                     
                         seek_to_dir_entry(selected_image_nr-1, current_path);
 
-                        fr = f_readdir(&dir_object, &hsi_dir_entry);
+                        FRESULT fr = f_readdir(&dir_object, &hsi_dir_entry);
                         if((0 != hsi_dir_entry.fname[0]) && (FR_OK == fr))
                         {
                             int odr_return = open_dir_entry(hsi_dir_entry);
@@ -780,7 +780,7 @@ void handle_selector_image(void)
 
 void insert_menu_image(char* menu_path)
 {
-    fr = mount_sdcard();
+    FRESULT fr = mount_sdcard();
     if (FR_OK == fr)
     {
         f_closedir(&dir_object);
@@ -1147,7 +1147,7 @@ void filebrowser_refresh(void)
 
     while((i<LCD_LINE_COUNT) && ((fb_window_pos + i) < fb_dir_entry_count))
     {
-        fr = f_readdir(&dir_object, &(fb_dir_entry[i]));
+        FRESULT fr = f_readdir(&dir_object, &(fb_dir_entry[i]));
         if((0 == fb_dir_entry[i].fname[0]) || (FR_OK != fr))
         {
             break;
@@ -1205,8 +1205,7 @@ uint16_t get_dir_entry_count(char* entrycount_path)
     char pattern[] = {"*"};
 
     dir_object.pat = pattern;           /* Save pointer to pattern string */
-    fr = f_opendir(&dir_object, entrycount_path);  /* Open the target directory */
-    if (FR_OK == fr)
+    if (FR_OK == f_opendir(&dir_object, entrycount_path))  /* Open the target directory */
     {
         while(FR_OK == f_readdir(&dir_object, &dir_entry))
         {
@@ -1230,15 +1229,14 @@ uint16_t seek_to_dir_entry(uint16_t entry_num, char* seek_path)
     char pattern[] = {"*"};
 
     dir_object.pat = pattern;           /* Save pointer to pattern string */
-    fr = f_opendir(&dir_object, seek_path);  /* Open the target directory */
-    if(FR_OK == fr)
+    if(FR_OK == f_opendir(&dir_object, seek_path))  /* Open the target directory */
     {
         f_readdir(&dir_object, 0);  // rewind the directory
         if (entry_num > 0)
         {
             do
             {
-                fr == f_readdir(&dir_object, &dir_entry);
+                FRESULT fr = f_readdir(&dir_object, &dir_entry);
                 if((FR_OK != fr) || (0 == dir_entry.fname[0]))
                 {
                     break;
@@ -1256,7 +1254,6 @@ void open_disk_image(FIL* fd, FILINFO *file_entry, uint8_t* image_type)
 {
     size_t namelen;
     char extension[5];
-    FRESULT fr = FR_NO_FILE;
 
     *image_type = UNDEF_IMAGE;  // image-type is undefined by default
 
@@ -1286,14 +1283,12 @@ void open_disk_image(FIL* fd, FILINFO *file_entry, uint8_t* image_type)
         return;
     }
 
-    fr = f_chdir(current_path);
-    if (FR_OK != fr)
+    if (FR_OK != f_chdir(current_path))
     {
         *image_type = UNDEF_IMAGE;
         return;
     }
-    fr = f_open(fd, file_entry->fname, FA_READ);
-    if (FR_OK != fr)
+    if (FR_OK != f_open(fd, file_entry->fname, FA_READ))
     {
         // Nicht unterstützt
         f_close(fd);

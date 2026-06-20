@@ -92,11 +92,9 @@ void start_stepper_timer(void);
 
 // Filesystem-variables:
 FATFS       fs;             // filesystem handle - only created once
-FRESULT     fr;             // general purpos result variable
 DIR         dir_object;
 FIL         fd;             // file descriptor for every open file
 FILINFO     dir_entry;
-FILINFO     file_entry;
 FILINFO     fb_dir_entry[LCD_LINE_COUNT];
 //
 //
