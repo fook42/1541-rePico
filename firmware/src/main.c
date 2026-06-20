@@ -61,9 +61,14 @@ void gpio_callback(uint gpio, uint32_t events)
 {
     if ((GPIO_STP0==gpio) || (GPIO_STP1==gpio))
     {
+        static uint64_t last_int;
         // general gpio-ISR .. triggered for STP0 or STP1 change.. no need to detect the cause
-        stepper_signal_puffer[stepper_signal_w_pos] = ((bool_to_bit(gpio_get(GPIO_STP0))<<1) | (bool_to_bit(gpio_get(GPIO_STP1))));
-        stepper_signal_w_pos++;
+        if (time_us_64() > (last_int+5000))
+        {
+            stepper_signal_puffer[stepper_signal_w_pos] = ((bool_to_bit(gpio_get(GPIO_STP0))<<1) | (bool_to_bit(gpio_get(GPIO_STP1))));
+            stepper_signal_w_pos++;
+        }
+        last_int = time_us_64();
     } else {
         if ((NO_KEY == irq_key_value) && (false == input_block))
         {
