@@ -2,7 +2,7 @@
  * read and write image routines
  *
  * Author: F00K42
- * Last change: 2026/02/14
+ * Last change: 2026/06/21
  ***********************************/
 
 #include "rw_routines.h"
@@ -228,7 +228,7 @@ int8_t read_disk(FIL* fd, const int image_type, FILINFO fileinfo)
             size_t namelen = strlen(fileinfo.fname)-4;  //remove the ".prg"
             if (namelen>16) {namelen=16;}
             memcpy(FILENAME,fileinfo.fname,namelen);
-            generate_directory_entry(FILENAME, CBMDOS_TYPE_PRG, PRGFILE_TRACK,0,((uint16_t) (fileinfo.fsize/253))+1);
+            generate_directory_entry(FILENAME, CBMDOS_TYPE_PRG, PRGFILE_TRACK,0,((uint16_t) (fileinfo.fsize/254))+1);
             convert_d64track2gcr(DIRECTORY_TRACK,id1,id2);
 
             last_track = num_max_tracks-1;
@@ -243,14 +243,6 @@ int8_t read_disk(FIL* fd, const int image_type, FILINFO fileinfo)
 int8_t write_disk(FIL* fd, const int image_type, const uint8_t num_tracks)
 {
     UINT bytes_write;
-    // uint8_t* P;
-    // uint8_t* Out_P;
-    // uint8_t sector_nr;
-    // uint8_t num;
-    // uint8_t temp;
-    // int32_t offset = 0;
-    // int32_t offset_track = 0;
-
     int8_t last_track = -1;
     FRESULT fr;
 
@@ -319,6 +311,7 @@ int8_t write_disk(FIL* fd, const int image_type, const uint8_t num_tracks)
             uint8_t* Out_P;
             uint8_t temp;
 
+            last_track = 0;
             for (int track_nr=0; track_nr<num_tracks; track_nr++)
             {
                 uint8_t* P = g64_tracks[track_nr];
@@ -349,42 +342,43 @@ int8_t write_disk(FIL* fd, const int image_type, const uint8_t num_tracks)
                 }
                 P += 5; // skip the header
                 int32_t offset = offset_track + (d64_sector_puffer[2]*D64_SECTOR_SIZE);
-                if (FR_OK == (fr=f_lseek(fd, offset)))
+                fr = f_lseek(fd, offset);
+                if (FR_OK != fr)
                 {
-                    // lets extract the given FloppyID for further readback of GCR...
-                    // ConvertFromGCR(P, d64_sector_puffer);
-                    // id2 = d64_sector_puffer[0];
-                    // id1 = d64_sector_puffer[1];
-                    P += 5; // skip the header-gap-bytes
-                    // find sector-marker
-                    do
-                    {
-                        while(*P++ != GCR_SYNCMARK) { };
-                        if (*P++ == GCR_SYNCMARK)
-                        {
-                            while(*P == GCR_SYNCMARK) { ++P; };
-                            if (*P == 0x55)
-                            {
-                                break;
-                            }
-                        }
-                    } while(1);
-                    // ----
-                    Out_P = d64_sector_puffer;
-                    for(int i=0; i<65; ++i)
-                    {
-                        ConvertFromGCR(P, Out_P);
-                        P += 5;
-                        Out_P += 4;
-                    }
-                    fr = f_write(fd, &d64_sector_puffer[1], D64_SECTOR_SIZE,&bytes_write);
-                    if ((FR_OK != fr) || (D64_SECTOR_SIZE != bytes_write))
-                    {
-                        last_track = -fr-60;
-                        break;
-                    }
-                } else {
                     last_track = -fr-40;
+                    break;
+                }
+
+                // lets extract the given FloppyID for further readback of GCR...
+                // ConvertFromGCR(P, d64_sector_puffer);
+                // id2 = d64_sector_puffer[0];
+                // id1 = d64_sector_puffer[1];
+                P += 5; // skip the header-gap-bytes
+                // find sector-marker
+                do
+                {
+                    while(*P++ != GCR_SYNCMARK) { };
+                    if (*P++ == GCR_SYNCMARK)
+                    {
+                        while(*P == GCR_SYNCMARK) { ++P; };
+                        if (*P == 0x55)
+                        {
+                            break;
+                        }
+                    }
+                } while(1);
+                // ----
+                Out_P = d64_sector_puffer;
+                for(int i=0; i<65; ++i)
+                {
+                    ConvertFromGCR(P, Out_P);
+                    P += 5;
+                    Out_P += 4;
+                }
+                fr = f_write(fd, &d64_sector_puffer[1], D64_SECTOR_SIZE,&bytes_write);
+                if ((FR_OK != fr) || (D64_SECTOR_SIZE != bytes_write))
+                {
+                    last_track = -fr-60;
                     break;
                 }
 
@@ -410,41 +404,45 @@ int8_t write_disk(FIL* fd, const int image_type, const uint8_t num_tracks)
                     }
                     P += 4;
                     offset = offset_track + (d64_sector_puffer[2]*D64_SECTOR_SIZE);
-                    if (FR_OK == (fr=f_lseek(fd, offset)))
+                    fr = f_lseek(fd, offset);
+                    if (FR_OK != fr)
                     {
-                        // find sector-marker
-                        do
-                        {
-                            while(*P++ != GCR_SYNCMARK) { };
-                            if (*P++ == GCR_SYNCMARK)
-                            {
-                                while(*P == GCR_SYNCMARK) { ++P; };
-                                if (*P == 0x55)
-                                {
-                                    break;
-                                }
-                            }
-                        } while(1);
-                        // ----
-                        Out_P = d64_sector_puffer;
-                        for(int i=0; i<65; ++i)
-                        {
-                            ConvertFromGCR(P, Out_P);
-                            P += 5;
-                            Out_P += 4;
-                        }
-                        fr = f_write(fd, &d64_sector_puffer[1], D64_SECTOR_SIZE,&bytes_write);
-                        if ((FR_OK != fr) || (D64_SECTOR_SIZE != bytes_write))
-                        {
-                            last_track = -fr;
-                            break;
-                        }
-                    } else {
                         last_track = -fr-20;
                         break;
                     }
+
+                    // find sector-marker
+                    do
+                    {
+                        while(*P++ != GCR_SYNCMARK) { };
+                        if (*P++ == GCR_SYNCMARK)
+                        {
+                            while(*P == GCR_SYNCMARK) { ++P; };
+                            if (*P == 0x55)
+                            {
+                                break;
+                            }
+                        }
+                    } while(1);
+                    // ----
+                    Out_P = d64_sector_puffer;
+                    for(int i=0; i<65; ++i)
+                    {
+                        ConvertFromGCR(P, Out_P);
+                        P += 5;
+                        Out_P += 4;
+                    }
+                    fr = f_write(fd, &d64_sector_puffer[1], D64_SECTOR_SIZE,&bytes_write);
+                    if ((FR_OK != fr) || (D64_SECTOR_SIZE != bytes_write))
+                    {
+                        last_track = -fr;
+                        break;
+                    }
                 }
-                last_track = track_nr;
+                if (0 <= last_track)
+                {
+                    last_track = track_nr;
+                }
             }
             break;
         }

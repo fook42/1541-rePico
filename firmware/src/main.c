@@ -2,7 +2,7 @@
 // 1541-rePico
 /////////////////////////////////////////////////
 // author: F00K42
-// last changed: 2026/03/25
+// last changed: 2026/06/21
 // repo: https://github.com/fook42/1541-rePico
 /////////////////////////////////////////////////
 
@@ -87,14 +87,14 @@ void gpio_callback(uint gpio, uint32_t events)
                         key2_down_time -= (now_time+1);
                         now_time = ((uint64_t)-1);
                     }
-                    
+
                     if ((now_time-key2_down_time) > TIMEOUT2_KEY2)
                     { irq_key_value = KEY2_TIMEOUT2; }
                     else if ((now_time-key2_down_time) > TIMEOUT1_KEY2)
                     { irq_key_value = KEY2_TIMEOUT1; }
                     else
                     { irq_key_value = KEY2_UP; }
-            
+
                     key2_down_time = now_time;
                     input_debounce_alarm = add_alarm_in_ms(BUTTON_DEBOUNCE_TIME, input_debounce_callback, NULL, false);
                 }
@@ -320,7 +320,7 @@ void update_gui(void)
     static uint32_t wait_counter0 = 0;
     bool new_motor_status;
     uint8_t key_code = get_key_from_buffer();
-    char byte_str[16];
+    char byte_str[8];
     FILINFO next_dir_entry;
 
     switch (current_gui_mode)
@@ -333,7 +333,7 @@ void update_gui(void)
         } else if(KEY2_TIMEOUT2 == key_code)
         {
             // next image...
-            if (selected_image_nr!=0xFFFF)
+            if (selected_image_nr<fb_dir_entry_count)
             {
                 seek_to_dir_entry(selected_image_nr, current_path);
                 FRESULT fr = f_readdir(&dir_object, &next_dir_entry);
@@ -341,8 +341,7 @@ void update_gui(void)
                 {
                     if(!(next_dir_entry.fattrib & AM_DIR))
                     {
-                        int odr_return = open_dir_entry(next_dir_entry);
-                        if (1 == odr_return)
+                        if (1 == open_dir_entry(next_dir_entry))
                         {
                             selected_image_nr++;
                             set_gui_mode(GUI_INFO_MODE);
@@ -500,7 +499,7 @@ void check_menu_events(const uint16_t menu_event)
                 case M_SAVE_IMAGE:
                     if (is_image_mount)
                     {
-                        char byte_str[6];
+                        char byte_str[8];
                         int file_op_status;
                         // todo: create save-file dialog, name, type
                         // for now: open a "standard-file" (G64)
@@ -710,7 +709,7 @@ void handle_selector_image(void)
                 convert_gcr2d64track(DIRECTORY_TRACK);
                 selected_image_nr = *((uint16_t*) &d64_sector_puffer[1+2*D64_SECTOR_SIZE]);
 
-                if (selected_image_nr > 0)
+                if (selected_image_nr != 0)
                 {
                     display_setcursor(disp_scrollfilename_p);
                     for(uint8_t i=0; i<LCD_LINE_SIZE; i++)
@@ -744,10 +743,8 @@ void handle_selector_image(void)
                         is_image_mount=false;
                         //rebuild the data-file
                         insert_menu_image(current_path);
-                        infomode_update();                            
-
+                        infomode_update();
                     } else {
-                    
                         seek_to_dir_entry(selected_image_nr-1, current_path);
 
                         FRESULT fr = f_readdir(&dir_object, &hsi_dir_entry);
@@ -760,7 +757,7 @@ void handle_selector_image(void)
                                 is_image_mount=false;
                                 //rebuild the data-file
                                 insert_menu_image(current_path);
-                                infomode_update();                            
+                                infomode_update();
                             } else
                             {
                                 set_gui_mode(GUI_INFO_MODE);
@@ -768,10 +765,6 @@ void handle_selector_image(void)
                         }
                     }
                 }
-
-    //             // with track_write_pos .. we may have the start of a sector to be decoded...
-    //             // only one sector needs to be decoded (ideally)
-
             }
             track_is_written = false;
         }
@@ -897,7 +890,7 @@ void insert_menu_image(char* menu_path)
             track_is_written = false;
 
             disable_write_protection();      // we need to be able to receive the answer of menu-selector as "write"
-            
+
             send_disk_change();
 
             start_bytetimer(akt_half_track);    // start the track-spinning
@@ -967,7 +960,6 @@ void infomode_update(void)
 void filebrowser_update(uint8_t key_code)
 {
     static uint32_t fbup_wait_counter0 = 0;
-    uint8_t odr_return = 0;
 
     switch (key_code)
     {
@@ -1003,17 +995,22 @@ void filebrowser_update(uint8_t key_code)
         break;
     case KEY2_UP:
         //fn open dir_entry...
-        odr_return = open_dir_entry(fb_dir_entry[fb_cursor_pos]);
-        if (1 != odr_return) 
+        uint8_t ode_return = open_dir_entry(fb_dir_entry[fb_cursor_pos]);
+        if (1 != ode_return)
         {
             // no valid image available / or we jumped into a folder
+            if (0 == ode_return)
+            {
+                display_clear();
+                display_setcursor(disp_unsupportedimg_p);
+                display_string(disp_unsupportedimg_s);
+                sleep_ms(1000);
+            }
             is_image_mount=false;
             filebrowser_refresh();
-        } else
-        {
+        } else {
             set_gui_mode(GUI_INFO_MODE);
         }
-
         break;
     case KEY2_TIMEOUT1:
         set_gui_mode(GUI_MENU_MODE);
@@ -1084,10 +1081,6 @@ uint8_t open_dir_entry(FILINFO od_file_entry)
 
     if(UNDEF_IMAGE == akt_image_type)
     {
-        display_clear();
-        display_setcursor(disp_unsupportedimg_p);
-        display_string(disp_unsupportedimg_s);
-        sleep_ms(1000);
         fd.obj.fs = 0;
     }
 

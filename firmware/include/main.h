@@ -146,8 +146,6 @@ bool floppy_wp = true;  // Hier wird der aktuelle WriteProtection Zustand gespei
 uint8_t stepper_signal_puffer[256]; // Ringpuffer für Stepper Signale (256 Bytes)
 volatile uint8_t stepper_signal_r_pos = 0;
 volatile uint8_t stepper_signal_w_pos = 0;
-volatile uint16_t stepper_signal_time = 0;  // extended to 16bit to cover bigger step-wait times
-volatile uint8_t stepper_signal = 0;
 
 alarm_id_t stepper_alarm = 0;
 
