@@ -371,13 +371,13 @@ void update_gui(void)
                 display_string(disp_motor_off_s);
         }
 
-        if(is_image_mount)
+        if((is_image_mount) && (gui_current_line_offset > 0))
         {
             //// Filename Scrolling
 
             ++wait_counter0;
 
-            if((gui_current_line_offset > 0) && (wait_counter0 == 300000))
+            if(300000 == wait_counter0)
             {
                 wait_counter0 = 0;
 

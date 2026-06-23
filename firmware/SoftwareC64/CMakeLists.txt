@@ -3,7 +3,6 @@ cmake_minimum_required(VERSION 3.13)
 set(PROJECT_INCLUDE ${PROJECT_SOURCE_DIR}/include)
 
 find_program(ACME_TOOL "acme" PATHS "/usr/local/bin;/usr/bin;/bin" NO_CACHE )
-find_program(DALI_TOOL "dali" PATHS "${CMAKE_CURRENT_SOURCE_DIR}" NO_CACHE )
 
 option(BUILD_MENUPRG    "Enable compiling of menu.prg" ON)
 option(COMPRESS_MENUPRG "Enable compression of menu.prg with dali" ON)
@@ -32,7 +31,7 @@ if(BUILD_MENUPRG)
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         DEPENDS ${ACME_OUTPUT}
         OUTPUT ${MENUPRG_BINARY}
-        COMMAND ${DALI_TOOL} ${DALI_OPTIONS} -o ${MENUPRG_BINARY} ${ACME_OUTPUT}
+        COMMAND dali_tool ${DALI_OPTIONS} -o ${MENUPRG_BINARY} ${ACME_OUTPUT}
       )
     endif()
   else()
@@ -50,6 +49,9 @@ add_custom_target(GenSelector
   COMMAND sed -i \"s!unsigned!const unsigned!g\" ${PROJECT_INCLUDE}/c64_selector.h
   COMMAND echo \"\#endif\" >> ${PROJECT_INCLUDE}/c64_selector.h
 )
+
+add_dependencies(GenSelector GenDali)
+
 add_custom_target(GenIntro
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   DEPENDS intro.prg
