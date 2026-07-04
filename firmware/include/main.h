@@ -143,6 +143,8 @@ bool is_image_mount;
 bool floppy_wp = true;  // Hier wird der aktuelle WriteProtection Zustand gespeichert
                         // false=Nicht Schreibgeschützt , true=Schreibgeschützt
 
+#define STEP_MIN_TIME (2000)    // us between 2 step changes.
+
 uint8_t stepper_signal_puffer[256]; // Ringpuffer für Stepper Signale (256 Bytes)
 volatile uint8_t stepper_signal_r_pos = 0;
 volatile uint8_t stepper_signal_w_pos = 0;
@@ -154,4 +156,3 @@ volatile bool send_byte_ready    = true;
 
 volatile uint8_t  track_write_nr;
 volatile uint16_t track_write_pos;
-

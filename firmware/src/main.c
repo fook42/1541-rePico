@@ -63,7 +63,7 @@ void gpio_callback(uint gpio, uint32_t events)
     {
         static uint64_t last_int;
         // general gpio-ISR .. triggered for STP0 or STP1 change.. no need to detect the cause
-        if (time_us_64() > (last_int+5000))
+        if ((time_us_64()-last_int) > STEP_MIN_TIME)
         {
             stepper_signal_puffer[stepper_signal_w_pos] = ((bool_to_bit(gpio_get(GPIO_STP0))<<1) | (bool_to_bit(gpio_get(GPIO_STP1))));
             stepper_signal_w_pos++;
