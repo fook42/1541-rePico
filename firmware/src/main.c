@@ -709,7 +709,7 @@ void handle_selector_image(void)
                 convert_gcr2d64track(DIRECTORY_TRACK);
                 selected_image_nr = *((uint16_t*) &d64_sector_puffer[1+2*D64_SECTOR_SIZE]);
 
-                if (selected_image_nr != 0)
+                if (0 != selected_image_nr)
                 {
                     display_setcursor(disp_scrollfilename_p);
                     for(uint8_t i=0; i<LCD_LINE_SIZE; i++)
@@ -724,8 +724,8 @@ void handle_selector_image(void)
                         sleep_ms(250/LCD_LINE_SIZE);
                     }
 
-                    uint8_t pathlen=strlen(current_path);
-                    if (pathlen>1)
+                    size_t pathlen=strlen(current_path);
+                    if (1 < pathlen)
                     {
                         selected_image_nr--;
                     }
@@ -733,7 +733,7 @@ void handle_selector_image(void)
                     {
                         // now we go up..
                         char* last_slash = strrchr(current_path,'/');
-                        if (last_slash!=NULL)
+                        if (NULL != last_slash)
                         {
                             *last_slash = 0;
                         }
@@ -750,7 +750,7 @@ void handle_selector_image(void)
                         FRESULT fr = f_readdir(&dir_object, &hsi_dir_entry);
                         if((0 != hsi_dir_entry.fname[0]) && (FR_OK == fr))
                         {
-                            int odr_return = open_dir_entry(hsi_dir_entry);
+                            uint8_t odr_return = open_dir_entry(hsi_dir_entry);
                             if (1 != odr_return)
                             {
                                 // no valid image available / or we jumped into a folder
@@ -795,7 +795,7 @@ void insert_menu_image(char* menu_path)
             generate_empty_image(id1,id2,num_max_tracks);
 
             // generates menu-file..
-            uint16_t menu_file_len = generate_menu_file(&dir_object, menu_path, SCRATCH_TRACK);
+            size_t menu_file_len = generate_menu_file(&dir_object, menu_path, SCRATCH_TRACK);
             size_t buffer_size = menu_file_len;
             size_t buffer_left;
             int8_t file_track = MENU_DATA_TRACK, next_file_track = file_track;

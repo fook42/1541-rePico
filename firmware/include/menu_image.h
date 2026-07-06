@@ -26,6 +26,6 @@ void generate_empty_image(uint8_t image_id1, uint8_t image_id2, uint8_t track_nu
 void generate_bam(const char* const image_name, const uint8_t* const image_id_buffer);
 
 void generate_directory_entry(uint8_t* const filename, const uint8_t filetype, const uint8_t des_track, const uint8_t des_sector, const uint16_t size);
-uint16_t generate_menu_file(DIR* dir_obj, uint8_t* dir_path, const uint8_t dest_track);
+size_t generate_menu_file(DIR* dir_obj, uint8_t* dir_path, const uint8_t dest_track);
 
 #endif

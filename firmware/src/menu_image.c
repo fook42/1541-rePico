@@ -83,7 +83,7 @@ void generate_directory_entry(uint8_t* const filename, const uint8_t filetype, c
     P[29]=(size>>8)&0xFF; // size high
 }
 
-uint16_t generate_menu_file(DIR* dir_obj, uint8_t* dir_path, const uint8_t dest_track)
+size_t generate_menu_file(DIR* dir_obj, uint8_t* dir_path, const uint8_t dest_track)
 {
     FILINFO     fb_dir_menu_entry;
     FRESULT     fr;
@@ -176,6 +176,6 @@ uint16_t generate_menu_file(DIR* dir_obj, uint8_t* dir_path, const uint8_t dest_
     }
     while(true);
 
-    return (uint16_t)(P-file_sector_P);
+    return (size_t)(P-file_sector_P);
 }
 
