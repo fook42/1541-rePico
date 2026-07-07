@@ -19,6 +19,7 @@ enum {
     TYPE_D64 = 2,
     TYPE_G64 = 3,
     TYPE_PRG = 4,
+    TYPE_VALID = 255,
     TYPE_UNKNOWN = 255
 };
 

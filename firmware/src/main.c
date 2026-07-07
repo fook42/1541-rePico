@@ -341,7 +341,7 @@ void update_gui(void)
                 {
                     if(!(next_dir_entry.fattrib & AM_DIR))
                     {
-                        if (1 == open_dir_entry(next_dir_entry))
+                        if (TYPE_VALID == open_dir_entry(next_dir_entry))
                         {
                             selected_image_nr++;
                             set_gui_mode(GUI_INFO_MODE);
@@ -750,8 +750,7 @@ void handle_selector_image(void)
                         FRESULT fr = f_readdir(&dir_object, &hsi_dir_entry);
                         if((0 != hsi_dir_entry.fname[0]) && (FR_OK == fr))
                         {
-                            uint8_t odr_return = open_dir_entry(hsi_dir_entry);
-                            if (1 != odr_return)
+                            if (TYPE_VALID != open_dir_entry(hsi_dir_entry))
                             {
                                 // no valid image available / or we jumped into a folder
                                 is_image_mount=false;
@@ -996,10 +995,10 @@ void filebrowser_update(uint8_t key_code)
     case KEY2_UP:
         //fn open dir_entry...
         uint8_t ode_return = open_dir_entry(fb_dir_entry[fb_cursor_pos]);
-        if (1 != ode_return)
+        if (TYPE_VALID != ode_return)
         {
             // no valid image available / or we jumped into a folder
-            if (0 == ode_return)
+            if (TYPE_NONE == ode_return)
             {
                 display_clear();
                 display_setcursor(disp_unsupportedimg_p);
@@ -1074,10 +1073,10 @@ uint8_t open_dir_entry(FILINFO od_file_entry)
 
         fb_cursor_pos = 0;
         fb_window_pos = 0;
-        return 2;
+        return TYPE_DIR;
     }
 
-    open_disk_image(&fd, &od_file_entry, &akt_image_type);
+    akt_image_type = open_disk_image(&fd, &od_file_entry);
 
     if(UNDEF_IMAGE == akt_image_type)
     {
@@ -1086,7 +1085,7 @@ uint8_t open_dir_entry(FILINFO od_file_entry)
 
     if(0 == fd.obj.fs)
     {
-        return 0;
+        return TYPE_NONE;
     }
 
     strcpy(image_filename, od_file_entry.fname);
@@ -1116,9 +1115,9 @@ uint8_t open_dir_entry(FILINFO od_file_entry)
         close_disk_image(&fd);
         akt_image_type = UNDEF_IMAGE;
         is_image_mount = false;
-        return 0;
+        return TYPE_NONE;
     }
-    return 1;
+    return TYPE_VALID;    // dont know which type we opened, but it was okay
 }
 
 
@@ -1243,17 +1242,16 @@ uint16_t seek_to_dir_entry(uint16_t entry_num, char* seek_path)
 
 /////////////////////////////////////////////////////////////////////
 
-void open_disk_image(FIL* fd, FILINFO *file_entry, uint8_t* image_type)
+uint8_t open_disk_image(FIL* fd, FILINFO *file_entry)
 {
     size_t namelen;
     char extension[5];
-
-    *image_type = UNDEF_IMAGE;  // image-type is undefined by default
+    uint8_t image_type;
 
     namelen = strlen(file_entry->fname);
-    if(namelen < 4) return;
+    if(4 > namelen) return UNDEF_IMAGE;
 
-    // Extension überprüfen --> g64 oder d64
+    // check the extension for a supported type (d64, g64, prg)
     namelen -= 4; // move copy-pointer 4 backwards
     for (int i=0; i<5; i++)
     {
@@ -1262,32 +1260,31 @@ void open_disk_image(FIL* fd, FILINFO *file_entry, uint8_t* image_type)
 
     if(!strcmp(extension,".g64"))
     {
-        *image_type = G64_IMAGE;
+        image_type = G64_IMAGE;
     }
     else if(!strcmp(extension,".d64"))
     {
-        *image_type = D64_IMAGE;
+        image_type = D64_IMAGE;
     }
     else if(!strcmp(extension,".prg"))
     {
-        *image_type = PRG_IMAGE;
+        image_type = PRG_IMAGE;
     } else {
         // extension unknown -> we wont try to open the file at all..
-        return;
+        return UNDEF_IMAGE;
     }
 
     if (FR_OK != f_chdir(current_path))
     {
-        *image_type = UNDEF_IMAGE;
-        return;
+        return UNDEF_IMAGE;
     }
     if (FR_OK != f_open(fd, file_entry->fname, FA_READ))
     {
-        // Nicht unterstützt
+        // image could not be opened for reading
         f_close(fd);
-        *image_type = UNDEF_IMAGE;
+        return UNDEF_IMAGE;
     }
-    return;
+    return image_type;
 }
 
 /////////////////////////////////////////////////////////////////////

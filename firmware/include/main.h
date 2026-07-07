@@ -47,7 +47,7 @@ void init_soe_gatearray(void);
 
 uint8_t open_dir_entry(FILINFO od_file_entry);
 
-void open_disk_image(FIL* fd, FILINFO *file_entry, uint8_t* image_type);
+uint8_t open_disk_image(FIL* fd, FILINFO *file_entry);
 void close_disk_image(FIL* fd);
 void unmount_image(void);
 
