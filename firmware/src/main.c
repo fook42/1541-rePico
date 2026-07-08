@@ -313,10 +313,41 @@ uint8_t get_key_from_buffer(void)
     return val;
 }
 
+void show_longpress(void)
+{
+    static uint8_t shown_time_steps;
+    uint64_t my_now_time = time_us_64();
+    uint64_t my_down_time = key2_down_time;
+    char filler;
+    if (my_down_time > my_now_time)
+    {
+        my_down_time -= (my_now_time+1);
+        my_now_time = ((uint64_t)-1);
+    }
+
+    const uint64_t block_step = TIMEOUT2_KEY2/LCD_LINE_SIZE;
+    uint8_t  time_steps = (my_now_time-my_down_time)/block_step;
+    filler = display_pointer_char;
+    if (time_steps>=LCD_LINE_SIZE) { filler = display_cursor_char; }
+
+    if (shown_time_steps != time_steps)
+    {
+        display_setcursor(0,2);
+        for(int i=0; i<LCD_LINE_SIZE; i++)
+        {
+            if(i<time_steps)
+                display_data(filler);
+            else
+                display_data(' ');
+        }
+    }
+}
+
 void update_gui(void)
 {
     static uint8_t shown_half_track = 255;
     static bool shown_motor_status = false;
+    static bool key2_pressed = false;
     static uint32_t wait_counter0 = 0;
     bool new_motor_status;
     uint8_t key_code = get_key_from_buffer();
@@ -329,9 +360,11 @@ void update_gui(void)
 
         if(KEY2_UP == key_code)
         {
+            key2_pressed = false;
             set_gui_mode(GUI_MENU_MODE);
         } else if(KEY2_TIMEOUT2 == key_code)
         {
+            key2_pressed = false;
             // next image...
             if (selected_image_nr<fb_dir_entry_count)
             {
@@ -349,7 +382,14 @@ void update_gui(void)
                     }
                 }
             }
+        } else if(KEY2_TIMEOUT1 == key_code)
+        {
+            key2_pressed = false;
+        } else if(KEY2_DOWN == key_code)
+        {
+            key2_pressed = true;
         }
+        if (key2_pressed) { show_longpress(); }
 
         if(shown_half_track != akt_half_track)
         {
@@ -1008,6 +1048,7 @@ void filebrowser_update(uint8_t key_code)
             is_image_mount=false;
             filebrowser_refresh();
         } else {
+            selected_image_nr = fb_window_pos+fb_cursor_pos;
             set_gui_mode(GUI_INFO_MODE);
         }
         break;

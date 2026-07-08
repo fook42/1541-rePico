@@ -21,6 +21,7 @@ void check_motor_signal(void);
 
 void init_key_inputs(void);
 uint8_t get_key_from_buffer(void);
+void show_longpress(void);
 void update_gui(void);
 void check_menu_events(const uint16_t menu_event);
 void set_gui_mode(const uint8_t gui_mode);
