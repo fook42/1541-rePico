@@ -344,6 +344,7 @@ void update_gui(void)
 {
     static uint8_t shown_half_track = 255;
     static bool shown_motor_status = false;
+    static bool key2_pressed = false;
     static uint32_t wait_counter0 = 0;
     bool new_motor_status;
     uint8_t key_code = get_key_from_buffer();
@@ -354,12 +355,13 @@ void update_gui(void)
     {
     case GUI_INFO_MODE:
 
-        show_longpress();
         if(KEY2_UP == key_code)
         {
+            key2_pressed = false;
             set_gui_mode(GUI_MENU_MODE);
         } else if(KEY2_TIMEOUT2 == key_code)
         {
+            key2_pressed = false;
             // next image...
             if (selected_image_nr<fb_dir_entry_count)
             {
@@ -377,7 +379,14 @@ void update_gui(void)
                     }
                 }
             }
+        } else if(KEY2_TIMEOUT1 == key_code)
+        {
+            key2_pressed = false;
+        } else if(KEY2_DOWN == key_code)
+        {
+            key2_pressed = true;
         }
+        if (key2_pressed) { show_longpress(); }
 
         if(shown_half_track != akt_half_track)
         {
@@ -1036,6 +1045,7 @@ void filebrowser_update(uint8_t key_code)
             is_image_mount=false;
             filebrowser_refresh();
         } else {
+            selected_image_nr = fb_window_pos+fb_cursor_pos;
             set_gui_mode(GUI_INFO_MODE);
         }
         break;
