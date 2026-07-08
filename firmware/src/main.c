@@ -313,6 +313,33 @@ uint8_t get_key_from_buffer(void)
     return val;
 }
 
+void show_longpress(void)
+{
+    uint64_t my_now_time = time_us_64();
+    uint64_t my_down_time = key2_down_time;
+    if (my_down_time > my_now_time)
+    {
+        my_down_time -= (my_now_time+1);
+        my_now_time = ((uint64_t)-1);
+    }
+
+    if ((my_now_time-my_down_time) > TIMEOUT2_KEY2)
+    {
+        display_setcursor(0,2);
+        display_data(display_cursor_char);
+    }
+    else if ((my_now_time-my_down_time) > TIMEOUT1_KEY2)
+    {
+        display_setcursor(0,2);
+        display_data('+');
+    }
+    else
+    {
+        display_setcursor(0,2);
+        display_data(' ');
+    }
+}
+
 void update_gui(void)
 {
     static uint8_t shown_half_track = 255;
@@ -327,6 +354,7 @@ void update_gui(void)
     {
     case GUI_INFO_MODE:
 
+        show_longpress();
         if(KEY2_UP == key_code)
         {
             set_gui_mode(GUI_MENU_MODE);
