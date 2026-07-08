@@ -318,6 +318,7 @@ void show_longpress(void)
     static uint8_t shown_time_steps;
     uint64_t my_now_time = time_us_64();
     uint64_t my_down_time = key2_down_time;
+    char filler;
     if (my_down_time > my_now_time)
     {
         my_down_time -= (my_now_time+1);
@@ -326,6 +327,8 @@ void show_longpress(void)
 
     const uint64_t block_step = TIMEOUT2_KEY2/LCD_LINE_SIZE;
     uint8_t  time_steps = (my_now_time-my_down_time)/block_step;
+    filler = display_pointer_char;
+    if (time_steps>=LCD_LINE_SIZE) { filler = display_cursor_char; }
 
     if (shown_time_steps != time_steps)
     {
@@ -333,7 +336,7 @@ void show_longpress(void)
         for(int i=0; i<LCD_LINE_SIZE; i++)
         {
             if(i<time_steps)
-                display_data(display_cursor_char);
+                display_data(filler);
             else
                 display_data(' ');
         }
