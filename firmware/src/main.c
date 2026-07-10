@@ -1246,7 +1246,7 @@ void filebrowser_refresh(void)
 
 /////////////////////////////////////////////////////////////////////
 
-uint16_t get_dir_entry_count(char* entrycount_path)
+uint16_t get_dir_entry_count(const char* entrycount_path)
 {
     uint16_t entry_count = 0;
 
@@ -1257,21 +1257,23 @@ uint16_t get_dir_entry_count(char* entrycount_path)
     dir_object.pat = pattern;           /* Save pointer to pattern string */
     if (FR_OK == f_opendir(&dir_object, entrycount_path))  /* Open the target directory */
     {
-        while(FR_OK == f_readdir(&dir_object, &dir_entry))
+        FILINFO gdec_dir_entry;
+        while(FR_OK == f_readdir(&dir_object, &gdec_dir_entry))
         {
-            if(0 == dir_entry.fname[0])
+            if(0 == gdec_dir_entry.fname[0])
             {
                 break;
             }
-            entry_count++;
+            ++entry_count;
         }
     }
+    if (1 < strlen(entrycount_path)) { ++entry_count; }
     return entry_count;
 }
 
 /////////////////////////////////////////////////////////////////////
 
-uint16_t seek_to_dir_entry(uint16_t entry_num, char* seek_path)
+uint16_t seek_to_dir_entry(uint16_t entry_num, const char* seek_path)
 {
     f_closedir(&dir_object);
 
@@ -1283,8 +1285,9 @@ uint16_t seek_to_dir_entry(uint16_t entry_num, char* seek_path)
         f_readdir(&dir_object, 0);  // rewind the directory
         while (entry_num > 0)
         {
-            FRESULT fr = f_readdir(&dir_object, &dir_entry);
-            if((FR_OK != fr) || (0 == dir_entry.fname[0]))
+            FILINFO seek_dir_entry;
+            FRESULT fr = f_readdir(&dir_object, &seek_dir_entry);
+            if((FR_OK != fr) || (0 == seek_dir_entry.fname[0]))
             {
                 break;
             }
