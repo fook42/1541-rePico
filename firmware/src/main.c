@@ -376,7 +376,7 @@ void update_gui(void)
                     {
                         if (TYPE_VALID == open_dir_entry(next_dir_entry))
                         {
-                            selected_image_nr++;
+                            ++selected_image_nr;
                             set_gui_mode(GUI_INFO_MODE);
                         }
                     }
@@ -751,6 +751,7 @@ void handle_selector_image(void)
 
                 if (0 != selected_image_nr)
                 {
+                    FRESULT fr;
                     display_setcursor(disp_scrollfilename_p);
                     for(uint8_t i=0; i<LCD_LINE_SIZE; i++)
                     {
@@ -764,43 +765,34 @@ void handle_selector_image(void)
                         sleep_ms(250/LCD_LINE_SIZE);
                     }
 
-                    size_t pathlen=strlen(current_path);
-                    if (1 < pathlen)
+                    if (1 < strlen(current_path))
                     {
-                        selected_image_nr--;
+                        --selected_image_nr;
                     }
                     if (0 == selected_image_nr)
                     {
-                        // now we go up..
-                        char* last_slash = strrchr(current_path,'/');
-                        if (NULL != last_slash)
-                        {
-                            *last_slash = 0;
-                        }
-
-                        f_chdir(current_path);
-                        fb_dir_entry_count = get_dir_entry_count(current_path);
-                        is_image_mount=false;
-                        //rebuild the data-file
-                        insert_menu_image(current_path);
-                        infomode_update();
+                        // first entry selected, which is ".." in this case
+                        // create a fake dir-entry and open it afterwards
+                        strcpy(hsi_dir_entry.fname, "..");
+                        hsi_dir_entry.fattrib = AM_DIR;
+                        fr = FR_OK;
                     } else {
                         seek_to_dir_entry(selected_image_nr-1, current_path);
+                        fr = f_readdir(&dir_object, &hsi_dir_entry);
+                    }
 
-                        FRESULT fr = f_readdir(&dir_object, &hsi_dir_entry);
-                        if((0 != hsi_dir_entry.fname[0]) && (FR_OK == fr))
+                    if((0 != hsi_dir_entry.fname[0]) && (FR_OK == fr))
+                    {
+                        if (TYPE_VALID != open_dir_entry(hsi_dir_entry))
                         {
-                            if (TYPE_VALID != open_dir_entry(hsi_dir_entry))
-                            {
-                                // no valid image available / or we jumped into a folder
-                                is_image_mount=false;
-                                //rebuild the data-file
-                                insert_menu_image(current_path);
-                                infomode_update();
-                            } else
-                            {
-                                set_gui_mode(GUI_INFO_MODE);
-                            }
+                            // no valid image available / or we jumped into a folder
+                            is_image_mount=false;
+                            //rebuild the data-file
+                            insert_menu_image(current_path);
+                            infomode_update();
+                        } else
+                        {
+                            set_gui_mode(GUI_INFO_MODE);
                         }
                     }
                 }
@@ -1048,13 +1040,27 @@ void filebrowser_update(uint8_t key_code)
             is_image_mount=false;
             filebrowser_refresh();
         } else {
-            selected_image_nr = fb_window_pos+fb_cursor_pos;
+            selected_image_nr = fb_window_pos+fb_cursor_pos+1;
             set_gui_mode(GUI_INFO_MODE);
         }
         break;
     case KEY2_TIMEOUT1:
         set_gui_mode(GUI_MENU_MODE);
         break;
+    case KEY2_TIMEOUT2:
+        // move up one directory level if possible
+        if (1 < strlen(current_path))
+        {
+            FILINFO fbu_dir_entry;
+            strcpy(fbu_dir_entry.fname, "..");
+            fbu_dir_entry.fattrib = AM_DIR;
+            (void) open_dir_entry(fbu_dir_entry);
+            is_image_mount=false;
+            filebrowser_refresh();
+        }
+        break;
+
+    default:
     }
 
     //// Filename Scrolling
@@ -1106,9 +1112,20 @@ uint8_t open_dir_entry(FILINFO od_file_entry)
 
     if(od_file_entry.fattrib & AM_DIR)
     {
-        // Eintrag ist ein Verzeichnis
-        strcat(current_path, "/");
-        strcat(current_path, od_file_entry.fname);
+        // selected entry seems to be a directory
+        if (0 == strcmp(od_file_entry.fname, ".."))
+        {
+            // parent directory selected .. so we go one level up
+            char* last_slash = strrchr(current_path,'/');
+            if (NULL != last_slash)
+            {
+                *last_slash = 0;
+            }
+        } else {
+            // append new filder-name to the existing path
+            strcat(current_path, "/");
+            strcat(current_path, od_file_entry.fname);
+        }
         f_chdir(current_path);
         fb_dir_entry_count = get_dir_entry_count(current_path);
 
@@ -1256,7 +1273,6 @@ uint16_t get_dir_entry_count(char* entrycount_path)
 
 uint16_t seek_to_dir_entry(uint16_t entry_num, char* seek_path)
 {
-    uint16_t entry_count = 0;
     f_closedir(&dir_object);
 
     char pattern[] = {"*"};
@@ -1265,20 +1281,17 @@ uint16_t seek_to_dir_entry(uint16_t entry_num, char* seek_path)
     if(FR_OK == f_opendir(&dir_object, seek_path))  /* Open the target directory */
     {
         f_readdir(&dir_object, 0);  // rewind the directory
-        if (entry_num > 0)
+        while (entry_num > 0)
         {
-            do
+            FRESULT fr = f_readdir(&dir_object, &dir_entry);
+            if((FR_OK != fr) || (0 == dir_entry.fname[0]))
             {
-                FRESULT fr = f_readdir(&dir_object, &dir_entry);
-                if((FR_OK != fr) || (0 == dir_entry.fname[0]))
-                {
-                    break;
-                }
-                entry_count++;
-            } while (entry_count < entry_num);
+                break;
+            }
+            --entry_num;
         }
     }
-    return entry_count;
+    return entry_num;
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -1299,15 +1312,15 @@ uint8_t open_disk_image(FIL* fd, FILINFO *file_entry)
         extension[i] = tolower(file_entry->fname[namelen+i]);
     }
 
-    if(!strcmp(extension,".g64"))
+    if(0 == strcmp(extension,".g64"))
     {
         image_type = G64_IMAGE;
     }
-    else if(!strcmp(extension,".d64"))
+    else if(0 == strcmp(extension,".d64"))
     {
         image_type = D64_IMAGE;
     }
-    else if(!strcmp(extension,".prg"))
+    else if(0 == strcmp(extension,".prg"))
     {
         image_type = PRG_IMAGE;
     } else {
