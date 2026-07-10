@@ -187,6 +187,8 @@ FRESULT mount_sdcard(void)
     if (FR_OK == fr)
     {
         fb_dir_entry_count = get_dir_entry_count(mount_path); // open card, count entries on root level
+
+        strcpy(current_path, mount_path);
     }
     return fr;
 }
@@ -1121,9 +1123,17 @@ uint8_t open_dir_entry(FILINFO od_file_entry)
             {
                 *last_slash = 0;
             }
+            if (1 > strlen(current_path))
+            {
+                current_path[0]='/';
+                current_path[1]=0;
+            }
         } else {
             // append new filder-name to the existing path
-            strcat(current_path, "/");
+            if (1 < strlen(current_path))
+            {
+                strcat(current_path, "/");
+            }
             strcat(current_path, od_file_entry.fname);
         }
         f_chdir(current_path);
@@ -1195,6 +1205,13 @@ void filebrowser_refresh(void)
 
     uint8_t i=0;
 
+    if ((1 < strlen(current_path)) && (0 == fb_window_pos))
+    {
+        strcpy(fb_dir_entry[0].fname, "..");
+        fb_dir_entry[0].fattrib = AM_DIR;
+        ++i;
+    }
+
     while((i<LCD_LINE_COUNT) && ((fb_window_pos + i) < fb_dir_entry_count))
     {
         FRESULT fr = f_readdir(&dir_object, &(fb_dir_entry[i]));
@@ -1202,18 +1219,20 @@ void filebrowser_refresh(void)
         {
             break;
         }
+        ++i;
+    }
 
-        display_setcursor(1,i);
-        if(fb_dir_entry[i].fattrib & AM_DIR)
+    for (uint8_t j=0; j<i; j++)
+    {
+        display_setcursor(1,j);
+        if(fb_dir_entry[j].fattrib & AM_DIR)
         {
             display_data(display_dir_char);
         } else {
             display_data(' ');
         }
 
-        display_print(fb_dir_entry[i].fname, 0, LCD_LINE_SIZE-3);
-
-        i++;
+        display_print(fb_dir_entry[j].fname, 0, LCD_LINE_SIZE-3);
     }
 
     display_setcursor(0, fb_cursor_pos);
@@ -1278,12 +1297,14 @@ uint16_t seek_to_dir_entry(uint16_t entry_num, const char* seek_path)
     f_closedir(&dir_object);
 
     char pattern[] = {"*"};
+    // if we are in a subfolder and not the first entry (="..") was selected, decrease the seek index by 1
+    if ((1 < strlen(seek_path)) && (0 < entry_num)) { --entry_num; }
 
     dir_object.pat = pattern;           /* Save pointer to pattern string */
     if(FR_OK == f_opendir(&dir_object, seek_path))  /* Open the target directory */
     {
         f_readdir(&dir_object, 0);  // rewind the directory
-        while (entry_num > 0)
+        while (0 < entry_num)
         {
             FILINFO seek_dir_entry;
             FRESULT fr = f_readdir(&dir_object, &seek_dir_entry);
