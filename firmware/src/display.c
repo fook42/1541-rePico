@@ -83,8 +83,9 @@ char* dez2out(int32_t value, uint8_t digits, char* dest)
         *dest++='-';
         value=-value;
     }
-    while (digits--)
+    while (0 < digits)
     {
+        --digits;
         uint8_t c = value/_dez[digits];
         if ((true == show) || (0 != c) || (0 == digits))
         {
@@ -105,8 +106,9 @@ char* hex2out(uint32_t dez, uint8_t digits, char* dest)
         digits = 8;
         show = false;
     }
-    while (digits--)
+    while (0 < digits)
     {
+        --digits;
         uint8_t c=(dez>>(digits<<2))&0x0F;
         if ((true == show) || (0 != c) || (0 == digits))
         {

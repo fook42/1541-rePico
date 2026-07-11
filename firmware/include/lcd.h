@@ -79,7 +79,7 @@ void lcd_data( const uint8_t data );
 
 ////////////////////////////////////////////////////////////////////////////////
 // Ausgabe eines Strings an der aktuellen Cursorposition 
-void lcd_string( char *data );
+void lcd_string( const char *data );
 
 ////////////////////////////////////////////////////////////////////////////////
 // Schreibt einen String auf das LCD mit erweiterten Parametern

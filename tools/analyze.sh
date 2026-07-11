@@ -121,11 +121,15 @@ if [ "$RUN_CPPCHECK" = true ]; then
     # Cppcheck ausführen
     if [ "$VERBOSE" = true ]; then
         cppcheck --enable=all --suppress=missingIncludeSystem \
+                 --check-level=exhaustive \
+                 -I firmware/include \
                  firmware/src firmware/include
     else
         cppcheck --enable=all --suppress=missingIncludeSystem \
                  --output-file="$REPORT_DIR/cppcheck-report.xml" \
                  --xml --xml-version=2 \
+                 --check-level=exhaustive \
+                 -I firmware/include \
                  firmware/src firmware/include || true
         
         if [ -f "$REPORT_DIR/cppcheck-report.xml" ]; then

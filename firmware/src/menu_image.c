@@ -52,7 +52,7 @@ void generate_bam(const char* const image_name, const uint8_t* const image_id_bu
     P[DIR_ID_OFFSET+4] = image_id_buffer[4];
 }
 
-void generate_directory_entry(uint8_t* const filename, const uint8_t filetype, const uint8_t des_track, const uint8_t des_sector, const uint16_t size)
+void generate_directory_entry(const uint8_t* filename, const uint8_t filetype, const uint8_t des_track, const uint8_t des_sector, const uint16_t size)
 {
     // assumption: d64_sector_puffer holds entire DIRECTORY_TRACK 18!!
     uint8_t*    P;
@@ -83,14 +83,13 @@ void generate_directory_entry(uint8_t* const filename, const uint8_t filetype, c
     P[29]=(size>>8)&0xFF; // size high
 }
 
-size_t generate_menu_file(DIR* dir_obj, uint8_t* dir_path, const uint8_t dest_track)
+size_t generate_menu_file(DIR* dir_obj, const uint8_t* dir_path, const uint8_t dest_track)
 {
     FILINFO     fb_dir_menu_entry;
-    FRESULT     fr;
 
     uint8_t*    P;
     uint8_t*    file_sector_P  = g64_tracks[dest_track];
-    uint8_t*    charP = dir_path;
+    const uint8_t*    charP = dir_path;
 
     char        file_extension[5]={0};
 
@@ -127,7 +126,7 @@ size_t generate_menu_file(DIR* dir_obj, uint8_t* dir_path, const uint8_t dest_tr
 
     do
     {
-        fr = f_readdir(dir_obj, &fb_dir_menu_entry);
+        FRESULT fr = f_readdir(dir_obj, &fb_dir_menu_entry);
         if((0 == fb_dir_menu_entry.fname[0]) || (FR_OK != fr))
         {
             break;
@@ -138,29 +137,34 @@ size_t generate_menu_file(DIR* dir_obj, uint8_t* dir_path, const uint8_t dest_tr
             *P++ = TYPE_DIR;   // directory
         } else {
             size_t namelen = strlen(fb_dir_menu_entry.fname);
-            strcpy(file_extension, fb_dir_menu_entry.fname+(namelen - 4));
-
-            int i=0;
-            while(0 != file_extension[i])
-            {
-                file_extension[i] = tolower(file_extension[i]);
-                ++i;
-            }
-            if(!strcmp(file_extension,".d64"))
-            {
-                *P++ = TYPE_D64;   // D64 file
-            }
-            else if(!strcmp(file_extension,".g64"))
-            {
-                *P++ = TYPE_G64;   // G64 file
-            }
-            else if(!strcmp(file_extension,".prg"))
-            {
-                *P++ = TYPE_PRG;   // PRG file
-            }
-            else
+            if (4 > namelen)
             {
                 *P++ = TYPE_UNKNOWN;// unknown file
+            } else {
+                strcpy(file_extension, fb_dir_menu_entry.fname+(namelen - 4));
+
+                int i=0;
+                while(0 != file_extension[i])
+                {
+                    file_extension[i] = tolower(file_extension[i]);
+                    ++i;
+                }
+                if (0 == strcmp(file_extension,".d64"))
+                {
+                    *P++ = TYPE_D64;   // D64 file
+                }
+                else if (0 == strcmp(file_extension,".g64"))
+                {
+                    *P++ = TYPE_G64;   // G64 file
+                }
+                else if (0 == strcmp(file_extension,".prg"))
+                {
+                    *P++ = TYPE_PRG;   // PRG file
+                }
+                else
+                {
+                    *P++ = TYPE_UNKNOWN;// unknown file
+                }
             }
         }
 

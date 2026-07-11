@@ -164,7 +164,7 @@ void lcd_setcursor( const uint8_t x, const uint8_t y )
 ////////////////////////////////////////////////////////////////////////////////
 // Schreibt einen String auf das LCD
 
-void lcd_string( char* data )
+void lcd_string( const char* data )
 {
     while( *data != '\0' )
     {

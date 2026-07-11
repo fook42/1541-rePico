@@ -308,7 +308,6 @@ int8_t write_disk(FIL* fd, const int image_type, const uint8_t num_tracks)
         }
         case D64_IMAGE:
         {
-            uint8_t* Out_P;
             uint8_t temp;
 
             last_track = 0;
@@ -368,7 +367,7 @@ int8_t write_disk(FIL* fd, const int image_type, const uint8_t num_tracks)
                     }
                 } while(1);
                 // ----
-                Out_P = d64_sector_puffer;
+                uint8_t* Out_P = d64_sector_puffer;
                 for(int i=0; i<65; ++i)
                 {
                     ConvertFromGCR(P, Out_P);

@@ -201,7 +201,7 @@ void oled_data( const uint8_t data )
 
 ////////////////////////////////////////////////////////////////////////////////
 // write a string
-void oled_string( char* data )
+void oled_string( const char* data )
 {
     while( 0 != data[0] )
     {
