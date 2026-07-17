@@ -57,6 +57,20 @@ int8_t read_disk(FIL* fd, const int image_type, FILINFO fileinfo)
 
             for(uint8_t track_nr=0; track_nr<G64_TRACKCOUNT; track_nr++)
             {
+                uint32_t speed_set = g64_speedtable[track_nr<<1];
+                if (4 > speed_set)
+                {
+                    // speed set for complete track (values 0..3)
+                    d64_track_zone[track_nr] = (uint8_t) 3 - (uint8_t) (speed_set & 0x0F);
+                } else {
+                    // speed zone defined (see G64.TXT)
+                    // offset of speedzone-area specified here
+                    // @TODO : implement byte-wise speed-setting
+
+                    // temporary fix: use a commom value for this track
+                    d64_track_zone[track_nr] = 3;
+                }
+
                 offset = g64_jumptable[track_nr<<1];
                 if (0 == offset)
                 {
@@ -146,6 +160,7 @@ int8_t read_disk(FIL* fd, const int image_type, FILINFO fileinfo)
 
             memset(g64_jumptable,  0, sizeof(g64_jumptable));
             memset(g64_speedtable, 0, sizeof(g64_speedtable));
+            memcpy(d64_track_zone, default_d64_track_zone, sizeof(default_d64_track_zone));
 
             for(uint8_t track_nr=0; track_nr<G64_TRACKCOUNT; ++track_nr)
             {

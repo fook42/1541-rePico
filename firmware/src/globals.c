@@ -19,8 +19,9 @@ const uint8_t d64_sector_count[NUM_SPEEDZONES] = {21,    //Spuren 1-17
                                                 19,    //Spuren 18-24
                                                 18,    //Spuren 25-30
                                                 17};   //Spuren 31-42
+uint8_t d64_track_zone[MAX_TRACKS];
 
-const uint8_t d64_track_zone[MAX_TRACKS] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,  //Spuren 1-17
+const uint8_t default_d64_track_zone[MAX_TRACKS] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,  //Spuren 1-17
                                             1,1,1,1,1,1,1,                      //Spuren 18-24
                                             2,2,2,2,2,2,                        //Spuren 25-30
                                             3,3,3,3,3,3,3,3,3,3,3,3};           //Spuren 31-42

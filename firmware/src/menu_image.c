@@ -18,6 +18,7 @@ void generate_empty_image(uint8_t image_id1, uint8_t image_id2, uint8_t track_nu
     memset(g64_jumptable,     0, sizeof(g64_jumptable));
     memset(g64_speedtable,    0, sizeof(g64_speedtable));
     memset(d64_sector_puffer, 0, sizeof(d64_sector_puffer));
+    memcpy(d64_track_zone, default_d64_track_zone, sizeof(default_d64_track_zone));
 
     for(uint8_t track_nr=0; track_nr<track_number; ++track_nr)
     {
@@ -182,4 +183,3 @@ size_t generate_menu_file(DIR* dir_obj, const uint8_t* dir_path, const uint8_t d
 
     return (size_t)(P-file_sector_P);
 }
-

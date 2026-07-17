@@ -45,7 +45,8 @@
 
 extern const uint16_t d64_track_offset[MAX_TRACKS];
 extern const uint8_t d64_sector_count[NUM_SPEEDZONES];
-extern const uint8_t d64_track_zone[MAX_TRACKS];
+extern uint8_t d64_track_zone[MAX_TRACKS];
+extern const uint8_t default_d64_track_zone[MAX_TRACKS];
 
 #define D64_SECTOR_SIZE (256)
 extern uint8_t d64_sector_puffer[21*D64_SECTOR_SIZE+5];
