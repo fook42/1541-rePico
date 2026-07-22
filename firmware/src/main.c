@@ -29,8 +29,6 @@
 #include "globals.h"
 #include "rw_routines.h"
 #include "menu_image.h"
-#include "c64_selector.h"
-#include "c64_intro.h"
 
 #include "hw_config.h"
 #include "f_util.h"
@@ -53,6 +51,9 @@ uint16_t selected_image_nr = 0xFFFF;
 
 int64_t input_debounce_callback(alarm_id_t id, void *user_data)
 {
+    (void) id;
+    (void) user_data;
+
     input_block = false;
     return 0;
 }
@@ -226,6 +227,9 @@ void show_fs_error(FRESULT error_code)
 
 int64_t steppertimer_callback(alarm_id_t id, void *user_data)
 {
+    (void) id;
+    (void) user_data;
+
     send_byte_ready = false;
     stop_bytetimer();
 
@@ -473,7 +477,7 @@ void update_gui(void)
             // exit_main = 0;
         }
 
-        handle_selector_image();
+        handle_menu_image();
 
         if(shown_half_track != akt_half_track)
         {
@@ -709,7 +713,7 @@ void set_gui_mode(const uint8_t gui_mode)
             break;
 
         case GUI_SELECTOR:
-            handle_selector_image();
+            handle_menu_image();
             break;
 
         default:
@@ -726,6 +730,134 @@ void show_start_message(void)
     display_setcursor(disp_firmwaretxt_p);
     display_string(disp_firmwaretxt_s);
     display_string(VERSION);
+}
+
+/////////////////////////////////////////////////////////////////////
+
+void handle_menu_image(void)
+{
+    FILINFO hmi_dir_entry;
+
+    if (SELECTOR_IMAGE != akt_image_type)
+    {
+        // insert the virtual menu-image
+        insert_menu_image(current_path);
+        infomode_update();
+    } else {
+        // we have the selector inserted.. now handle the selection
+        if (track_is_written)
+        {
+            if (DIRECTORY_TRACK == track_write_nr)
+            {
+                // something was changed on the image.. lets fetch the image-number
+
+                // simple approach: convert the complete track, all 19 sectors.. then select sector 2 and read 2 bytes
+                convert_gcr2d64track(DIRECTORY_TRACK);
+                selected_image_nr = *((uint16_t*) &d64_sector_puffer[1+2*D64_SECTOR_SIZE]);
+
+                if (0 != selected_image_nr)
+                {
+                    FRESULT fr;
+                    display_setcursor(disp_scrollfilename_p);
+                    for(uint8_t i=0; i<LCD_LINE_SIZE; i++)
+                    {
+                        display_data(display_cursor_char);
+                        sleep_ms(250/LCD_LINE_SIZE);
+                    }
+                    display_setcursor(disp_scrollfilename_p);
+                    for(uint8_t i=0; i<LCD_LINE_SIZE; i++)
+                    {
+                        display_data(' ');
+                        sleep_ms(250/LCD_LINE_SIZE);
+                    }
+
+                    if (1 < strlen(current_path))
+                    {
+                        --selected_image_nr;
+                    }
+                    if (0 == selected_image_nr)
+                    {
+                        // first entry selected, which is ".." in this case
+                        // create a fake dir-entry and open it afterwards
+                        strcpy(hmi_dir_entry.fname, "..");
+                        hmi_dir_entry.fattrib = AM_DIR;
+                        fr = FR_OK;
+                    } else {
+                        seek_to_dir_entry(selected_image_nr-1, current_path);
+                        fr = f_readdir(&dir_object, &hmi_dir_entry);
+                    }
+
+                    if((0 != hmi_dir_entry.fname[0]) && (FR_OK == fr))
+                    {
+                        if (TYPE_VALID != open_dir_entry(hmi_dir_entry))
+                        {
+                            // no valid image available / or we jumped into a folder
+                            is_image_mount=false;
+                            //rebuild the data-file
+                            insert_menu_image(current_path);
+                            infomode_update();
+                        } else
+                        {
+                            set_gui_mode(GUI_INFO_MODE);
+                        }
+                    }
+                }
+            }
+            track_is_written = false;
+        }
+    }
+}
+
+void insert_menu_image(char* menu_path)
+{
+    FRESULT fr = mount_sdcard();
+    if (FR_OK == fr)
+    {
+        (void) f_closedir(&dir_object);
+
+        char pattern[] = {"*"};
+
+        dir_object.pat = pattern;           /* Save pointer to pattern string */
+        fr = f_opendir(&dir_object, menu_path);  /* Open the target directory */
+
+        if(FR_OK == fr)
+        {
+            stop_bytetimer();
+            send_byte_ready = false;            // disable VIA transfer
+
+            create_menu_image(menu_path, &dir_object, &id1, &id2, &num_max_tracks, image_filename);
+
+            akt_track_pos = 0;
+            selected_track = (INIT_TRACK << 1);
+            akt_half_track = selected_track;
+
+            send_byte_ready = true;             // enable VIA transfer
+            is_image_mount = true;
+
+            akt_image_type = SELECTOR_IMAGE;    // to identify the write-back-channel handling
+            track_is_written = false;
+
+            disable_write_protection();         // we need to be able to receive the answer of menu-selector as "write"
+
+            send_disk_change();
+
+            start_bytetimer(akt_half_track);    // start the track-spinning
+
+            menu_set_entry_var1(&image_menu, M_WP_IMAGE, floppy_wp);
+        } else {
+            display_clear();
+            display_home();
+            display_string("f_opendir :");
+            display_data(fr+'A');
+            show_fs_error(fr);
+        }
+    } else {
+        display_clear();
+        display_home();
+        display_string("f_mount error:");
+        display_data(fr+'A');
+        show_fs_error(fr);
+    }
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -1376,7 +1508,7 @@ void init_stepper(void)
 
 void stepper_inc(void)
 {
-    if(selected_track >= ((MAX_TRACKS-1)<<1)) return;
+    if(selected_track >= ((NUM_TRACKS_MAX-1)<<1)) return;
 
     ++selected_track;
 }
