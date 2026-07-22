@@ -32,7 +32,8 @@
 // offset inside directory track of ID1+ID2
 #define DIR_ID_OFFSET   (0xA2)
 
-#define MAX_TRACKS      (42)
+#define NUM_TRACKS_MAX  (42)
+#define NUM_TRACKS_STD  (35)
 #define NUM_SPEEDZONES  (4)
 
 #define GCR_SYNCMARK    (0xFF)
@@ -40,13 +41,13 @@
 // see: https://ist.uwaterloo.ca/~schepers/formats/G64.TXT
 
 #define G64_VERSION     (0x00)
-#define G64_TRACKCOUNT  MAX_TRACKS
+#define G64_TRACKCOUNT  NUM_TRACKS_MAX
 #define G64_TRACKSIZE   (7928)  // = 0x1ef8
 
-extern const uint16_t d64_track_offset[MAX_TRACKS];
+extern const uint16_t d64_track_offset[NUM_TRACKS_MAX];
 extern const uint8_t d64_sector_count[NUM_SPEEDZONES];
-extern uint8_t d64_track_zone[MAX_TRACKS];
-extern const uint8_t default_d64_track_zone[MAX_TRACKS];
+extern uint8_t d64_track_zone[NUM_TRACKS_MAX];
+extern const uint8_t default_d64_track_zone[NUM_TRACKS_MAX];
 
 #define D64_SECTOR_SIZE (256)
 extern uint8_t d64_sector_puffer[21*D64_SECTOR_SIZE+5];

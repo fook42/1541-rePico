@@ -193,7 +193,7 @@ int8_t read_disk(FIL* fd, const int image_type, FILINFO fileinfo)
             const uint8_t id_buffer[]={" 1541"};      // disk-id
             id1 = id_buffer[0];
             id2 = id_buffer[1];
-            const uint8_t num_max_tracks = MAX_TRACKS;
+            const uint8_t num_max_tracks = NUM_TRACKS_STD;
             generate_empty_image(id1,id2,num_max_tracks);
 
             // generates a prg_file starting from PRGFILE_TRACK
@@ -467,7 +467,7 @@ int8_t write_disk(FIL* fd, const int image_type, const uint8_t num_tracks)
     return last_track;
 }
 
-void convert_d64track2gcr(uint8_t track_nr, uint8_t image_id1, uint8_t image_id2)
+void convert_d64track2gcr(const uint8_t track_nr, const uint8_t image_id1, const uint8_t image_id2)
 {
     uint8_t* P;
     uint8_t buffer[4];
