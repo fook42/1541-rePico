@@ -28,9 +28,9 @@ static spi_t spi = {
     .sck_gpio = 18,    // GPIO number (not Pico pin number)
     .mosi_gpio = 19,
     .miso_gpio = 16,
-    //.baud_rate = 125 * 1000 * 1000 / 8  // 15625000 Hz
+    .baud_rate = 125 * 1000 * 1000 / 8  // 15625000 Hz
     //.baud_rate = 125 * 1000 * 1000 / 6  // 20833333 Hz
-    .baud_rate = 125 * 1000 * 1000 / 4  // 31250000 Hz
+    // .baud_rate = 125 * 1000 * 1000 / 4  // 31250000 Hz
     //.baud_rate = 125 * 1000 * 1000 / 2  // 62500000 Hz
 };
 
