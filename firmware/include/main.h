@@ -2,7 +2,7 @@
  * header - main routines, defines, variables
  *
  * Author: F00K42
- * Last change: 2026/02/16
+ * Last change: 2026/07/24
 ***********************************/
 #include "hw_config.h"
 #include "f_util.h"
@@ -55,6 +55,8 @@ void unmount_image(void);
 void init_writeprot(void);
 void send_disk_change(void);
 
+void init_sound(void);
+
 bool repeating_timer_callback(__unused struct repeating_timer *t);
 void init_bytetimer(void);
 void start_bytetimer(uint8_t half_track);
@@ -90,6 +92,8 @@ void start_stepper_timer(void);
 #define enable_write_protection()   {clear_wps();floppy_wp=true;}
 #define disable_write_protection()  {set_wps();floppy_wp=false;}
 
+#define turn_sound_on()     gpio_put(GPIO_SND,true)
+#define turn_sound_off()    gpio_put(GPIO_SND,false)
 
 // Filesystem-variables:
 FATFS       fs;             // filesystem handle - only created once
