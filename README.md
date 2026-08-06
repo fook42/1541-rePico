@@ -30,6 +30,10 @@ single board, size 59mm x 60 mm
 
 one size fits for all 1541 models.
 
+## how to build ##
+
+-> [interactive BOM](/hardware/bom/ibom.html)
+
 ### Software ###
 
 #### Pico2 Firmware ####
