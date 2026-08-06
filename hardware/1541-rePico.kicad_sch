@@ -6,7 +6,7 @@
 	(paper "A4")
 	(title_block
 		(title "1541-rePico")
-		(date "2026-08-02")
+		(date "2026-08-06")
 		(rev "1.7")
 	)
 	(lib_symbols
@@ -7375,7 +7375,7 @@
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
-		(on_board no)
+		(on_board yes)
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "a372dd73-febe-4b87-8c36-15638d474f2f")
@@ -7945,7 +7945,7 @@
 				(hide yes)
 			)
 		)
-		(property "Footprint" "Connector_PinHeader_2.00mm:PinHeader_1x01_P2.00mm_Vertical"
+		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_1x01_P2.54mm_Vertical"
 			(at 168.91 87.63 0)
 			(effects
 				(font
