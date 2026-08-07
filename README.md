@@ -12,8 +12,8 @@ thanks to [BensonRSI](https://github.com/BensonRSI) for adding debugging documen
 ## Features ##
 
 latest version:
-- software: 1.6.1
-- hardware: 1.6
+- software: 1.7.0
+- hardware: 1.7
 
 ### Hardware ###
 
