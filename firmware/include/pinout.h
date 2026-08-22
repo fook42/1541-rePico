@@ -29,13 +29,9 @@
 #define GPIO_PA7    15
 */
 
-// SND test
-#define GPIO_SND    17
-
 // SPI defines
 #define SPI_PORT    spi0
 #define SPI_MISO    16
-//#define SPI_CS      17
 #define SPI_SCK     18
 #define SPI_MOSI    19
 
@@ -52,3 +48,12 @@
 #define GPIO_BRDY   22
 
 #define NOT_CONNECTED (-1)
+
+
+#if PCB_VERSION>=17
+#define GPIO_SND    17
+#define SPI_CS      NOT_CONNECTED
+#else
+#define GPIO_SND    NOT_CONNECTED
+#define SPI_CS      17
+#endif

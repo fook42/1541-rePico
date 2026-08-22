@@ -38,7 +38,7 @@ static spi_t spi = {
 /* SPI Interface */
 static sd_spi_if_t spi_if = {
     .spi = &spi,  // Pointer to the SPI driving this card
-    .ss_gpio = NOT_CONNECTED // The SPI slave select GPIO for this SD card
+    .ss_gpio = SPI_CS // The SPI slave select GPIO for this SD card
 };
 
 /* Configuration of the SD Card socket object */

@@ -92,8 +92,13 @@ void start_stepper_timer(void);
 #define enable_write_protection()   {clear_wps();floppy_wp=true;}
 #define disable_write_protection()  {set_wps();floppy_wp=false;}
 
+#if PCB_VERSION>=17
 #define turn_sound_on()     gpio_put(GPIO_SND,true)
 #define turn_sound_off()    gpio_put(GPIO_SND,false)
+#else
+#define turn_sound_on()     {}
+#define turn_sound_off()    {}
+#endif
 
 // Filesystem-variables:
 FATFS       fs;             // filesystem handle - only created once

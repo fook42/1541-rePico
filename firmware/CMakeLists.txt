@@ -84,4 +84,12 @@ target_link_libraries(1541-rePico
 
 pico_add_extra_outputs(1541-rePico)
 
+#pass PCB_VERSION-value to the compiler
+# set version to 17 as default
+if(NOT PCB_VERSION)
+   set(PCB_VERSION 17)
+endif()
+target_compile_definitions(1541-rePico PUBLIC PCB_VERSION=${PCB_VERSION})
+
+unset(PCB_VERSION CACHE)
 
