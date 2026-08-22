@@ -2,7 +2,7 @@
 // 1541-rePico
 /////////////////////////////////////////////////
 // author: F00K42
-// last changed: 2026/07/10
+// last changed: 2026/07/24
 // repo: https://github.com/fook42/1541-rePico
 /////////////////////////////////////////////////
 
@@ -147,6 +147,11 @@ int main()
     init_writeprot();
     disable_write_protection();
 
+#if PCB_VERSION>=17
+    // Enable Sound-Output-Pin
+    init_sound();
+#endif
+
     // setup menus
     menu_init(&main_menu,     main_menu_entrys,     count_of(main_menu_entrys),     LCD_LINE_SIZE, LCD_LINE_COUNT);
     menu_init(&image_menu,    image_menu_entrys,    count_of(image_menu_entrys),    LCD_LINE_SIZE, LCD_LINE_COUNT);
@@ -240,12 +245,16 @@ int64_t steppertimer_callback(alarm_id_t id, void *user_data)
 
     start_bytetimer(akt_half_track);
     send_byte_ready = true;
+    turn_sound_off();
+
     return 0;
 }
 
 
 void start_stepper_timer(void)
 {
+    turn_sound_on();
+
     if (stepper_alarm) { cancel_alarm(stepper_alarm); }
     stepper_alarm = add_alarm_in_ms(STEPPER_DELAY_TIME, steppertimer_callback, NULL, false);
 }
@@ -1608,6 +1617,15 @@ void start_bytetimer(uint8_t half_track)
 void stop_bytetimer(void)
 {
     (void) cancel_repeating_timer(&bytetimer);
+}
+
+/////////////////////////////////////////////////////////////////////
+
+void init_sound(void)
+{
+    gpio_init(GPIO_SND);
+    gpio_set_dir(GPIO_SND, GPIO_OUT);
+    turn_sound_off();
 }
 
 ///////////////////////////////////////

@@ -12,8 +12,8 @@ thanks to [BensonRSI](https://github.com/BensonRSI) for adding debugging documen
 ## Features ##
 
 latest version:
-- software: 1.6.1
-- hardware: 1.6
+- software: 1.7.0
+- hardware: 1.7
 
 ### Hardware ###
 
@@ -97,10 +97,20 @@ prepare build-folder / configure Ninja for build the cmake project
 cd firmware
 mkdir build
 cd build
-cmake -G Ninja .. -D BUILD_MENUPRG=OFF
+cmake -G Ninja .. -D BUILD_MENUPRG=OFF -D COMPRESS_MENUPRG=ON -D PCB_VERSION=17
 ```
 
-Hint: you may change the option "BUILD_MENUPRG" to "ON" if you want to let ACME compile the provided menu.asm-code. Otherwise the shipped, precompiled "menu.prg" will be used.
+optional cmake variables are:
+
+| Variable | Values | Description |
+| :--- | :---: | :--- |
+| BUILD_MENUPRG | ON*/OFF | let ACME compile the provided menu.asm-code. Otherwise the shipped, precompiled "menu.prg" will be used. |
+| COMPRESS_MENUPRG | ON*/OFF | uses dali binary compression to generate a smaller menu-prg object |
+| PCB_VERSION | 0..17* | defines which PCB version is used -> enables specific code features according to pcb-layout (like sound output) |
+
+(* is default)
+
+
 
 now trigger a build
 

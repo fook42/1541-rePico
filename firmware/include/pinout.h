@@ -2,7 +2,7 @@
  * header - pinout assignment for Pico2 to baseboard
  *
  * Author: F00K42
- * Last change: 2026/02/15
+ * Last change: 2026/07/24
 ***********************************/
 #include "hardware/spi.h"
 
@@ -32,7 +32,6 @@
 // SPI defines
 #define SPI_PORT    spi0
 #define SPI_MISO    16
-#define SPI_CS      17
 #define SPI_SCK     18
 #define SPI_MOSI    19
 
@@ -47,3 +46,14 @@
 #define GPIO_BT3    28
 
 #define GPIO_BRDY   22
+
+#define NOT_CONNECTED (-1)
+
+
+#if PCB_VERSION>=17
+#define GPIO_SND    17
+#define SPI_CS      NOT_CONNECTED
+#else
+#define GPIO_SND    NOT_CONNECTED
+#define SPI_CS      17
+#endif
