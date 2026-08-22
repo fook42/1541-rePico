@@ -1,5 +1,5 @@
 ### 1541-rePico Mapping ###
-## (stand: 2026-02-15)
+## (stand: 2026-08-06)
 
 pico2 PIN-mapping:
 # 17 für die VIA6522 Verbindung (PA0-PA7, BRDY, SYNC, SOE, SOE_GA, WP, MTR, STP0, STP1, OE)
@@ -23,7 +23,7 @@ BRDY = GP22
 
 # 4 für die SD-Karte (SPI)
 MISO = GP16
-CS   = GP17
+CS   = n.c. (nicht belegt)
 SCK  = GP18
 MOSI = GP19
 
@@ -36,3 +36,5 @@ BT1  = GP27
 BT2  = GP26
 BT3  = GP28
 
+# Anschluss Sound-Buzzer
+SOUND = GP17
