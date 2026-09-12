@@ -1,0 +1,5 @@
+"Comment","Designator","Footprint","JLCPCB Part #"
+"1M","R4","Resistor_SMD:R_0603_1608Metric","C22935"
+"SN74LVC4245A","U2","Package_SO:TSSOP-24_4.4x7.8mm_P0.65mm","C7859"
+"BSS138","Q1,Q2,Q3,Q4,Q5,Q6,Q7,Q8,Q9","Package_TO_SOT_SMD:SOT-23","C7420339"
+"10k","R5,R6,R7,R8,R9,R10,R11,R12,R13,R14,R15,R16,R17,R18,R19,R20","Resistor_SMD:R_0603_1608Metric","C25804"

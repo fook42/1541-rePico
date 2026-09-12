@@ -227,6 +227,19 @@
 				)
 			)
 		)
+		(property "JLCPCB Part #" ""
+			(at 0 0 90)
+			(unlocked yes)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "b0f21f95-f9a0-4458-b730-4f211be6341d")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
 		(property ki_fp_filters "Connector*:*_1x??_*")
 		(path "/8d5d5ecd-17d9-4fc1-9f38-048adf9af17f")
 		(sheetname "/")
@@ -459,6 +472,19 @@
 			(effects
 				(font
 					(size 1.27 1.27)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "JLCPCB Part #" ""
+			(at 0 0 270)
+			(unlocked yes)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "ef5454ad-729b-4f1f-886b-b3d2ac406bf9")
+			(effects
+				(font
+					(size 1 1)
 					(thickness 0.15)
 				)
 			)
@@ -711,6 +737,19 @@
 			(effects
 				(font
 					(size 1.27 1.27)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "JLCPCB Part #" ""
+			(at 0 0 0)
+			(unlocked yes)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "63aaae43-d661-4894-a4d3-44b0102420db")
+			(effects
+				(font
+					(size 1 1)
 					(thickness 0.15)
 				)
 			)
@@ -1166,6 +1205,19 @@
 				)
 			)
 		)
+		(property "JLCPCB Part #" ""
+			(at 0 0 90)
+			(unlocked yes)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "93471d08-fc1f-47ff-bfd7-41e5244f5a9f")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
 		(path "/00000000-0000-0000-0000-00005adb99af")
 		(sheetname "/")
 		(sheetfile "1541-rePico.kicad_sch")
@@ -1508,6 +1560,19 @@
 			(effects
 				(font
 					(size 1.27 1.27)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "JLCPCB Part #" ""
+			(at 0 0 180)
+			(unlocked yes)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "70112a9c-5b26-4bea-9b3e-8b45cfdb4faa")
+			(effects
+				(font
+					(size 1 1)
 					(thickness 0.15)
 				)
 			)
@@ -2866,6 +2931,19 @@
 				)
 			)
 		)
+		(property "JLCPCB Part #" ""
+			(at 0 0 270)
+			(unlocked yes)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "f63c1bd0-773b-47f4-b314-985249262652")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
 		(property ki_fp_filters "*Buzzer*")
 		(path "/da21af61-2b4a-4c36-81e0-ca8c3d273f02")
 		(sheetname "/")
@@ -3020,6 +3098,19 @@
 			(effects
 				(font
 					(size 1.27 1.27)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "JLCPCB Part #" ""
+			(at 0 0 0)
+			(unlocked yes)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "369f7bcf-cf86-47cd-a1d1-f453a74745fc")
+			(effects
+				(font
+					(size 1 1)
 					(thickness 0.15)
 				)
 			)
@@ -3234,6 +3325,19 @@
 			(effects
 				(font
 					(size 1.27 1.27)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "JLCPCB Part #" ""
+			(at 0 0 180)
+			(unlocked yes)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "dff3fe97-c607-4380-97ea-a5f427cf5288")
+			(effects
+				(font
+					(size 1 1)
 					(thickness 0.15)
 				)
 			)
@@ -3989,6 +4093,19 @@
 				)
 			)
 		)
+		(property "JLCPCB Part #" ""
+			(at 0 0 180)
+			(unlocked yes)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "509e835a-b583-48bb-8a2a-9e955e7a5e09")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
 		(property ki_fp_filters "Connector*:*_1x??_*")
 		(path "/00000000-0000-0000-0000-00005aeecddd")
 		(sheetname "/")
@@ -4209,6 +4326,19 @@
 			(effects
 				(font
 					(size 1.27 1.27)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "JLCPCB Part #" ""
+			(at 0 0 90)
+			(unlocked yes)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "2a101a16-4df3-4037-afc5-1b1c0697b072")
+			(effects
+				(font
+					(size 1 1)
 					(thickness 0.15)
 				)
 			)
@@ -4486,6 +4616,19 @@
 			(effects
 				(font
 					(size 1.27 1.27)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "JLCPCB Part #" ""
+			(at 0 0 180)
+			(unlocked yes)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "c566fbdb-bcea-431f-b506-dbf1c1839a18")
+			(effects
+				(font
+					(size 1 1)
 					(thickness 0.15)
 				)
 			)
@@ -4941,6 +5084,19 @@
 				)
 			)
 		)
+		(property "JLCPCB Part #" ""
+			(at 0 0 0)
+			(unlocked yes)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "b2fb4e58-b0aa-4298-8ce0-525f4ff4cb0d")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
 		(property ki_fp_filters "Connector*:*_1x??_*")
 		(path "/00000000-0000-0000-0000-00005aef69af")
 		(sheetname "/")
@@ -5191,6 +5347,19 @@
 			(effects
 				(font
 					(size 1.27 1.27)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "JLCPCB Part #" ""
+			(at 0 0 90)
+			(unlocked yes)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "3329dd33-184f-489f-abd8-4b8fd7ad6924")
+			(effects
+				(font
+					(size 1 1)
 					(thickness 0.15)
 				)
 			)
@@ -5448,6 +5617,19 @@
 			(effects
 				(font
 					(size 1.27 1.27)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "JLCPCB Part #" ""
+			(at 0 0 180)
+			(unlocked yes)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "6202c570-1a12-4b14-90da-a61d466d38b8")
+			(effects
+				(font
+					(size 1 1)
 					(thickness 0.15)
 				)
 			)
@@ -5877,6 +6059,19 @@
 			(effects
 				(font
 					(size 1.27 1.27)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "JLCPCB Part #" ""
+			(at 0 0 0)
+			(unlocked yes)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "2bec9272-8d22-42a1-8f35-e661ee468f44")
+			(effects
+				(font
+					(size 1 1)
 					(thickness 0.15)
 				)
 			)
@@ -7575,6 +7770,19 @@
 				)
 			)
 		)
+		(property "JLCPCB Part #" ""
+			(at 0 0 90)
+			(unlocked yes)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "d8fec10c-b135-42be-9fc3-804300e703fa")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
 		(property ki_fp_filters "Connector*:*_1x??_*")
 		(path "/00000000-0000-0000-0000-00006159a997")
 		(sheetname "/")
@@ -7806,6 +8014,19 @@
 			(effects
 				(font
 					(size 1.27 1.27)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "JLCPCB Part #" ""
+			(at 0 0 0)
+			(unlocked yes)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "a2568dc0-1a11-4bcc-a0d9-7446707bdf27")
+			(effects
+				(font
+					(size 1 1)
 					(thickness 0.15)
 				)
 			)
@@ -8044,6 +8265,20 @@
 			(effects
 				(font
 					(size 1.27 1.27)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
+		(property "JLCPCB Part #" ""
+			(at 0 0 0)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "e3451b42-741f-4983-9b56-e9c9b8eb4b91")
+			(effects
+				(font
+					(size 1 1)
 					(thickness 0.15)
 				)
 				(justify mirror)
@@ -8419,6 +8654,20 @@
 				(justify mirror)
 			)
 		)
+		(property "JLCPCB Part #" ""
+			(at 0 0 270)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "85e4fc2e-6d26-4d7f-b3e3-40873c2310c6")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
 		(property ki_fp_filters "R_*")
 		(path "/00000000-0000-0000-0000-000055f9b22c/8950ad57-04af-4481-9678-ce73b3c1b651/03d63d9f-17c3-4daf-8518-340e3c0a9b06")
 		(sheetname "/VIA 6522 Sockel/BSS138_7/")
@@ -8560,6 +8809,20 @@
 			(effects
 				(font
 					(size 1.27 1.27)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
+		(property "JLCPCB Part #" ""
+			(at 0 0 180)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "676714a6-0346-46b8-b08a-a0a1260f9d74")
+			(effects
+				(font
+					(size 1 1)
 					(thickness 0.15)
 				)
 				(justify mirror)
@@ -8930,6 +9193,20 @@
 			(effects
 				(font
 					(size 1.27 1.27)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
+		(property "JLCPCB Part #" ""
+			(at 0 0 180)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "f1282c78-68d7-416d-88bb-22f0021f71dc")
+			(effects
+				(font
+					(size 1 1)
 					(thickness 0.15)
 				)
 				(justify mirror)
@@ -9424,6 +9701,20 @@
 				(justify mirror)
 			)
 		)
+		(property "JLCPCB Part #" ""
+			(at 0 0 270)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "b5234d19-ba4e-4c5f-871d-fdf2dd0a97e6")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
 		(property ki_fp_filters "R_*")
 		(path "/00000000-0000-0000-0000-000055f9b22c/8950ad57-04af-4481-9678-ce73b3c1b651/449d5df4-b0c0-4fdc-8ee8-d755c5f94493")
 		(sheetname "/VIA 6522 Sockel/BSS138_7/")
@@ -9570,11 +9861,25 @@
 				(justify mirror)
 			)
 		)
+		(property "JLCPCB Part #" ""
+			(at 0 0 0)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "a0fbbc15-0a98-41c5-b212-ca30bb941b71")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
 		(property ki_fp_filters "R_*")
 		(path "/b2c99f15-ff5f-43f9-a438-55581b7984a4")
 		(sheetname "/")
 		(sheetfile "1541-rePico.kicad_sch")
-		(attr smd)
+		(attr smd dnp)
 		(fp_line
 			(start -0.227064 -0.735)
 			(end 0.227064 -0.735)
@@ -9704,11 +10009,25 @@
 				(justify mirror)
 			)
 		)
+		(property "JLCPCB Part #" ""
+			(at 0 0 0)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "c99cb03c-f509-45ec-b810-79d3624dcc07")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
 		(property ki_fp_filters "R_*")
 		(path "/13756d8c-483f-465f-8a36-dc0295d1a8ad")
 		(sheetname "/")
 		(sheetfile "1541-rePico.kicad_sch")
-		(attr smd)
+		(attr smd dnp)
 		(fp_line
 			(start -0.227064 -0.735)
 			(end 0.227064 -0.735)
@@ -9833,6 +10152,20 @@
 			(effects
 				(font
 					(size 1.27 1.27)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
+		(property "JLCPCB Part #" ""
+			(at 0 0 90)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "522a8e10-1192-4a3e-b859-c4981a0bf480")
+			(effects
+				(font
+					(size 1 1)
 					(thickness 0.15)
 				)
 				(justify mirror)
@@ -9984,6 +10317,20 @@
 				(justify mirror)
 			)
 		)
+		(property "JLCPCB Part #" ""
+			(at 0 0 90)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "f8734bc4-f78d-412e-83b9-a918eff4f0a0")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
 		(property ki_fp_filters "R_*")
 		(path "/00000000-0000-0000-0000-000055f9b22c/e62564d5-f813-4dec-84af-d3968973aa80/449d5df4-b0c0-4fdc-8ee8-d755c5f94493")
 		(sheetname "/VIA 6522 Sockel/BSS138_2/")
@@ -10125,6 +10472,20 @@
 			(effects
 				(font
 					(size 1.27 1.27)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
+		(property "JLCPCB Part #" ""
+			(at 0 0 270)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "d3f0f6ab-330d-4337-bb8c-638043127e68")
+			(effects
+				(font
+					(size 1 1)
 					(thickness 0.15)
 				)
 				(justify mirror)
@@ -10276,6 +10637,20 @@
 				(justify mirror)
 			)
 		)
+		(property "JLCPCB Part #" ""
+			(at 0 0 90)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "5ef80c8b-3dec-4c4c-931f-0fa9a56e7c17")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
 		(property ki_fp_filters "R_*")
 		(path "/00000000-0000-0000-0000-000055f9b22c/885ec6c8-2664-4471-9335-f467a1d279c9/449d5df4-b0c0-4fdc-8ee8-d755c5f94493")
 		(sheetname "/VIA 6522 Sockel/BSS138_3/")
@@ -10417,6 +10792,20 @@
 			(effects
 				(font
 					(size 1.27 1.27)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
+		(property "JLCPCB Part #" ""
+			(at 0 0 0)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "85833429-91d0-4771-b143-68c81594105e")
+			(effects
+				(font
+					(size 1 1)
 					(thickness 0.15)
 				)
 				(justify mirror)
@@ -10792,6 +11181,20 @@
 				(justify mirror)
 			)
 		)
+		(property "JLCPCB Part #" ""
+			(at 0 0 270)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "86e3d0e5-1464-45e4-b192-ea16ecf1b37b")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
 		(property ki_fp_filters "R_*")
 		(path "/00000000-0000-0000-0000-000055f9b22c/e62564d5-f813-4dec-84af-d3968973aa80/03d63d9f-17c3-4daf-8518-340e3c0a9b06")
 		(sheetname "/VIA 6522 Sockel/BSS138_2/")
@@ -10933,6 +11336,20 @@
 			(effects
 				(font
 					(size 1.27 1.27)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
+		(property "JLCPCB Part #" ""
+			(at 0 0 90)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "86f3f402-b387-4ea9-938d-653dc1e918c9")
+			(effects
+				(font
+					(size 1 1)
 					(thickness 0.15)
 				)
 				(justify mirror)
@@ -11084,6 +11501,20 @@
 				(justify mirror)
 			)
 		)
+		(property "JLCPCB Part #" ""
+			(at 0 0 270)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "934ca825-01c5-4780-a4e5-02b43df6b5c6")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
 		(property ki_fp_filters "R_*")
 		(path "/00000000-0000-0000-0000-000055f9b22c/246fc3b7-a537-41dd-a740-86b07c815380/03d63d9f-17c3-4daf-8518-340e3c0a9b06")
 		(sheetname "/VIA 6522 Sockel/BSS138_8/")
@@ -11225,6 +11656,20 @@
 			(effects
 				(font
 					(size 1.27 1.27)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
+		(property "JLCPCB Part #" ""
+			(at 0 0 90)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "79932c51-3b32-4369-a7e0-b570a2a3ae83")
+			(effects
+				(font
+					(size 1 1)
 					(thickness 0.15)
 				)
 				(justify mirror)
@@ -11376,6 +11821,20 @@
 				(justify mirror)
 			)
 		)
+		(property "JLCPCB Part #" ""
+			(at 0 0 90)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "cefcfc76-cbb6-4ffb-8d52-979331737210")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
 		(property ki_fp_filters "R_*")
 		(path "/00000000-0000-0000-0000-000055f9b22c/a8e98cbc-6eab-422c-ab89-20b6dfe10445/03d63d9f-17c3-4daf-8518-340e3c0a9b06")
 		(sheetname "/VIA 6522 Sockel/BSS138_6/")
@@ -11517,6 +11976,20 @@
 			(effects
 				(font
 					(size 1.27 1.27)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
+		(property "JLCPCB Part #" ""
+			(at 0 0 270)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "d9ad4db6-e922-4fe3-8b74-63e4aea1cc32")
+			(effects
+				(font
+					(size 1 1)
 					(thickness 0.15)
 				)
 				(justify mirror)
@@ -11668,6 +12141,20 @@
 				(justify mirror)
 			)
 		)
+		(property "JLCPCB Part #" ""
+			(at 0 0 270)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "b9c199fe-5c22-4ff9-b42a-13168d7bea9f")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
 		(property ki_fp_filters "R_*")
 		(path "/00000000-0000-0000-0000-000055f9b22c/f20b0aa4-1a90-4ba7-a2da-30bf2186b969/03d63d9f-17c3-4daf-8518-340e3c0a9b06")
 		(sheetname "/VIA 6522 Sockel/BSS138_4/")
@@ -11809,6 +12296,20 @@
 			(effects
 				(font
 					(size 1.27 1.27)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
+		(property "JLCPCB Part #" ""
+			(at 0 0 0)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "6530a4b7-8147-4dd1-a785-0008f5de7d7d")
+			(effects
+				(font
+					(size 1 1)
 					(thickness 0.15)
 				)
 				(justify mirror)
@@ -12184,6 +12685,20 @@
 				(justify mirror)
 			)
 		)
+		(property "JLCPCB Part #" ""
+			(at 0 0 270)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "9239a599-7e08-45db-be26-3df56676725d")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
 		(property ki_fp_filters "R_*")
 		(path "/00000000-0000-0000-0000-000055f9b22c/a729e1c9-4b00-4d67-b80f-a63a23c3e869/449d5df4-b0c0-4fdc-8ee8-d755c5f94493")
 		(sheetname "/VIA 6522 Sockel/BSS138_5/")
@@ -12325,6 +12840,20 @@
 			(effects
 				(font
 					(size 1.27 1.27)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
+		(property "JLCPCB Part #" ""
+			(at 0 0 180)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "ee87234d-88ed-4472-9cbd-9470012012ed")
+			(effects
+				(font
+					(size 1 1)
 					(thickness 0.15)
 				)
 				(justify mirror)
@@ -12700,6 +13229,20 @@
 				(justify mirror)
 			)
 		)
+		(property "JLCPCB Part #" ""
+			(at 0 0 180)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "5b8f3c71-a2f5-4492-885b-06bbbd40d305")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
 		(property ki_fp_filters "SOT?23*")
 		(path "/00000000-0000-0000-0000-000055f9b22c/d787ca12-3105-491e-b3f2-90ef7e582f2b")
 		(sheetname "/VIA 6522 Sockel/")
@@ -13070,6 +13613,20 @@
 				(justify mirror)
 			)
 		)
+		(property "JLCPCB Part #" ""
+			(at 0 0 270)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "4a93f45b-e622-42fd-bf92-063e01527c4f")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
 		(property ki_fp_filters "R_*")
 		(path "/00000000-0000-0000-0000-000055f9b22c/e070540c-2fe6-4eed-9fce-aff92b479d93/03d63d9f-17c3-4daf-8518-340e3c0a9b06")
 		(sheetname "/VIA 6522 Sockel/BSS138_1/")
@@ -13211,6 +13768,20 @@
 			(effects
 				(font
 					(size 1.27 1.27)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
+		(property "JLCPCB Part #" ""
+			(at 0 0 0)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "53daf274-0245-4d5b-8634-828b555f2e13")
+			(effects
+				(font
+					(size 1 1)
 					(thickness 0.15)
 				)
 				(justify mirror)
@@ -13586,6 +14157,20 @@
 				(justify mirror)
 			)
 		)
+		(property "JLCPCB Part #" ""
+			(at 0 0 270)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "adbe4144-ab2e-4f8f-82f0-008fe9a68014")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
 		(property ki_fp_filters "R_*")
 		(path "/00000000-0000-0000-0000-000055f9b22c/0b9048fb-c8cb-4e31-bbd7-5533a73adc70")
 		(sheetname "/VIA 6522 Sockel/")
@@ -13727,6 +14312,20 @@
 			(effects
 				(font
 					(size 1.27 1.27)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
+		(property "JLCPCB Part #" ""
+			(at 0 0 0)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "f709d8a2-5481-4406-8984-2ca88c9e1d46")
+			(effects
+				(font
+					(size 1 1)
 					(thickness 0.15)
 				)
 				(justify mirror)
@@ -14102,6 +14701,20 @@
 				(justify mirror)
 			)
 		)
+		(property "JLCPCB Part #" ""
+			(at 0 0 90)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "9855f443-24a5-48af-8933-c5c062aa726c")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
 		(property ki_fp_filters "R_*")
 		(path "/00000000-0000-0000-0000-000055f9b22c/a8e98cbc-6eab-422c-ab89-20b6dfe10445/449d5df4-b0c0-4fdc-8ee8-d755c5f94493")
 		(sheetname "/VIA 6522 Sockel/BSS138_6/")
@@ -14243,6 +14856,20 @@
 			(effects
 				(font
 					(size 1.27 1.27)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
+		(property "JLCPCB Part #" ""
+			(at 0 0 0)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "5aaf77a7-7013-4532-90d8-ac73d7a1b88a")
+			(effects
+				(font
+					(size 1 1)
 					(thickness 0.15)
 				)
 				(justify mirror)
@@ -22102,7 +22729,7 @@
 				(xy 107.0276 106.588774) (xy 106.993525 106.461607) (xy 106.960612 106.4046) (xy 107.854831 106.4046)
 				(xy 107.844357 106.338473) (xy 107.844357 106.33847) (xy 107.778695 106.136382) (xy 107.691572 105.965395)
 				(xy 107.678676 105.896726) (xy 107.704952 105.831986) (xy 107.762058 105.791728) (xy 107.802057 105.7851)
-				(xy 107.850327 105.7851) (xy 109.492672 105.7851)
+				(xy 109.492672 105.7851)
 			)
 		)
 		(filled_polygon
@@ -22757,24 +23384,24 @@
 			(layer "B.Cu")
 			(pts
 				(xy 107.066881 102.680274) (xy 107.430305 103.043698) (xy 107.431107 103.045167) (xy 107.432685 103.046078)
-				(xy 107.432687 103.04608) (xy 107.524012 103.098807) (xy 107.625873 103.1261) (xy 107.731327 103.1261)
-				(xy 112.880396 103.1261) (xy 112.947435 103.145785) (xy 112.99319 103.198589) (xy 113.003134 103.267747)
-				(xy 112.974109 103.331303) (xy 112.968077 103.337781) (xy 112.913188 103.392669) (xy 112.913188 103.39267)
-				(xy 112.913186 103.392672) (xy 112.880227 103.438036) (xy 112.811368 103.532811) (xy 112.732728 103.687152)
-				(xy 112.679197 103.851902) (xy 112.6521 104.022989) (xy 112.6521 104.19621) (xy 112.67565 104.344904)
-				(xy 112.679198 104.367301) (xy 112.732715 104.532009) (xy 112.732728 104.532047) (xy 112.745053 104.556236)
-				(xy 112.811368 104.686388) (xy 112.874633 104.773465) (xy 112.884623 104.787214) (xy 112.908103 104.853021)
-				(xy 112.892278 104.921074) (xy 112.842172 104.969769) (xy 112.784305 104.9841) (xy 108.014855 104.9841)
-				(xy 107.947816 104.964415) (xy 107.927174 104.947781) (xy 107.633274 104.653881) (xy 107.599789 104.592558)
-				(xy 107.603023 104.527884) (xy 107.649771 104.384009) (xy 107.667985 104.26901) (xy 107.6781 104.205151)
-				(xy 107.6781 104.024048) (xy 107.657548 103.894296) (xy 107.649771 103.845191) (xy 107.593811 103.672961)
-				(xy 107.593811 103.67296) (xy 107.56013 103.606859) (xy 107.511596 103.511606) (xy 107.457152 103.43667)
-				(xy 107.405158 103.365105) (xy 107.405154 103.3651) (xy 107.278737 103.238683) (xy 107.277657 103.236706)
-				(xy 107.269739 103.231697) (xy 107.130597 103.130606) (xy 107.130596 103.130605) (xy 107.130594 103.130604)
-				(xy 107.041561 103.085239) (xy 106.969239 103.048388) (xy 106.969236 103.048387) (xy 106.79701 102.992429)
-				(xy 106.636921 102.967073) (xy 106.573786 102.937144) (xy 106.536855 102.877832) (xy 106.537853 102.80797)
-				(xy 106.576463 102.749737) (xy 106.636921 102.722127) (xy 106.797009 102.696771) (xy 106.808707 102.69297)
-				(xy 106.940884 102.650023) (xy 107.010723 102.648029)
+				(xy 107.432687 103.04608) (xy 107.524012 103.098807) (xy 107.625873 103.1261) (xy 112.880396 103.1261)
+				(xy 112.947435 103.145785) (xy 112.99319 103.198589) (xy 113.003134 103.267747) (xy 112.974109 103.331303)
+				(xy 112.968077 103.337781) (xy 112.913188 103.392669) (xy 112.913188 103.39267) (xy 112.913186 103.392672)
+				(xy 112.880227 103.438036) (xy 112.811368 103.532811) (xy 112.732728 103.687152) (xy 112.679197 103.851902)
+				(xy 112.6521 104.022989) (xy 112.6521 104.19621) (xy 112.67565 104.344904) (xy 112.679198 104.367301)
+				(xy 112.732715 104.532009) (xy 112.732728 104.532047) (xy 112.745053 104.556236) (xy 112.811368 104.686388)
+				(xy 112.874633 104.773465) (xy 112.884623 104.787214) (xy 112.908103 104.853021) (xy 112.892278 104.921074)
+				(xy 112.842172 104.969769) (xy 112.784305 104.9841) (xy 108.014855 104.9841) (xy 107.947816 104.964415)
+				(xy 107.927174 104.947781) (xy 107.633274 104.653881) (xy 107.599789 104.592558) (xy 107.603023 104.527884)
+				(xy 107.649771 104.384009) (xy 107.667985 104.26901) (xy 107.6781 104.205151) (xy 107.6781 104.024048)
+				(xy 107.657548 103.894296) (xy 107.649771 103.845191) (xy 107.593811 103.672961) (xy 107.593811 103.67296)
+				(xy 107.56013 103.606859) (xy 107.511596 103.511606) (xy 107.457152 103.43667) (xy 107.405158 103.365105)
+				(xy 107.405154 103.3651) (xy 107.278737 103.238683) (xy 107.277657 103.236706) (xy 107.269739 103.231697)
+				(xy 107.130597 103.130606) (xy 107.130596 103.130605) (xy 107.130594 103.130604) (xy 107.041561 103.085239)
+				(xy 106.969239 103.048388) (xy 106.969236 103.048387) (xy 106.79701 102.992429) (xy 106.636921 102.967073)
+				(xy 106.573786 102.937144) (xy 106.536855 102.877832) (xy 106.537853 102.80797) (xy 106.576463 102.749737)
+				(xy 106.636921 102.722127) (xy 106.797009 102.696771) (xy 106.808707 102.69297) (xy 106.940884 102.650023)
+				(xy 107.010723 102.648029)
 			)
 		)
 		(filled_polygon
@@ -23281,13 +23908,13 @@
 			(layer "B.Cu")
 			(pts
 				(xy 119.313303 81.145142) (xy 119.319781 81.151174) (xy 120.939119 82.770512) (xy 120.93912 82.770513)
-				(xy 121.013687 82.84508) (xy 121.105013 82.897807) (xy 121.206873 82.9251) (xy 121.312327 82.9251)
-				(xy 128.01704 82.9251) (xy 128.084079 82.944785) (xy 128.129834 82.997589) (xy 128.139778 83.066747)
-				(xy 128.117359 83.121983) (xy 128.082083 83.170536) (xy 128.051368 83.212811) (xy 127.972728 83.367152)
-				(xy 127.919197 83.531902) (xy 127.8921 83.702989) (xy 127.8921 83.87621) (xy 127.918007 84.039785)
-				(xy 127.919198 84.047301) (xy 127.972727 84.212045) (xy 128.051368 84.366388) (xy 128.153186 84.506528)
-				(xy 128.275672 84.629014) (xy 128.415812 84.730832) (xy 128.570155 84.809473) (xy 128.734899 84.863002)
-				(xy 128.905989 84.8901) (xy 128.90599 84.8901) (xy 129.87921 84.8901) (xy 129.879211 84.8901) (xy 130.050301 84.863002)
+				(xy 121.013687 82.84508) (xy 121.105013 82.897807) (xy 121.206873 82.9251) (xy 128.01704 82.9251)
+				(xy 128.084079 82.944785) (xy 128.129834 82.997589) (xy 128.139778 83.066747) (xy 128.117359 83.121983)
+				(xy 128.082083 83.170536) (xy 128.051368 83.212811) (xy 127.972728 83.367152) (xy 127.919197 83.531902)
+				(xy 127.8921 83.702989) (xy 127.8921 83.87621) (xy 127.918007 84.039785) (xy 127.919198 84.047301)
+				(xy 127.972727 84.212045) (xy 128.051368 84.366388) (xy 128.153186 84.506528) (xy 128.275672 84.629014)
+				(xy 128.415812 84.730832) (xy 128.570155 84.809473) (xy 128.734899 84.863002) (xy 128.905989 84.8901)
+				(xy 128.90599 84.8901) (xy 129.87921 84.8901) (xy 129.879211 84.8901) (xy 130.050301 84.863002)
 				(xy 130.215045 84.809473) (xy 130.369388 84.730832) (xy 130.509528 84.629014) (xy 130.632014 84.506528)
 				(xy 130.733832 84.366388) (xy 130.812473 84.212045) (xy 130.866002 84.047301) (xy 130.8931 83.876211)
 				(xy 130.8931 83.702989) (xy 130.866002 83.531899) (xy 130.812473 83.367155) (xy 130.733832 83.212812)

@@ -6,7 +6,7 @@
 	(paper "A4")
 	(title_block
 		(title "1541-rePico")
-		(date "2026-09-11")
+		(date "2026-09-12")
 		(rev "1.7.0")
 	)
 	(lib_symbols
@@ -5071,6 +5071,15 @@
 				)
 			)
 		)
+		(property "JLCPCB Part #" ""
+			(at 102.87 55.88 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "1"
 			(uuid "7a836aaf-3e7d-47d3-9881-c30e820be6bc")
 		)
@@ -5278,6 +5287,15 @@
 				)
 			)
 		)
+		(property "JLCPCB Part #" ""
+			(at 92.71 63.5 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "1"
 			(uuid "94f033e2-0e23-4577-a8be-f29988c72957")
 		)
@@ -5350,6 +5368,15 @@
 				)
 			)
 		)
+		(property "JLCPCB Part #" ""
+			(at 250.19 93.98 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "1"
 			(uuid "3852d2c3-0e32-4bee-8f42-468bf5070947")
 		)
@@ -5420,6 +5447,15 @@
 				(font
 					(size 1.27 1.27)
 				)
+			)
+		)
+		(property "JLCPCB Part #" ""
+			(at 238.76 151.13 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -5770,6 +5806,15 @@
 				(font
 					(size 1.27 1.27)
 				)
+			)
+		)
+		(property "JLCPCB Part #" ""
+			(at 111.76 172.72 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -6170,6 +6215,15 @@
 				)
 			)
 		)
+		(property "JLCPCB Part #" ""
+			(at 34.29 33.02 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "1"
 			(uuid "7fdd6096-665f-4824-b9cf-52b4f8e13616")
 		)
@@ -6242,6 +6296,15 @@
 				(font
 					(size 1.27 1.27)
 				)
+			)
+		)
+		(property "JLCPCB Part #" ""
+			(at 50.8 181.61 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -6414,7 +6477,7 @@
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
-		(dnp no)
+		(dnp yes)
 		(uuid "13756d8c-483f-465f-8a36-dc0295d1a8ad")
 		(property "Reference" "R1"
 			(at 92.71 98.806 0)
@@ -6453,6 +6516,15 @@
 			)
 		)
 		(property "Description" "Resistor"
+			(at 96.52 100.33 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "JLCPCB Part #" ""
 			(at 96.52 100.33 0)
 			(effects
 				(font
@@ -7136,6 +7208,15 @@
 				(hide yes)
 			)
 		)
+		(property "JLCPCB Part #" ""
+			(at 59.69 139.7 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "1"
 			(uuid "e8e1e597-35d9-4643-b0dc-3b224d58ef8a")
 		)
@@ -7411,6 +7492,15 @@
 				)
 			)
 		)
+		(property "JLCPCB Part #" ""
+			(at 147.32 185.42 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "1"
 			(uuid "5e2cbda6-4202-489c-b2f8-a7238be8af8e")
 		)
@@ -7482,6 +7572,15 @@
 				(hide yes)
 			)
 		)
+		(property "JLCPCB Part #" ""
+			(at 59.69 162.56 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "3"
 			(uuid "56760eb1-3acf-4e12-ba2e-683d92daeea8")
 		)
@@ -7516,7 +7615,7 @@
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
-		(dnp no)
+		(dnp yes)
 		(uuid "b2c99f15-ff5f-43f9-a438-55581b7984a4")
 		(property "Reference" "R2"
 			(at 100.838 98.806 0)
@@ -7555,6 +7654,15 @@
 			)
 		)
 		(property "Description" "Resistor"
+			(at 99.06 100.33 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "JLCPCB Part #" ""
 			(at 99.06 100.33 0)
 			(effects
 				(font
@@ -7693,6 +7801,15 @@
 				(font
 					(size 1.27 1.27)
 				)
+			)
+		)
+		(property "JLCPCB Part #" ""
+			(at 138.43 96.52 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
 			)
 		)
 		(pin "39"
@@ -7954,6 +8071,15 @@
 			)
 		)
 		(property "Description" "Generic connector, single row, 01x01, script generated"
+			(at 168.91 87.63 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "JLCPCB Part #" ""
 			(at 168.91 87.63 0)
 			(effects
 				(font
@@ -8235,6 +8361,15 @@
 				(hide yes)
 			)
 		)
+		(property "JLCPCB Part #" ""
+			(at 41.91 140.97 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "1"
 			(uuid "d63a4b7d-508e-4792-8aa4-cd1767ad5b96")
 		)
@@ -8421,6 +8556,15 @@
 			)
 		)
 		(property "Description" "Generic connector, single row, 01x05, script generated"
+			(at 71.12 90.17 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "JLCPCB Part #" ""
 			(at 71.12 90.17 0)
 			(effects
 				(font
