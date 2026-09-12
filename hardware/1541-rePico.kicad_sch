@@ -6,8 +6,8 @@
 	(paper "A4")
 	(title_block
 		(title "1541-rePico")
-		(date "2026-08-06")
-		(rev "1.7")
+		(date "2026-09-11")
+		(rev "1.7.0")
 	)
 	(lib_symbols
 		(symbol "Connector:Conn_01x01_Pin"
@@ -3316,6 +3316,12 @@
 		(uuid "3c7d8946-93bc-4146-9a73-8409510178bb")
 	)
 	(junction
+		(at 130.81 177.8)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "75d7c4ea-4122-458f-8bf6-edc11f1b7912")
+	)
+	(junction
 		(at 96.52 96.52)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -3555,16 +3561,6 @@
 	)
 	(wire
 		(pts
-			(xy 104.14 177.8) (xy 106.68 177.8)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "32fa4d3f-38c8-4d6d-b4df-9249eb547045")
-	)
-	(wire
-		(pts
 			(xy 119.38 167.64) (xy 128.27 167.64)
 		)
 		(stroke
@@ -3665,6 +3661,16 @@
 	)
 	(wire
 		(pts
+			(xy 54.61 134.62) (xy 54.61 137.16)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "47a69371-c759-449d-99a8-9e6047a9a3e2")
+	)
+	(wire
+		(pts
 			(xy 156.21 97.79) (xy 179.07 97.79)
 		)
 		(stroke
@@ -3682,16 +3688,6 @@
 			(type default)
 		)
 		(uuid "4a16b218-5b16-4f16-b002-a87deaf4611b")
-	)
-	(wire
-		(pts
-			(xy 57.15 142.24) (xy 54.61 142.24)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "4a82f52f-a76b-42af-bf2a-8ec802f17740")
 	)
 	(wire
 		(pts
@@ -3925,13 +3921,23 @@
 	)
 	(wire
 		(pts
-			(xy 54.61 139.7) (xy 57.15 139.7)
+			(xy 52.07 139.7) (xy 54.61 139.7)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
 		(uuid "6fa1e5df-f640-4c5c-a072-b2bc02352190")
+	)
+	(wire
+		(pts
+			(xy 147.32 180.34) (xy 147.32 177.8)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "72ead133-b4fa-47be-acb5-c311913d567b")
 	)
 	(wire
 		(pts
@@ -3985,6 +3991,16 @@
 	)
 	(wire
 		(pts
+			(xy 130.81 177.8) (xy 130.81 186.69)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "8129d9a3-d13b-4ff7-a357-211a09f10a56")
+	)
+	(wire
+		(pts
 			(xy 106.68 170.18) (xy 97.79 170.18)
 		)
 		(stroke
@@ -4025,7 +4041,7 @@
 	)
 	(wire
 		(pts
-			(xy 54.61 135.89) (xy 54.61 139.7)
+			(xy 52.07 135.89) (xy 52.07 139.7)
 		)
 		(stroke
 			(width 0)
@@ -4085,7 +4101,7 @@
 	)
 	(wire
 		(pts
-			(xy 54.61 135.89) (xy 38.1 135.89)
+			(xy 52.07 135.89) (xy 38.1 135.89)
 		)
 		(stroke
 			(width 0)
@@ -4195,7 +4211,7 @@
 	)
 	(wire
 		(pts
-			(xy 119.38 177.8) (xy 121.92 177.8)
+			(xy 119.38 177.8) (xy 130.81 177.8)
 		)
 		(stroke
 			(width 0)
@@ -4252,6 +4268,16 @@
 			(type default)
 		)
 		(uuid "bf3e6480-3290-49d3-9873-40679fdcfeaa")
+	)
+	(wire
+		(pts
+			(xy 130.81 177.8) (xy 147.32 177.8)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "bf9cd8d0-eacd-4a3d-80ec-13db768ca8ac")
 	)
 	(wire
 		(pts
@@ -4355,6 +4381,16 @@
 	)
 	(wire
 		(pts
+			(xy 95.25 186.69) (xy 95.25 177.8)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "d5e2c512-e4c6-461c-a11b-9652f660c36a")
+	)
+	(wire
+		(pts
 			(xy 176.53 115.57) (xy 191.77 115.57)
 		)
 		(stroke
@@ -4445,6 +4481,16 @@
 	)
 	(wire
 		(pts
+			(xy 130.81 186.69) (xy 95.25 186.69)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "ee0a4ffe-5ec2-4490-8c37-64451005ab83")
+	)
+	(wire
+		(pts
 			(xy 156.21 87.63) (xy 163.83 87.63)
 		)
 		(stroke
@@ -4492,6 +4538,16 @@
 			(type default)
 		)
 		(uuid "ff249774-d4a7-478f-8c64-5dd2bdbdaead")
+	)
+	(wire
+		(pts
+			(xy 95.25 177.8) (xy 106.68 177.8)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "ffae4743-76ff-4160-ba0d-e4dfc1d023cd")
 	)
 	(label "_PA2"
 		(at 171.45 105.41 0)
@@ -6064,142 +6120,6 @@
 		)
 	)
 	(symbol
-		(lib_id "power:+5V")
-		(at 104.14 177.8 90)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "00000000-0000-0000-0000-00005e9d1262")
-		(property "Reference" "#PWR012"
-			(at 107.95 177.8 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Value" "+5V"
-			(at 99.06 177.8 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 104.14 177.8 0)
-			(effects
-				(font
-					(size 1.524 1.524)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 104.14 177.8 0)
-			(effects
-				(font
-					(size 1.524 1.524)
-				)
-			)
-		)
-		(property "Description" ""
-			(at 104.14 177.8 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "8490a482-34a0-42bb-9542-f536e8c777ed")
-		)
-		(instances
-			(project "1541-rebuild"
-				(path "/4631efb2-4527-496a-ab61-db51624eef82"
-					(reference "#PWR013")
-					(unit 1)
-				)
-			)
-			(project "1541-rePico"
-				(path "/7c37ffbe-d8d1-4c30-ad42-fd3ef959e14d"
-					(reference "#PWR012")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "power:+5V")
-		(at 121.92 177.8 270)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "00000000-0000-0000-0000-00005e9d1a0b")
-		(property "Reference" "#PWR020"
-			(at 118.11 177.8 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Value" "+5V"
-			(at 127 177.8 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 121.92 177.8 0)
-			(effects
-				(font
-					(size 1.524 1.524)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 121.92 177.8 0)
-			(effects
-				(font
-					(size 1.524 1.524)
-				)
-			)
-		)
-		(property "Description" ""
-			(at 121.92 177.8 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "7da4eab1-d113-4a74-a77a-deb3f966f04a")
-		)
-		(instances
-			(project "1541-rebuild"
-				(path "/4631efb2-4527-496a-ab61-db51624eef82"
-					(reference "#PWR014")
-					(unit 1)
-				)
-			)
-			(project "1541-rePico"
-				(path "/7c37ffbe-d8d1-4c30-ad42-fd3ef959e14d"
-					(reference "#PWR020")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "Device:CP")
 		(at 34.29 33.02 270)
 		(unit 1)
@@ -6488,74 +6408,6 @@
 		)
 	)
 	(symbol
-		(lib_id "Connector_Generic:Conn_01x02")
-		(at 62.23 142.24 0)
-		(mirror x)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "061ca756-6cc1-4179-918b-570add7fcb56")
-		(property "Reference" "J8"
-			(at 61.976 136.398 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "Buzzer Connector"
-			(at 72.644 139.446 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "Connector_PinSocket_2.54mm:PinSocket_1x02_P2.54mm_Vertical"
-			(at 62.23 142.24 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 62.23 142.24 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Generic connector, single row, 01x02, script generated (kicad-library-utils/schlib/autogen/connector/)"
-			(at 62.23 142.24 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "2"
-			(uuid "f7a15686-845b-489d-8f3e-a3ecdb89c425")
-		)
-		(pin "1"
-			(uuid "a044bac1-e60c-4adf-a5ab-bc2f994e5811")
-		)
-		(instances
-			(project ""
-				(path "/7c37ffbe-d8d1-4c30-ad42-fd3ef959e14d"
-					(reference "J8")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "Device:R")
 		(at 96.52 100.33 0)
 		(unit 1)
@@ -6619,6 +6471,71 @@
 			(project "1541-rePico"
 				(path "/7c37ffbe-d8d1-4c30-ad42-fd3ef959e14d"
 					(reference "R1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:+3.3V")
+		(at 54.61 134.62 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "1589b45e-d67a-4b18-ad7d-7ea10d8ca471")
+		(property "Reference" "#PWR038"
+			(at 54.61 138.43 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "+3.3V"
+			(at 51.562 130.302 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" ""
+			(at 54.61 134.62 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 54.61 134.62 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 54.61 134.62 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "5bee0aeb-a278-4757-8e02-4cc0ffec55c3")
+		)
+		(instances
+			(project "1541-rePico"
+				(path "/7c37ffbe-d8d1-4c30-ad42-fd3ef959e14d"
+					(reference "#PWR038")
 					(unit 1)
 				)
 			)
@@ -7166,6 +7083,78 @@
 		)
 	)
 	(symbol
+		(lib_id "Connector_Generic:Conn_01x03")
+		(at 59.69 139.7 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "8d5d5ecd-17d9-4fc1-9f38-048adf9af17f")
+		(property "Reference" "J8"
+			(at 58.674 134.112 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "Buzzer Connector"
+			(at 62.23 140.9699 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical"
+			(at 59.69 139.7 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 59.69 139.7 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Generic connector, single row, 01x03, script generated (kicad-library-utils/schlib/autogen/connector/)"
+			(at 59.69 139.7 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "e8e1e597-35d9-4643-b0dc-3b224d58ef8a")
+		)
+		(pin "3"
+			(uuid "32ea53b3-d792-4889-9e83-b3b961defa5a")
+		)
+		(pin "2"
+			(uuid "f053c8d4-b083-4144-88c6-7972d6b6df88")
+		)
+		(instances
+			(project ""
+				(path "/7c37ffbe-d8d1-4c30-ad42-fd3ef959e14d"
+					(reference "J8")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "power:GND")
 		(at 120.65 102.87 270)
 		(unit 1)
@@ -7370,17 +7359,16 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:Buzzer")
-		(at 41.91 140.97 0)
+		(lib_id "Connector_Generic:Conn_01x03")
+		(at 147.32 185.42 270)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "a372dd73-febe-4b87-8c36-15638d474f2f")
-		(property "Reference" "BZ1"
-			(at 45.72 139.6999 0)
+		(uuid "aa5a1782-99bb-47a3-b1c9-fcd475ff3288")
+		(property "Reference" "J9"
+			(at 152.4 185.42 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -7388,8 +7376,8 @@
 				(justify left)
 			)
 		)
-		(property "Value" "Buzzer"
-			(at 45.72 142.2399 0)
+		(property "Value" "SD Power"
+			(at 147.32 187.96 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -7397,8 +7385,8 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Buzzer_Beeper:Buzzer_TDK_PS1240P02BT_D12.2mm_H6.5mm"
-			(at 41.275 138.43 90)
+		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical"
+			(at 147.32 185.42 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -7407,7 +7395,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 41.275 138.43 90)
+			(at 147.32 185.42 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -7415,25 +7403,27 @@
 				(hide yes)
 			)
 		)
-		(property "Description" "Buzzer, polarized"
-			(at 41.91 140.97 0)
+		(property "Description" ""
+			(at 147.32 185.42 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(hide yes)
 			)
 		)
 		(pin "1"
-			(uuid "b37429d3-2037-43f6-8b06-dc804536558a")
+			(uuid "5e2cbda6-4202-489c-b2f8-a7238be8af8e")
 		)
 		(pin "2"
-			(uuid "d689b609-4ceb-4e9b-8219-072709dffbd4")
+			(uuid "724611cb-6f7b-4187-8621-25d26875653f")
+		)
+		(pin "3"
+			(uuid "6f981780-7fb0-49c4-aabf-2642c188bd3c")
 		)
 		(instances
-			(project ""
+			(project "1541-rePico"
 				(path "/7c37ffbe-d8d1-4c30-ad42-fd3ef959e14d"
-					(reference "BZ1")
+					(reference "J9")
 					(unit 1)
 				)
 			)
@@ -7985,6 +7975,71 @@
 		)
 	)
 	(symbol
+		(lib_id "power:+3.3V")
+		(at 144.78 180.34 90)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "c2737f49-41bc-4e70-9dfb-4ee04fcaad7c")
+		(property "Reference" "#PWR040"
+			(at 148.59 180.34 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "+3.3V"
+			(at 140.97 180.34 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" ""
+			(at 144.78 180.34 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 144.78 180.34 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 144.78 180.34 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "38ba70b4-cd6b-490e-8d35-e63aa7fb01bf")
+		)
+		(instances
+			(project "1541-rePico"
+				(path "/7c37ffbe-d8d1-4c30-ad42-fd3ef959e14d"
+					(reference "#PWR040")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "power:GND")
 		(at 156.21 102.87 90)
 		(unit 1)
@@ -8120,6 +8175,138 @@
 			(project "1541-rePico"
 				(path "/7c37ffbe-d8d1-4c30-ad42-fd3ef959e14d"
 					(reference "#PWR015")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:Buzzer")
+		(at 41.91 140.97 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "da21af61-2b4a-4c36-81e0-ca8c3d273f02")
+		(property "Reference" "BZ1"
+			(at 45.72 139.6999 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "Buzzer"
+			(at 45.72 142.2399 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Buzzer_Beeper:MagneticBuzzer_StarMicronics_QMX"
+			(at 41.275 138.43 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 41.275 138.43 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Buzzer, polarized"
+			(at 41.91 140.97 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "d63a4b7d-508e-4792-8aa4-cd1767ad5b96")
+		)
+		(pin "2"
+			(uuid "712ba517-9075-442e-ac1c-bb9dc9ed8c91")
+		)
+		(instances
+			(project ""
+				(path "/7c37ffbe-d8d1-4c30-ad42-fd3ef959e14d"
+					(reference "BZ1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:+5V")
+		(at 149.86 180.34 270)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "e7b9a6de-ae61-4561-8dfc-c6a5024c3438")
+		(property "Reference" "#PWR039"
+			(at 146.05 180.34 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "+5V"
+			(at 154.94 180.34 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 149.86 180.34 0)
+			(effects
+				(font
+					(size 1.524 1.524)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 149.86 180.34 0)
+			(effects
+				(font
+					(size 1.524 1.524)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 149.86 180.34 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "29840d3b-8204-4674-87b5-7a750d4831ac")
+		)
+		(instances
+			(project "1541-rePico"
+				(path "/7c37ffbe-d8d1-4c30-ad42-fd3ef959e14d"
+					(reference "#PWR039")
 					(unit 1)
 				)
 			)
