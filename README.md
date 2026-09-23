@@ -5,15 +5,15 @@ replacement of analog-part of Commodore 1541-Floppy devices based on Pi-Pico(2)
 this project was derived from the original 1541-rebuild from Thorsten Kattanek (https://github.com/ThKattanek/1541-rebuild) !
 parts of his code were taken from there and adopted for Raspberry Pico and modified to handle disk images differently. Thanks!
 
-the C64 selector-programm was developed and implemented by Peiselulli !
+the C64/C16 selector-programm was developed and implemented by [PeiselUlli](https://github.com/peiselulli69) !
 
 thanks to [BensonRSI](https://github.com/BensonRSI) for adding debugging documentation, dev-containers and github-magic !
 
 ## Features ##
 
 latest version:
-- software: 1.7.0
-- hardware: 1.7
+- software: 1.7.1
+- hardware: 1.7.0
 
 ### Hardware ###
 
@@ -43,14 +43,14 @@ one size fits for all 1541 models.
 - read and write access for both D64 & G64
 - sd-card hotswap feature (refresh of directory content)
 
-#### C64 Image Selector ####
+#### C64/C16 Image Selector ####
 
 - browsing through sd-card content via "virtual disk-image"
   - subdirectory support
   - 4 way scrolling
 - highlighting and selecting of different file-types (D64,G64,PRG,Folder)
 - simple mounting and also fastloading of selected entry
-
+- supports C64-PAL, C64-NTSC and C16 computers
 
 ## how to build ##
 
