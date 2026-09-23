@@ -1,4 +1,7 @@
-build/*
-firmware/include/selector.h
+firmware/build/*
+firmware/include/boot_selector.h
+firmware/include/c64_*.h
+firmware/include/c16_*.h
+firmware/SoftwareC64/tmp*
 analysis-reports/*
 build-analysis/*

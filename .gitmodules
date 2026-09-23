@@ -4,3 +4,4 @@
 [submodule "firmware/buildtools/bitfire"]
 	path = firmware/buildtools/bitfire
 	url = https://github.com/bboxy/bitfire.git
+	ignore = untracked
