@@ -24,6 +24,7 @@
     VIC_IRQ_ENA = $ff0a
     VIC_IRQ_STATUS = $ff09
     EA31 = $ce0e
+    E518 = 55435
     D020 = $ff19
     D021 = $ff15
     BORDER_COLOR = $3b
@@ -42,6 +43,7 @@
     VIC_IRQ_ENA = $d01a
     VIC_IRQ_STATUS = $d019
     EA31 = $ea31
+    E518 = $e518
     D020 = $d020
     D021 = $d021
     BORDER_COLOR = $0b
@@ -131,7 +133,7 @@ LINE_SIZES = $033c  ;"MAX_LINE"-bytes to line lengths
         }
 restart:
         jsr load_menu_file
-        jsr $e518
+        jsr E518
         ldy #MAX_X
 -       lda buttomline-1,y
         ora #$80
@@ -143,10 +145,11 @@ restart:
         bne -
         sta D020
         sty D021
-        lda #$1b
-        sta $d011
         !ifdef C16 {
         lda #$39
+        } else {
+        lda #$1b
+        sta $d011
         }
         sta RASTER_LINE
         !ifdef C16 {
