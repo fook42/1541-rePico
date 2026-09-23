@@ -26,13 +26,6 @@ set(DALI_OPTIONS_C16 --sfx_plus4 0x1008)
 
 if(BUILD_MENUPRG)
   if(ACME_TOOL)
-    add_custom_command(
-      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-      DEPENDS selector.asm plus4boot.bin
-      OUTPUT ${SELECTOR_PRG_BINARY}
-      COMMAND ${ACME_TOOL} ${ACME_OPTIONS} -o ${SELECTOR_PRG_BINARY} selector.asm
-    )
-
     ## Menu_pal - build
     add_custom_command(
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
