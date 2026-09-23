@@ -189,6 +189,32 @@ size_t generate_menu_file(DIR* dir_obj, const uint8_t* dir_path, const uint8_t d
     return (size_t)(P-file_sector_P);
 }
 
+uint8_t fill_tracks_with_file(uint8_t file_track, uint8_t* file_buffer_pointer, size_t buffer_size, const uint8_t num_max_tracks, const uint8_t my_id1, const uint8_t my_id2)
+{
+    size_t buffer_left;
+    uint8_t prev_sector = 0;
+    uint8_t next_file_track = file_track;
+    do
+    {
+        buffer_left = buffer_to_track(file_buffer_pointer, buffer_size, file_track, &prev_sector);
+        if (buffer_left>0)
+        {
+            next_file_track = (file_track+1)%num_max_tracks;
+            file_buffer_pointer += (buffer_size-buffer_left);
+            buffer_size = buffer_left;
+            // last sector ?? -> update last sector-chain-pointer to new "file_track,0"...
+            d64_sector_puffer[1+prev_sector*D64_SECTOR_SIZE]=next_file_track+1;
+            d64_sector_puffer[1+prev_sector*D64_SECTOR_SIZE+1]=0;
+        }
+        convert_d64track2gcr(file_track, my_id1, my_id2);
+        file_track = next_file_track;
+        /* code */
+    } while (buffer_left>0);
+
+    return file_track;
+
+}
+
 void create_menu_image(const char* menu_path, DIR* dir_obj, uint8_t* id1_p, uint8_t* id2_p, uint8_t* num_tracks_p, char* image_name_p)
 {
     /* create this disklayout
@@ -250,125 +276,20 @@ void create_menu_image(const char* menu_path, DIR* dir_obj, uint8_t* id1_p, uint
         convert_d64track2gcr(track_nr, my_id1, my_id2);
     }
 
-    // generates selector_file..
-    buffer_size = selector_prg_len;
-    file_track = SELECTOR_TRACK;
-    next_file_track = file_track;
-    file_buffer_pointer = (uint8_t*) &selector_prg[0];
-    prev_sector = 0;
-    do
-    {
-        buffer_left = buffer_to_track(file_buffer_pointer, buffer_size, file_track, &prev_sector);
-        if (buffer_left>0)
-        {
-            next_file_track = (file_track+1)%num_max_tracks;
-            file_buffer_pointer += (buffer_size-buffer_left);
-            buffer_size = buffer_left;
-            // last sector ?? -> update last sector-chain-pointer to new "file_track,0"...
-            d64_sector_puffer[1+prev_sector*D64_SECTOR_SIZE]=next_file_track+1;
-            d64_sector_puffer[1+prev_sector*D64_SECTOR_SIZE+1]=0;
-        }
-        convert_d64track2gcr(file_track, my_id1, my_id2);
-        file_track = next_file_track;
-        /* code */
-    } while (buffer_left>0);
+    uint8_t last_track;
+    last_track = fill_tracks_with_file(SELECTOR_TRACK, (uint8_t*) &selector_prg[0], selector_prg_len, num_max_tracks, my_id1, my_id2);
 
-    // generates selector_file..
-    buffer_size = menu_pal_prg_len;
-    file_track++;   // we just take the next track after the last selector-file-track
-    int8_t menu_pal_track=file_track;
-    next_file_track = file_track;
-    file_buffer_pointer = (uint8_t*) &menu_pal_prg[0];
-    prev_sector = 0;
-    do
-    {
-        buffer_left = buffer_to_track(file_buffer_pointer, buffer_size, file_track, &prev_sector);
-        if (buffer_left>0)
-        {
-            next_file_track = (file_track+1)%num_max_tracks;
-            file_buffer_pointer += (buffer_size-buffer_left);
-            buffer_size = buffer_left;
-            // last sector ?? -> update last sector-chain-pointer to new "file_track,0"...
-            d64_sector_puffer[1+prev_sector*D64_SECTOR_SIZE]=next_file_track+1;
-            d64_sector_puffer[1+prev_sector*D64_SECTOR_SIZE+1]=0;
-        }
-        convert_d64track2gcr(file_track, my_id1, my_id2);
-        file_track = next_file_track;
-        /* code */
-    } while (buffer_left>0);
+    uint8_t menu_pal_track = last_track+1;
+    last_track = fill_tracks_with_file(menu_pal_track, (uint8_t*) &menu_pal_prg[0], menu_pal_prg_len, num_max_tracks, my_id1, my_id2);
 
-    // generates selector_file..
-    buffer_size = menu_16_prg_len;
+    uint8_t menu_16_track = last_track+1;
+    last_track = fill_tracks_with_file(menu_16_track,  (uint8_t*) &menu_16_prg[0],  menu_16_prg_len,  num_max_tracks, my_id1, my_id2);
 
-    file_track++;   // we just take the next track
-    int8_t menu_16_track=file_track;
-    next_file_track = file_track;
-    file_buffer_pointer = (uint8_t*) &menu_16_prg[0];
-    prev_sector = 0;
-    do
-    {
-        buffer_left = buffer_to_track(file_buffer_pointer, buffer_size, file_track, &prev_sector);
-        if (buffer_left>0)
-        {
-            next_file_track = (file_track+1)%num_max_tracks;
-            file_buffer_pointer += (buffer_size-buffer_left);
-            buffer_size = buffer_left;
-            // last sector ?? -> update last sector-chain-pointer to new "file_track,0"...
-            d64_sector_puffer[1+prev_sector*D64_SECTOR_SIZE]=next_file_track+1;
-            d64_sector_puffer[1+prev_sector*D64_SECTOR_SIZE+1]=0;
-        }
-        convert_d64track2gcr(file_track, my_id1, my_id2);
-        file_track = next_file_track;
-        /* code */
-    } while (buffer_left>0);
+    uint8_t menu_ntsc_track = last_track+1;
+    last_track = fill_tracks_with_file(menu_ntsc_track,(uint8_t*) &menu_ntsc_prg[0],menu_ntsc_prg_len,num_max_tracks, my_id1, my_id2);
 
-    // generates selector_file..
-    buffer_size = menu_ntsc_prg_len;
-    file_track++;   // we just take the next track
-    int8_t menu_ntsc_track=file_track;
-    next_file_track = file_track;
-    file_buffer_pointer = (uint8_t*) &menu_ntsc_prg[0];
-    prev_sector = 0;
-    do
-    {
-        buffer_left = buffer_to_track(file_buffer_pointer, buffer_size, file_track, &prev_sector);
-        if (buffer_left>0)
-        {
-            next_file_track = (file_track+1)%num_max_tracks;
-            file_buffer_pointer += (buffer_size-buffer_left);
-            buffer_size = buffer_left;
-            // last sector ?? -> update last sector-chain-pointer to new "file_track,0"...
-            d64_sector_puffer[1+prev_sector*D64_SECTOR_SIZE]=next_file_track+1;
-            d64_sector_puffer[1+prev_sector*D64_SECTOR_SIZE+1]=0;
-        }
-        convert_d64track2gcr(file_track, my_id1, my_id2);
-        file_track = next_file_track;
-        /* code */
-    } while (buffer_left>0);
-
-
-    // generates intro file..
-    buffer_size = intro_prg_len;
-    file_track++;   // we just take the next track
-    uint8_t intro_track = file_track;   //store for directory-creation
-    file_buffer_pointer = (uint8_t*) &intro_prg[0];
-    prev_sector = 0;
-    do
-    {
-        buffer_left = buffer_to_track(file_buffer_pointer, buffer_size, file_track, &prev_sector);
-        if (buffer_left>0)
-        {
-            next_file_track = (file_track+1)%num_max_tracks;
-            file_buffer_pointer += (buffer_size-buffer_left);
-            buffer_size = buffer_left;
-            // last sector ?? -> update last sector-chain-pointer to new "file_track,0"...
-            d64_sector_puffer[1+prev_sector*D64_SECTOR_SIZE]=next_file_track+1;
-            d64_sector_puffer[1+prev_sector*D64_SECTOR_SIZE+1]=0;
-        }
-        convert_d64track2gcr(file_track, my_id1, my_id2);
-        file_track = next_file_track;
-        /* code */
-    } while (buffer_left>0);
+    uint8_t intro_track = last_track+1;
+    last_track = fill_tracks_with_file(intro_track,    (uint8_t*) &intro_prg[0],    intro_prg_len,    num_max_tracks, my_id1, my_id2);
 
     memset(d64_sector_puffer, 0, sizeof(d64_sector_puffer));
     generate_bam("- 1541 REPICO -", id_buffer);
