@@ -2,7 +2,7 @@
  * generate menu image header
  *
  * Author: F00K42
- * Last change: 2026/05/08
+ * Last change: 2026/09/23
  ***********************************/
 
 #include "menu_image.h"
@@ -10,8 +10,11 @@
 #include "globals.h"
 #include "gcr.h"
 #include "ctype.h"
-#include "c64_selector.h"
 #include "c64_intro.h"
+#include "boot_selector.h"
+#include "c64_menu_pal.h"
+#include "c64_menu_ntsc.h"
+#include "c16_menu.h"
 
 #define MAX_DIR_ENTRIES (128)
 
@@ -103,7 +106,7 @@ size_t generate_menu_file(DIR* dir_obj, const uint8_t* dir_path, const uint8_t d
 
     //store current path to menu-file
     uint8_t dirname_len = strlen(dir_path);
-    if (0 == dirname_len)
+    if (2 > dirname_len)
     {
         charP = (uint8_t*) version_str;
     } else if (38 < dirname_len)
@@ -188,14 +191,36 @@ size_t generate_menu_file(DIR* dir_obj, const uint8_t* dir_path, const uint8_t d
 
 void create_menu_image(const char* menu_path, DIR* dir_obj, uint8_t* id1_p, uint8_t* id2_p, uint8_t* num_tracks_p, char* image_name_p)
 {
-    const uint8_t id_buffer[]={" F00K"};      // disk-id
-    const uint8_t num_max_tracks = NUM_TRACKS_STD;
+    /* create this disklayout
+
+        T01  ====== upper limit
+        T17  ^\_start DATAFILE (MENU_DATA_FILE) - start: MENU_DATA_TRACK fixed
+
+        T18  DIRECTORY TRACK
+
+        T19  v/ start SELECTOR                  - start: SELECTOR_TRACK fixed
+        ..   ====
+        Txx  v/ start MENU_PAL_C64              - start: C64 Pal MenuPRG variable
+        ..   ====
+        Txx  v/ start MENU_C16                  - start: C16 MenuPRG variable
+        ..   ====
+        Txx  v/ start MENU_NTSC_C64             - start: C64 Ntsc MenuPRG variable
+        ..   ====
+
+        Txx  v/ start INTRO                     - start: intro_track variable
+        ..   |
+        T35  ====== lower limit
+    
+    */
+
+    const uint8_t id_buffer[]={" F00K"};            // disk-id
+    const uint8_t num_max_tracks = NUM_TRACKS_STD;  // 35 Tracks should be enough
     const uint8_t my_id1 = id_buffer[0];
     const uint8_t my_id2 = id_buffer[1];
 
     generate_empty_image(my_id1,my_id2,num_max_tracks);
 
-    // generates menu-file..
+    // generates menu-datafile..
     size_t menu_file_len = generate_menu_file(dir_obj, menu_path, SCRATCH_TRACK);
     size_t buffer_size = menu_file_len;
     size_t buffer_left;
@@ -226,10 +251,10 @@ void create_menu_image(const char* menu_path, DIR* dir_obj, uint8_t* id1_p, uint
     }
 
     // generates selector_file..
-    buffer_size = menu_prg_len;
+    buffer_size = selector_prg_len;
     file_track = SELECTOR_TRACK;
     next_file_track = file_track;
-    file_buffer_pointer = (uint8_t*) &menu_prg[0];
+    file_buffer_pointer = (uint8_t*) &selector_prg[0];
     prev_sector = 0;
     do
     {
@@ -248,9 +273,83 @@ void create_menu_image(const char* menu_path, DIR* dir_obj, uint8_t* id1_p, uint
         /* code */
     } while (buffer_left>0);
 
+    // generates selector_file..
+    buffer_size = menu_pal_prg_len;
+    file_track++;   // we just take the next track after the last selector-file-track
+    int8_t menu_pal_track=file_track;
+    next_file_track = file_track;
+    file_buffer_pointer = (uint8_t*) &menu_pal_prg[0];
+    prev_sector = 0;
+    do
+    {
+        buffer_left = buffer_to_track(file_buffer_pointer, buffer_size, file_track, &prev_sector);
+        if (buffer_left>0)
+        {
+            next_file_track = (file_track+1)%num_max_tracks;
+            file_buffer_pointer += (buffer_size-buffer_left);
+            buffer_size = buffer_left;
+            // last sector ?? -> update last sector-chain-pointer to new "file_track,0"...
+            d64_sector_puffer[1+prev_sector*D64_SECTOR_SIZE]=next_file_track+1;
+            d64_sector_puffer[1+prev_sector*D64_SECTOR_SIZE+1]=0;
+        }
+        convert_d64track2gcr(file_track, my_id1, my_id2);
+        file_track = next_file_track;
+        /* code */
+    } while (buffer_left>0);
+
+    // generates selector_file..
+    buffer_size = menu_16_prg_len;
+
+    file_track++;   // we just take the next track
+    int8_t menu_16_track=file_track;
+    next_file_track = file_track;
+    file_buffer_pointer = (uint8_t*) &menu_16_prg[0];
+    prev_sector = 0;
+    do
+    {
+        buffer_left = buffer_to_track(file_buffer_pointer, buffer_size, file_track, &prev_sector);
+        if (buffer_left>0)
+        {
+            next_file_track = (file_track+1)%num_max_tracks;
+            file_buffer_pointer += (buffer_size-buffer_left);
+            buffer_size = buffer_left;
+            // last sector ?? -> update last sector-chain-pointer to new "file_track,0"...
+            d64_sector_puffer[1+prev_sector*D64_SECTOR_SIZE]=next_file_track+1;
+            d64_sector_puffer[1+prev_sector*D64_SECTOR_SIZE+1]=0;
+        }
+        convert_d64track2gcr(file_track, my_id1, my_id2);
+        file_track = next_file_track;
+        /* code */
+    } while (buffer_left>0);
+
+    // generates selector_file..
+    buffer_size = menu_ntsc_prg_len;
+    file_track++;   // we just take the next track
+    int8_t menu_ntsc_track=file_track;
+    next_file_track = file_track;
+    file_buffer_pointer = (uint8_t*) &menu_ntsc_prg[0];
+    prev_sector = 0;
+    do
+    {
+        buffer_left = buffer_to_track(file_buffer_pointer, buffer_size, file_track, &prev_sector);
+        if (buffer_left>0)
+        {
+            next_file_track = (file_track+1)%num_max_tracks;
+            file_buffer_pointer += (buffer_size-buffer_left);
+            buffer_size = buffer_left;
+            // last sector ?? -> update last sector-chain-pointer to new "file_track,0"...
+            d64_sector_puffer[1+prev_sector*D64_SECTOR_SIZE]=next_file_track+1;
+            d64_sector_puffer[1+prev_sector*D64_SECTOR_SIZE+1]=0;
+        }
+        convert_d64track2gcr(file_track, my_id1, my_id2);
+        file_track = next_file_track;
+        /* code */
+    } while (buffer_left>0);
+
+
     // generates intro file..
     buffer_size = intro_prg_len;
-    file_track++;   // we just take the next track after the last selector-file-track
+    file_track++;   // we just take the next track
     uint8_t intro_track = file_track;   //store for directory-creation
     file_buffer_pointer = (uint8_t*) &intro_prg[0];
     prev_sector = 0;
@@ -274,7 +373,10 @@ void create_menu_image(const char* menu_path, DIR* dir_obj, uint8_t* id1_p, uint
     memset(d64_sector_puffer, 0, sizeof(d64_sector_puffer));
     generate_bam("- 1541 REPICO -", id_buffer);
     // create a file-entry in the directory...
-    generate_directory_entry("SELECTOR", CBMDOS_TYPE_PRG, SELECTOR_TRACK ,0,((uint16_t) (menu_prg_len/254))+1);
+    generate_directory_entry("SELECTOR", CBMDOS_TYPE_PRG, SELECTOR_TRACK ,0,((uint16_t) (selector_prg_len/254))+1);
+    generate_directory_entry("P",        CBMDOS_TYPE_PRG, menu_pal_track ,0,((uint16_t) (menu_pal_prg_len/254))+1);
+    generate_directory_entry("+",        CBMDOS_TYPE_PRG, menu_16_track  ,0,((uint16_t) (menu_16_prg_len/254))+1);
+    generate_directory_entry("N",        CBMDOS_TYPE_PRG, menu_ntsc_track,0,((uint16_t) (menu_ntsc_prg_len/254))+1);
     generate_directory_entry("DATAFILE", CBMDOS_TYPE_PRG, MENU_DATA_TRACK,0,((uint16_t) (menu_file_len/254))+1);
     generate_directory_entry("INTRO",    CBMDOS_TYPE_PRG, intro_track    ,0,((uint16_t) (intro_prg_len/254))+1);
     convert_d64track2gcr(DIRECTORY_TRACK, my_id1, my_id2);

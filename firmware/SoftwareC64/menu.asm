@@ -1,4 +1,4 @@
-        !to "menu.prg",cbm
+        ;!to "menu.prg",cbm
 
         !cpu 6510
 
@@ -11,11 +11,56 @@
     TYPE_PRG = 4
     TYPE_UNKNOWN = 255
 
+
+    MAX_X = 40	    ;screen width
+    MAX_LINE = 23
+
+    
+!ifdef C16 {
+    VIDEORAM = $0c00
+    COLORRAM = $0800
+    RASTER_LINE = $ff0b
+    RASTER_LINE_READ = $ff1d
+    VIC_IRQ_ENA = $ff0a
+    VIC_IRQ_STATUS = $ff09
+    EA31 = $ce0e
+    D020 = $ff19
+    D021 = $ff15
+    BORDER_COLOR = $3b
+    SELECTOR_COLOR = $18
+    LOAD = $ffd5
+    BA = $0137
+    ptr1 = $03
+    ptr2 = $05
+    ptr3 = $9f
+
+} else {
+    VIDEORAM = $0400
+    COLORRAM = $d800
+    RASTER_LINE = $d012
+    RASTER_LINE_READ = $d012
+    VIC_IRQ_ENA = $d01a
+    VIC_IRQ_STATUS = $d019
+    EA31 = $ea31
+    D020 = $d020
+    D021 = $d021
+    BORDER_COLOR = $0b
+    SELECTOR_COLOR = $02
+    BA = $ba
+    !ifdef NTSC {
+    LOAD = FASTLOAD_EXOS
+    } else {
+    LOAD = $014b
+    }
+    ptr1 = $fb
+    ptr2 = $fd
+    ptr3 = $f7
+}
+
+    STACK_START = $0138
+
 tmp1 = $02
 tmp2 = $ff
-ptr1 = $fb
-ptr2 = $fd
-ptr3 = $f7
 directory_end = $ae
 x_pos = $92
 
@@ -25,17 +70,17 @@ current_endpos = $c3
 current_cursor_position = $9e
 current_index_number = $ac
 
-LOAD = $014b
-STACK_START = $0138
 DRIVECODE_START = $0146
 
 TOGGLE_DISKWRITE_FOR_DISKSWITCH = 2
 
 ;CLEANUP_BLOCK_WRITTEN = 1
-DRIVE_RESET = 1
+DRIVE_RESET = 1;
+	!ifndef NTSC {
+DRIVE_INITIALIZE = 1
+	}
 
 
-MAX_LINE = 23
 
 LINE_SIZES = $033c  ;"MAX_LINE"-bytes to line lengths
 
@@ -71,42 +116,64 @@ LINE_SIZES = $033c  ;"MAX_LINE"-bytes to line lengths
         *= $0801
         !by $0b,$08,$00,$00,$9e,$32,$30,$36,$31,$00,$00,$00
         } else {
+        !ifndef C16 {
         * = $0808
+        } else {
+        * = $1008
+        }
         }
         jsr fastload_init
-        ;lda #$36
-        ;sta $01
+        !ifdef C16 {
+        lda #$08
+        sta BA
+        } else {
         dec $01
+        }
 restart:
         jsr load_menu_file
         jsr $e518
-        ldy #40
+        ldy #MAX_X
 -       lda buttomline-1,y
         ora #$80
-        sta $0400+24*40-1,y
-        lda #$0b
-        sta $d800-1,y
-        sta $d800+24*40-1,y
+        sta VIDEORAM+24*MAX_X-1,y
+        lda #BORDER_COLOR
+        sta COLORRAM-1,y
+        sta COLORRAM+24*MAX_X-1,y
         dey
         bne -
-        sta $d020
-        sty $d021
+        sta D020
+        sty D021
         lda #$1b
         sta $d011
-        ;lda #$39
-        sta $d012
+        !ifdef C16 {
+        lda #$39
+        }
+        sta RASTER_LINE
+        !ifdef C16 {
+        lda #$d5
+        sta $ff13
+        } else {
         lda #$17
         sta $d018
         lda #$7f
         sta $dc0d
         lda $dc0d
+        }
         lda #<irq
         sta $0314
         lda #>irq
         sta $0315
+        !ifdef C16 {
+        lda #$02
+        } else {
         lda #$81
-        sta $d01a
-        inc $d019
+        sta VIC_IRQ_ENA
+        }
+        !ifdef C16 {
+        sta VIC_IRQ_STATUS
+        } else {
+        inc VIC_IRQ_STATUS
+        }
 
         ;ldy #<directory_start  ; is zero now
         sty ptr1
@@ -117,9 +184,9 @@ restart:
         beq end_of_top_line_string
         +conv_to_screen
         ora #$80
-        sta $0400,y
+        sta VIDEORAM,y
         iny
-        cpy #40
+        cpy #MAX_X
         bne -
         dey
 -       iny
@@ -128,10 +195,10 @@ restart:
 end_of_top_line_string:
         tya
         tax
--       cpx #40
+-       cpx #MAX_X
         bcs end_top_line
         lda #$a0
-        sta $0400,x
+        sta VIDEORAM,x
         inx
         bne -
 end_top_line:
@@ -211,7 +278,7 @@ no_f7:  cmp #133    ;f1
 no_f1:  cmp #29     ;cursor right
         bne no_crsr_right
         lda x_pos
-        cmp #255-40
+        cmp #255-MAX_X
         bcs keyloop
         inc x_pos
         jmp repaint
@@ -231,7 +298,31 @@ no_crsr_left:
         sta x_pos
         jmp repaint
 
-no_home:       
+no_home:
+        cmp #134
+        bne no_f3
+        !ifdef C16 {
+        ldx #$2c
+        stx fastload_c16_deactivated
+        bne do_space
+        } else {
+        !ifdef NTSC {
+        lda #$24
+        sta fix_for_normal_load_ntsc
+        bne do_space    ;unconditional	
+        } else {
+        inc fix_for_normal_load2
+        dec fix_for_normal_load3
+        lda #$4c
+        sta fix_for_normal_load
+        lda #<$ffd5 
+        sta fix_for_normal_load+1
+        lda #>$ffd5 
+        sta fix_for_normal_load+2
+        bne do_space    ;unconditional
+        }
+        }
+no_f3:       
         cmp #$20
         beq do_space
 
@@ -249,14 +340,24 @@ do_space:
         cmp #TYPE_DIR
         bcc do_keyloop
         lda #$00
-        sta $d01a
-        inc $d019
-        lda #$31
+        !ifdef C16 {
+        lda #$cc
+        sta RASTER_LINE
+        lda #$02
+        sta VIC_IRQ_STATUS
+        } else {
+        sta VIC_IRQ_ENA
+        inc VIC_IRQ_STATUS
+        }
+        lda #<EA31
         sta $0314
-        lda #$ea
+        lda #>EA31
         sta $0315
+        !ifdef C16 {
+        } else {
         lda #$81
         sta $dc0d
+        }
         ;lda $dc0d
         
         lda current_cursor_position
@@ -274,7 +375,7 @@ do_space:
         jsr block_write
         jsr wait_for_flipdisk
         !ifdef DRIVE_RESET {
-        jsr drive_reset
+        jsr drive_initialize
         }
 current_type = *+1
         lda #$00
@@ -282,18 +383,48 @@ current_type = *+1
         bne +
         jmp restart
 +        
-        ;jsr $e518
+        !ifdef C16 {
+        sei
+        sta $FF3E
+        ldx #$ff
+        txs
+        jsr 55373   ;editor reset
+        jsr 62219   ;io init
+        jsr 62158   ;restore vectors
+        lda #$00
+        sta $fdd0 
+        cli
+        }
 do_run = *+1
         lda #$00
         beq do_exit
-        sei
+        !ifdef C16 {
+        ;jsr drive_reset
+        ;jsr 32814   ;basic reset
+fastload_c16_deactivated:
+        jsr $0700
+        ldx #load_run_text_len
+        stx $ef
+        } else {
         ldx #load_run_text_len
         stx $c6
+        }
+        sei
 -       lda load_run_text-1,x
+        !ifdef C16 {
+        sta $0527-1,x
+        } else { 
         sta $0277-1,x
+        }
         dex
         bne -
 do_exit:
+        !ifdef C16 {
+        jsr 32962   ;init screen
+        cli
+        ;jmp ($0302)
+        jmp 32778   ;basic warm start
+        } else {
         ;lda #$37
         inc $01
         ;jsr $E422
@@ -301,12 +432,15 @@ do_exit:
         ;jmp $a474
         jsr $fda3
         jmp $fcf8   ;part of reset, jumps to ($a000)
+        }
 
-irq:    ldy #$02
-        lda $d012
--       cmp $d012
+irq:    ldy #SELECTOR_COLOR
+        !ifndef C16 {
+        lda RASTER_LINE_READ
+-       cmp RASTER_LINE_READ
         beq -
-        sty $d021
+        }
+        sty D021
         lda #<irq2
         sta $0314
         ;lda #>irq2
@@ -314,8 +448,12 @@ irq:    ldy #$02
 current_cursor_position_this_irq = *+1
         lda #$00
         clc
+        !ifdef C16 {
+        adc #$12
+        } else {
         adc #$42
-        sta $d012
+        }
+        sta RASTER_LINE
 
         lda current_cursor_position
         asl
@@ -323,18 +461,27 @@ current_cursor_position_this_irq = *+1
         asl
         sta current_cursor_position_this_irq
         sta current_cursor_position_other_irq
-        inc $d019
+        !ifdef C16 {
+        lda #$02
+        sta VIC_IRQ_STATUS
+        } else {
+        inc VIC_IRQ_STATUS
         dec $028B
         bne +
         inc $028B
 +
+        }
+        !ifdef C16 {
+        jmp c16irqcont
+        } else {
         jmp $ea81
+        }
 
 irq2:
         ldy #$03
 -       dey
         bne -
-        sty $d021
+        sty D021
         lda #<irq
         sta $0314
         ;lda #>irq
@@ -342,10 +489,28 @@ irq2:
 current_cursor_position_other_irq = *+1
         lda #$00
         clc
+        !ifdef C16 {
+        adc #$a
+        } else {
         adc #$39
-        sta $d012
-        inc $d019
-        jmp $ea31
+        }
+        sta RASTER_LINE
+        !ifdef C16 {
+        lda #$02
+        sta VIC_IRQ_STATUS
+c16irqcont:
+        cli
+        jsr $DB11       ;tastatur abfragen
+        pla
+        tay
+        pla
+        tax
+        pla
+        rti
+        } else {
+        inc VIC_IRQ_STATUS
+        jmp EA31
+        }
 
     !if >irq2 != >irq {
         !error "irq and irq in different pages"
@@ -449,12 +614,12 @@ print_at_current_pos_continue:
         sta ptr1+1
         lda #$00
         sta tmp1
-        lda #40
+        lda #MAX_X
         sta ptr2
         sta ptr3
-        lda #$04
+        lda #>VIDEORAM
         sta ptr2+1
-        lda #$d8
+        lda #>COLORRAM
         sta ptr3+1
 print_big_loop:
         lda ptr1
@@ -481,7 +646,7 @@ line_size = *+1
         lda #$20
 -       sta (ptr2),y
         iny
-        cpy #40
+        cpy #MAX_X
         bne -
         ldy tmp2
         jmp end_line
@@ -501,7 +666,7 @@ do_print:
         lda filetypecolor-1,x
         sta (ptr3),y
         iny
-        cpy #40
+        cpy #MAX_X
         bne -
         ;find end of string
 -       lda (ptr1),y
@@ -514,7 +679,7 @@ string_ends:
         lda #$20
 -       sta (ptr2),y
         iny
-        cpy #40
+        cpy #MAX_X
         bne -
         ldy tmp2
 end_line:
@@ -526,7 +691,7 @@ end_line:
         inc ptr1+1
         clc
 +       lda ptr2
-        adc #40
+        adc #MAX_X
         sta ptr2
         sta ptr3
         bcc +
@@ -613,7 +778,7 @@ load_menu_file:
         ldy #>fname
         jsr $ffbd     ; call SETNAM
         lda #$01
-        ldx $ba
+        ldx BA
         ldy #$00      ; $00 means: load to new address
         jsr $ffba     ; call SETLFS
 
@@ -625,6 +790,10 @@ load_menu_file:
         sty $c4
         jsr LOAD      ; call LOAD
         bcs .error    ; if carry set, a load error has happened
+        !ifdef C16 {
+        stx directory_end
+        sty directory_end+1
+        }
         lda #$00
         sta current_index_number
         sta current_index_number+1
@@ -641,7 +810,7 @@ load_menu_file:
         ; A = $00 (BREAK, RUN/STOP has been pressed during loading)
 
         ;... error handling ...
--       inc $d020
+-       inc D020
         jmp -
     
 block_write:
@@ -653,7 +822,7 @@ block_write:
         JSR $FFBD     ; call SETNAM
 
         LDA #$02      ; file number 2
-        ldx $ba
+        ldx BA
         tay           ; secondary address 2
         JSR $FFBA     ; call SETLFS
 
@@ -667,7 +836,7 @@ block_write:
         LDY #>bpcmd
         JSR $FFBD     ; call SETNAM
         LDA #$0F      ; file number 15
-        LDX $BA       ; last used device number
+        ldx BA
         tay           ; secondary address 15
         JSR $FFBA     ; call SETLFS
 
@@ -717,29 +886,46 @@ error:
         ;... error handling for open errors ...
         JMP .close    ; even if OPEN failed, the file has to be closed
 
-        !ifdef DRIVE_RESET {
-drive_reset:
+drive_initialize:
+        !ifdef DRIVE_INITIALIZE {
+        !ifndef C16 {
+        lda do_run
+        bpl drive_reset
+        }
         lda #drive_init_end-drive_init
         ldx #<drive_init
         ldy #>drive_init
         bne execute_code_cont ;unconditional 
+	} else {
+	lda do_run
+	beq drive_reset
+	rts		;for EXOS, no initialize
+	}
+	!ifdef DRIVE_RESET {
+drive_reset:
+        lda #$60
+        sta reset_activated
+        ldx #<drive_fffc
+        ;ldy #>drive_fffc
+        bne execute_code ;unconditional
         }
                 
-        !ifdef CLEANUP_BLOCK_WRITTEN {
-clear_buffer_2:
-        ldx #<clear_buffer2
-        ldy #>clear_buffer2
-        bne execute_code ;unconditional
-        } 
 
 wait_for_flipdisk:
         ldx #<wait_for_diskchange
-        ldy #>wait_for_diskchange
+        ;ldy #>wait_for_diskchange
+        !ifdef CLEANUP_BLOCK_WRITTEN {
+        bne execute_code ;unconditional
+
+clear_buffer_2:
+        ldx #<clear_buffer2
+        ;ldy #>clear_buffer2
+        } 
 
 execute_code:
         ;in x/y code (x low)
         stx me_dest
-        sty me_dest+1
+        ;sty me_dest+1
         lda #me_comm_end-me_comm
         ldx #<me_comm
         ldy #>me_comm
@@ -754,13 +940,13 @@ upload_code:
 execute_code_cont:
         JSR $FFBD     ; call SETNAM
         LDA #$0F      ; file number 15
-        LDX $BA       ; last used device number
+        ldx BA
         tay           ; secondary address 15
         JSR $FFBA     ; call SETLFS
 
         jsr $FFC0     ; call OPEN (open command channel and send B-P command)
         BCS error     ; if carry set, the file could not be opened
-
+reset_activated:
         LDA #$0F      ; filenumber 15
         jsr $FFC3     ; call CLOSE
         JMP $FFCC     ; call CLRCHN
@@ -782,7 +968,7 @@ bwcmd:  !text "U2:2 0 18 2"
         !BYTE $0D     ; carriage return, required to start command
 bwcmd_end:
 
-        !ifdef DRIVE_RESET {
+        !ifdef DRIVE_INITIALIZE {
 drive_init:
         !text "I"
 drive_init_end:
@@ -804,7 +990,11 @@ load_run_text:
 load_run_text_len = *-load_run_text
 
 buttomline:
-        !scr "<space>=mount <ret>=run F1=pgup F7=pgdwn"
+        !ifdef C16 {
+        !scr "<SPC>=mnt <ret/F2>=run F1=pgup HLP=pgdwn"
+        } else {
+        !scr "<SPC>=mnt <ret/F3>=run  F1=pgup F7=pgdwn"
+        }
 
 mw_comm:
          !text "M-W"
@@ -836,16 +1026,25 @@ wait_for_diskchange:
         bne --
         }
         rts
+        
+drive_fffc:
+        jmp ($fffc)
         }
 diskdrive_code_len = * - diskdrive_code
 mw_end:
 
 filetypecolor:
+    !ifdef C16 {
+        !byte $5e   ; dir
+        !byte $53   ; d64
+        !byte $43   ; g64
+        !byte $51   ; prg
+    } else {
         !byte $0e   ; dir
         !byte $03   ; d64
         !byte $03   ; g64
         !byte $0f   ; prg
-
+    }
 
 sector_address:
 index:  !word 0
@@ -859,6 +1058,142 @@ directory_start = (*+$ff) & $ff00
 
         ;all stuff after this is erased
         ;by loading "DATAFILE"
+
+        !ifdef C16 {
+;;;;;;;;;;;;;;;;;;; PLUS4 START ;;;;;;;;;;;;;;;;;;;;;;;
+c16keyb:
+        !byte 133,134,135,136,133,134,135,136
+        
+fastload_init:
+        ldx #$07
+fkey_clear_loop:
+        lda #$01
+        sta $055f,x
+        lda c16keyb,x
+        sta $0567,x
+        dey
+        dex
+        bpl fkey_clear_loop 
+
+        php
+        sei
+        sta $ff3f
+        ldy #>(fastload_main_len+$ff)
+        ldx #$00
+-       
+src = *+1
+        lda fastload_main,x
+dst = *+1
+        sta $f300,x
+        inx
+        bne -
+        inc src+1
+        inc dst+1
+        dey
+        bne -
+        sta $ff3e
+        
+        ldx #fastload_stack_len
+-       lda fastload_stack-1,x
+        sta STACK_START-1,x
+        dex
+        bne -
+
+        ldx #fastload_0700_len
+-       lda fastload_0700-1,x
+        sta $0700-1,x
+        dex
+        bne -
+        ;for VICE tests
+        ;lda #$60
+        ;sta $0700
+        jsr $0700
+        plp
+        rts
+
+fastload_main:
+        !bin "fastload_16_f300.bin",,2
+fastload_main_len = *-fastload_main
+
+fastload_0700:
+        !bin "fastload_16_0700.bin",,2
+fastload_0700_len = *-fastload_0700
+fastload_stack:
+!pseudopc STACK_START {
+load_fast:
+        lda #load_star_name_len
+        ldx #<load_star_name
+        ldy #>load_star_name
+        jsr $ffbd     ; call SETNAM
+        lda #$01
+        ldx BA
+        tay           ; $01 means: load to origin address
+        jsr $ffba     ; call SETLFS
+
+        lda #$00
+        cli
+        jsr LOAD
+        bcs +         ; if carry set, a load error has happened
+        stx $2d
+        sty $2e
++
+        jsr 62158       ;restore vectors
+        anc #0
+        rts
+load_star_name:
+        !text ":*"
+load_star_name_len = * - load_star_name
+}
+fastload_stack_len = *-fastload_stack
+
+;;;;;;;;;;;;;;;;;;; PLUS4 END ;;;;;;;;;;;;;;;;;;;;;;;
+
+        } else {
+
+        !ifdef NTSC {
+;;;;;;;;;;;;;;;;;;; NTSC C64 START ;;;;;;;;;;;;;;;;;;;;;;;
+
+fastload_init:
+        ldx #fastload_stack_len
+-       lda fastload_stack-1,x
+        sta STACK_START-1,x
+        dex
+        bne -
+        !src "exos_ntsc.asm"
+
+fastload_stack:
+!pseudopc STACK_START {
+        lda #load_star_name_len
+        ldx #<load_star_name
+        ldy #>load_star_name
+        jsr $ffbd     ; call SETNAM
+        lda #$01
+        ldx BA
+        tay           ; $01 means: load to origin address
+        jsr $ffba     ; call SETLFS
+FASTLOAD_EXOS:
+        lda $01
+        pha
+        lda #$35
+fix_for_normal_load_ntsc:
+        sta $01
+        lda #$00
+        jsr $ffd5
+        pla
+        sta $01
+        cli
+        rts        
+load_star_name:
+        !text ":*"
+load_star_name_len = * - load_star_name
+}
+fastload_stack_len = * - fastload_stack 
+
+;;;;;;;;;;;;;;;;;;; NTSC C64 END ;;;;;;;;;;;;;;;;;;;;;;;
+     
+        } else {
+
+;;;;;;;;;;;;;;;;;;; PAL C64 START ;;;;;;;;;;;;;;;;;;;;;;;
 
 fastload_init:
         ldx #fastload_stack_len
@@ -882,26 +1217,33 @@ fastload_main_dst_ptr = *+2
 
 fastload_stack:
 !pseudopc STACK_START {
-        lda #1
-        ldx #<load_star_name
+fix_for_normal_load2 = *+1
+        lda #load_star_name_len-1
+fix_for_normal_load3 = *+1
+        ldx #<load_star_name+1
         ldy #>load_star_name
         jsr $ffbd     ; call SETNAM
         lda #$01
-        ldx $ba
+        ldx BA
         tay           ; $01 means: load to origin address
         jsr $ffba     ; call SETLFS
 
         lda #$00
+fix_for_normal_load:
         !bin "fastload_0140.bin",$2c,2+11
         jmp $f5a9
         !bin "fastload_0140.bin",,2+11+$2f
-load_star_name:
-        !text "*"
+load_star_name:     ; bug in fast loader : cannot handle ":*"
+        !text ":*"
+load_star_name_len = * - load_star_name
         }
 fastload_stack_len = * - fastload_stack      
 
 fastload_main:
         !bin "fastload_e000.bin",,2
 fastload_main_len = *-1
+        }
+        ;;;;;;;;;;;;;;;;;;; PAL C64 END ;;;;;;;;;;;;;;;;;;;;;;;
 
+        }
 
