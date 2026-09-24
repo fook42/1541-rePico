@@ -4,14 +4,14 @@
             "name": "Pico",
             "includePath": [
                 "${workspaceFolder}/**",
-                "${userHome}/.pico-sdk/sdk/2.1.1/**"
+                "${PICO_SDK_PATH}/**"
             ],
             "forcedInclude": [
-                "${userHome}/.pico-sdk/sdk/2.1.1/src/common/pico_base_headers/include/pico.h",
+                "${PICO_SDK_PATH}/src/common/pico_base_headers/include/pico.h",
                 "${workspaceFolder}/build/generated/pico_base/pico/config_autogen.h"
             ],
             "defines": [],
-            "compilerPath": "${userHome}/.pico-sdk/toolchain/14_2_Rel1/bin/arm-none-eabi-gcc",
+            "compilerPath": "/usr/bin/arm-none-eabi-gcc",
             "compileCommands": "${workspaceFolder}/build/compile_commands.json",
             "cStandard": "c17",
             "cppStandard": "c++14",

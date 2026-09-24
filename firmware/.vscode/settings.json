@@ -29,7 +29,6 @@
     },
     "terminal.integrated.env.linux": {
         "PICO_SDK_PATH": "${env:PICO_SDK_PATH}",
-        "PICO_TOOLCHAIN_PATH": "${env:PICO_SDK_PATH}",
         "PATH": "${env:PATH}"
     },
     "raspberry-pi-pico.cmakeAutoConfigure": true,
