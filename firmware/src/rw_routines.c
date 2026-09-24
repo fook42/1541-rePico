@@ -197,40 +197,23 @@ int8_t read_disk(FIL* fd, const int image_type, FILINFO fileinfo)
             generate_empty_image(id1,id2,num_max_tracks);
 
             // generates a prg_file starting from PRGFILE_TRACK
-            size_t buffer_size = fileinfo.fsize;
-            size_t buffer_left;
-            int8_t file_track = PRGFILE_TRACK, next_file_track = PRGFILE_TRACK;
+            size_t file_size = fileinfo.fsize;
             uint8_t* file_buffer_pointer = g64_tracks[SCRATCH_TRACK];
 
             if (FR_OK != f_lseek(fd, 0))
             {
                 break;
             }
-            fr = f_read(fd, file_buffer_pointer, buffer_size, &bytes_read);
-            if ((FR_OK != fr) || (bytes_read!=buffer_size))
+            fr = f_read(fd, file_buffer_pointer, file_size, &bytes_read);
+            if ((FR_OK != fr) || (bytes_read!=file_size))
             {
                 last_track = -bytes_read;
                 break;
             }
-            uint8_t prev_sector;
-            do
-            {
-                buffer_left = buffer_to_track(file_buffer_pointer, buffer_size, file_track, &prev_sector);
-                if (buffer_left>0)
-                {
-                    next_file_track = file_track-1;
-                    file_buffer_pointer += (buffer_size-buffer_left);
-                    buffer_size = buffer_left;
-                    // last sector ?? -> update last sector-chain-pointer to new "file_track,0"...
-                    d64_sector_puffer[1+prev_sector*D64_SECTOR_SIZE]=next_file_track+1;
-                    d64_sector_puffer[1+prev_sector*D64_SECTOR_SIZE+1]=0;
-                }
-                convert_d64track2gcr(file_track, id1, id2);
-                file_track = next_file_track;
-                /* code */
-            } while ((buffer_left>0) && (file_track>=0));
 
+            (void) fill_tracks_with_file(PRGFILE_TRACK, file_buffer_pointer, file_size, FILL_UP, num_max_tracks, id1, id2);
 
+            // need to clean out temporary data from "f_read" in track-buffer memory
             memset(d64_sector_puffer, 0, sizeof(d64_sector_puffer));
             for(uint8_t track_nr=SCRATCH_TRACK; track_nr<num_max_tracks; ++track_nr)
             {
@@ -676,12 +659,12 @@ void convert_gcr2d64track(uint8_t track_nr)
     }
 }
 
-size_t buffer_to_track(uint8_t* buffer, size_t buffer_len, uint8_t track_nr, uint8_t* last_sector)
+size_t buffer_to_track(uint8_t* buffer, const size_t buffer_len, const uint8_t track_nr, uint8_t next_sector, uint8_t* last_sector)
 {
     size_t      remaining_size = buffer_len;
     uint8_t*    Dest_P;
     uint8_t*    Buffer_P = buffer;
-    uint8_t     current_sector, next_sector = 0;
+    uint8_t     current_sector;
     const uint8_t sector_interleave = (d64_track_zone[track_nr] == 2) ? 11 : 10; // set interleave to 10 by default, 11 for 18sector-tracks
     const uint8_t num_of_sectors = d64_sector_count[d64_track_zone[track_nr]];
 
@@ -714,4 +697,28 @@ size_t buffer_to_track(uint8_t* buffer, size_t buffer_len, uint8_t track_nr, uin
     *last_sector = current_sector;
 
     return remaining_size;
+}
+
+int8_t fill_tracks_with_file(int8_t file_track, uint8_t* file_buffer_pointer, size_t buffer_size, const fill_direction_t direction, const uint8_t num_max_tracks, const uint8_t my_id1, const uint8_t my_id2)
+{
+    size_t buffer_left;
+    uint8_t prev_sector = 0;
+    int8_t next_file_track = file_track;
+    do
+    {
+        buffer_left = buffer_to_track(file_buffer_pointer, buffer_size, file_track, 0, &prev_sector);
+        if (0 < buffer_left)
+        {
+            next_file_track = file_track-1+direction;
+            file_buffer_pointer += (buffer_size-buffer_left);
+            buffer_size = buffer_left;
+            // last sector ?? -> update last sector-chain-pointer to new "file_track,0"...
+            d64_sector_puffer[1+prev_sector*D64_SECTOR_SIZE]=next_file_track+1;
+            d64_sector_puffer[1+prev_sector*D64_SECTOR_SIZE+1]=0;
+        }
+        convert_d64track2gcr(file_track, my_id1, my_id2);
+        file_track = next_file_track;
+    } while ((0 < buffer_left) && (0 <= file_track) && (num_max_tracks > file_track));
+
+    return file_track;
 }
