@@ -120,6 +120,10 @@ int main()
 {
     stdio_init_all();
 
+    sleep_ms(2000);
+
+    printf("1541repico boot\n");
+
     if (display_init())
     {
         display_home();
