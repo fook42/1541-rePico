@@ -56,6 +56,8 @@ void init_writeprot(void);
 void send_disk_change(void);
 
 void init_sound(void);
+void turn_sound_on(void);
+void turn_sound_off(void);
 
 bool repeating_timer_callback(__unused struct repeating_timer *t);
 void init_bytetimer(void);
@@ -92,14 +94,6 @@ void start_stepper_timer(void);
 #define enable_write_protection()   {clear_wps();floppy_wp=true;}
 #define disable_write_protection()  {set_wps();floppy_wp=false;}
 
-#if PCB_VERSION>=17
-#define turn_sound_on()     gpio_put(GPIO_SND,true)
-#define turn_sound_off()    gpio_put(GPIO_SND,false)
-#else
-#define turn_sound_on()     {}
-#define turn_sound_off()    {}
-#endif
-
 // Filesystem-variables:
 FATFS       fs;             // filesystem handle - only created once
 DIR         dir_object;
@@ -109,6 +103,10 @@ FILINFO     fb_dir_entry[LCD_LINE_COUNT];
 //
 #define ROTARY_DEBOUNCE_TIME    (200)
 #define BUTTON_DEBOUNCE_TIME    (100)
+
+#define soundtimer_value    ((1000*1000)/440)       // 440 Hz = "A"
+int SND_GPIO_PWM_SLICE;
+uint SND_GPIO_PWM_CHAN;
 
 alarm_id_t input_debounce_alarm = 0;
 // timer_t key_longpress_timer;
@@ -122,7 +120,6 @@ uint8_t old_half_track;
 // timer definition
 
 struct repeating_timer bytetimer;
-
 
 char image_filename[256]; //Maximal 256 Zeichen
 char current_path[512];

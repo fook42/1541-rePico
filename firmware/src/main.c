@@ -12,6 +12,7 @@
 #include "hardware/i2c.h"
 #include "hardware/timer.h"
 #include "hardware/clocks.h"
+#include "hardware/pwm.h"
 
 #include "pinout.h"
 
@@ -1620,12 +1621,42 @@ void stop_bytetimer(void)
 
 /////////////////////////////////////////////////////////////////////
 
+#if PCB_VERSION>=17
 void init_sound(void)
 {
-    gpio_init(GPIO_SND);
-    gpio_set_dir(GPIO_SND, GPIO_OUT);
-    turn_sound_off();
+    gpio_set_function(GPIO_SND, GPIO_FUNC_PWM);
+    SND_GPIO_PWM_SLICE = pwm_gpio_to_slice_num(GPIO_SND);
+    SND_GPIO_PWM_CHAN  = pwm_gpio_to_channel(GPIO_SND);
+
+    // Get some sensible defaults for the slice configuration. By default, the
+    // counter is allowed to wrap over its maximum range (0 to 2**16-1)
+
+    pwm_config mypwm_config = pwm_get_default_config();
+    // Set divider, reduces counter clock to sysclock/this value
+    pwm_config_set_clkdiv_int(&mypwm_config, 128);
+    // Load the configuration into our PWM slice, and set it running.
+    pwm_init(SND_GPIO_PWM_SLICE, &mypwm_config, true);
+    pwm_set_wrap(SND_GPIO_PWM_SLICE, 1024);
+    pwm_set_chan_level(SND_GPIO_PWM_SLICE, SND_GPIO_PWM_CHAN, 512);
+    pwm_set_enabled(SND_GPIO_PWM_SLICE,true);
 }
+
+void turn_sound_on(void)
+{
+    pwm_set_wrap(SND_GPIO_PWM_SLICE,akt_half_track*32+1024);
+    pwm_set_chan_level(SND_GPIO_PWM_SLICE, SND_GPIO_PWM_CHAN, akt_half_track*16+512);
+    pwm_set_enabled(SND_GPIO_PWM_SLICE,true);
+}
+
+void turn_sound_off(void)
+{
+    pwm_set_enabled(SND_GPIO_PWM_SLICE,false);
+}
+#else
+void init_sound(void) {}
+void turn_sound_on(void) {}
+void turn_sound_off(void) {}
+#endif
 
 ///////////////////////////////////////
 ///////// ISR
