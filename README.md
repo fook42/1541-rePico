@@ -91,6 +91,13 @@ git clone https://github.com/raspberrypi/picotool.git
 
 ### build steps ###
 
+make sure submodules are initialized and up-to-date (like NoOS-Fat-lib)
+
+```
+git submodule update --init
+git pull --recurse-submodules
+```
+
 prepare build-folder / configure Ninja for build the cmake project
 
 ```
