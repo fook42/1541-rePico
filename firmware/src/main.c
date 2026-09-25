@@ -1344,14 +1344,24 @@ void unmount_image(void)
 
 void show_sdcard_info_message(void)
 {
+    sd_card_t* my_sdcard;
+    uint32_t sdcard_size = 0;
+
     if (0 != fs.fs_type)    // check for valid mounted file-system
     {
         display_clear();
         display_home();
 
         display_string(disp_sdinfo_size_s);
-        // sprintf(out_str, "%d MB", (uint16_t)(info.capacity / 1024 / 1024));
-        // display_string(out_str);
+        my_sdcard = sd_get_by_num(0);   // get a sd_card_info-struct from current card
+        if (NULL != my_sdcard)
+        {
+            sdcard_size = my_sdcard->get_num_sectors(my_sdcard);
+            char data[9];
+            dez2out((int32_t)(sdcard_size*512E-9),0,data);
+            display_string(data);
+        }
+        display_string(" GB");
 
         display_setcursor(0,1);
         display_string(disp_sdinfo_part_s);
