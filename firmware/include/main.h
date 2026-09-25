@@ -12,7 +12,7 @@
 // functions
 int64_t input_debounce_callback(alarm_id_t id, void *user_data);
 
-FRESULT mount_sdcard(void);
+FRESULT mount_sdcard(const char* mount_path);
 FRESULT umount_sdcard(void);
 void show_fs_error(FRESULT error_code);
 

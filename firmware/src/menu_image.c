@@ -105,7 +105,7 @@ size_t generate_menu_file(DIR* dir_obj, const uint8_t* dir_path, const uint8_t d
     *P++ = 0x08;
 
     //store current path to menu-file
-    uint8_t dirname_len = strlen(dir_path);
+    size_t dirname_len = strlen(dir_path);
     if (2 > dirname_len)
     {
         charP = (uint8_t*) version_str;

@@ -168,6 +168,10 @@ int main()
 
     set_gui_mode(GUI_SELECTOR);
 
+    // set root of sd-card as current path
+    current_path[0]='/';
+    current_path[1]=0;
+
     while (true) {
         check_stepper_signals();
         update_gui();
@@ -176,35 +180,24 @@ int main()
 /////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////
 
-FRESULT mount_sdcard(void)
+FRESULT mount_sdcard(const char* mount_path)
 {
-    char mount_path[] = {"/"};
     BYTE mount_option = 1; /* 0=Do not mount (delayed mount), 1=Mount immediately */
 
     FRESULT fr = f_mount(&fs, mount_path, mount_option);
-    // uint8_t retry_count = 3;
-
-    // while ((FR_OK != fr) && (retry_count > 0)) {
-    //     retry_count--;
-    //     sleep_ms(1000);
-    //     fr = f_mount(&fs, mount_path, mount_option);
-    // }
-
     if (FR_OK == fr)
     {
         fb_dir_entry_count = get_dir_entry_count(mount_path); // open card, count entries on root level
-
-        strcpy(current_path, mount_path);
     }
     return fr;
 }
 
-
 FRESULT umount_sdcard(void)
 {
-    char mount_path[] = {""};
-
-    return f_unmount(mount_path);
+    // reset path for next sd-card mount
+    current_path[0]='/';
+    current_path[1]=0;
+    return f_unmount("");
 }
 
 void show_fs_error(FRESULT error_code)
@@ -537,7 +530,7 @@ void check_menu_events(const uint16_t menu_event)
                     set_gui_mode(GUI_SELECTOR);
                     break;
                 case M_LOAD_IMAGE:
-                    fr = mount_sdcard();
+                    fr = mount_sdcard(current_path);
                     display_clear();
                     display_home();
                     if (FR_OK == fr)
@@ -558,7 +551,7 @@ void check_menu_events(const uint16_t menu_event)
                         int file_op_status;
                         // todo: create save-file dialog, name, type
                         // for now: open a "standard-file" (G64)
-                        fr = mount_sdcard();
+                        fr = mount_sdcard(current_path);
                         display_clear();
                         display_home();
                         if (FR_OK != fr)
@@ -569,9 +562,10 @@ void check_menu_events(const uint16_t menu_event)
                             menu_refresh();
                             break;
                         }
-                        if (FR_OK == f_open(&fd, "1541-repico.g64", FA_CREATE_ALWAYS|FA_WRITE))
+                        fr = f_open(&fd, "1541-repico.g64", FA_CREATE_ALWAYS|FA_WRITE);
+                        display_string("G64 file open...");
+                        if (FR_OK == fr)
                         {
-                            display_string("G64 file opened");
                             display_setcursor(0,1);
                             file_op_status = write_disk(&fd, G64_IMAGE, num_max_tracks);
                             if (file_op_status>0)
@@ -587,17 +581,17 @@ void check_menu_events(const uint16_t menu_event)
                                 display_data(byte_str[1]);
                             }
                         } else {
-                            display_string("G64 file open");
                             display_setcursor(0,1);
-                            display_string("failed 4 writing");
+                            display_string("failed !");
                         }
                         f_close(&fd);
                         sleep_ms(3000);
                         display_clear();
                         display_home();
-                        if (FR_OK == f_open(&fd, "1541-repico.d64", FA_CREATE_ALWAYS|FA_WRITE))
+                        fr = f_open(&fd, "1541-repico.d64", FA_CREATE_ALWAYS|FA_WRITE);
+                        display_string("D64 file open...");
+                        if (FR_OK == fr)
                         {
-                            display_string("D64 file opened");
                             display_setcursor(0,1);
                             file_op_status = write_disk(&fd, D64_IMAGE, num_max_tracks);
                             if (file_op_status>0)
@@ -613,9 +607,8 @@ void check_menu_events(const uint16_t menu_event)
                                 display_data(byte_str[1]);
                             }
                         } else {
-                            display_string("D64 file open");
                             display_setcursor(0,1);
-                            display_string("failed 4 writing");
+                            display_string("failed !");
                         }
                         f_close(&fd);
                         sleep_ms(3000);
@@ -676,7 +669,7 @@ void check_menu_events(const uint16_t menu_event)
                     break;
 
                 case M_SDCARD_INFO:
-                    if (FR_OK == mount_sdcard())
+                    if (FR_OK == mount_sdcard(current_path))
                     {
                         show_sdcard_info_message();
                         while(irq_key_value != KEY2_DOWN) {};
@@ -780,11 +773,7 @@ void handle_menu_image(void)
                         sleep_ms(250/LCD_LINE_SIZE);
                     }
 
-                    if (1 < strlen(current_path))
-                    {
-                        --selected_image_nr;
-                    }
-                    if (0 == selected_image_nr)
+                    if ((1 < strlen(current_path)) && (1 == selected_image_nr))
                     {
                         // first entry selected, which is ".." in this case
                         // create a fake dir-entry and open it afterwards
@@ -819,7 +808,7 @@ void handle_menu_image(void)
 
 void insert_menu_image(char* menu_path)
 {
-    FRESULT fr = mount_sdcard();
+    FRESULT fr = mount_sdcard(menu_path);
     if (FR_OK == fr)
     {
         (void) f_closedir(&dir_object);
@@ -1385,7 +1374,7 @@ void show_sdcard_info_message(void)
                 break;
         }
     }
-    sleep_ms(START_MESSAGE_TIME);
+    //sleep_ms(START_MESSAGE_TIME);
 
     // struct sd_raw_info info;
 
