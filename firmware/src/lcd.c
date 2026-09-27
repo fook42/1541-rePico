@@ -210,3 +210,11 @@ void lcd_setbright( bool bright_on )
 {
     (void) bright_on;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// set "inverse" mode for next display data
+void lcd_setinverse(void)
+{
+    //  lcd_inverse = true;
+    lcd_data(0x03); // show arrow instead ...
+}

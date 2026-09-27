@@ -258,7 +258,7 @@ void create_menu_image(const char* menu_path, DIR* dir_obj, uint8_t* id1_p, uint
     generate_directory_entry("INTRO",    CBMDOS_TYPE_PRG, intro_track    ,0,((uint16_t) (intro_prg_len/254))+1);
     convert_d64track2gcr(DIRECTORY_TRACK, my_id1, my_id2);
 
-    strcpy(image_name_p, "\06 ONSCREEN MENU");
+    strcpy(image_name_p, "\xff ONSCREEN MENU ");
     *id1_p = my_id1;
     *id2_p = my_id2;
     *num_tracks_p = num_max_tracks;

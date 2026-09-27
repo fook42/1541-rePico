@@ -1018,6 +1018,7 @@ void filebrowser_update(uint8_t key_code)
             }
 
             display_setcursor(2,fb_cursor_pos);
+            display_data('\xFF');
             display_print(fb_dir_entry[fb_cursor_pos].fname,fb_line_scroll_pos, LCD_LINE_SIZE-3 );
         }
         else
@@ -1148,6 +1149,10 @@ void filebrowser_refresh(void)
     for (uint8_t j=0; j<i; j++)
     {
         display_setcursor(1,j);
+        if (fb_cursor_pos==j)
+        {
+            display_setinverse();
+        }
         if(fb_dir_entry[j].fattrib & AM_DIR)
         {
             display_data(display_dir_char);
@@ -1158,8 +1163,8 @@ void filebrowser_refresh(void)
         display_print(fb_dir_entry[j].fname, 0, LCD_LINE_SIZE-3);
     }
 
-    display_setcursor(0, fb_cursor_pos);
-    display_data(display_pointer_char);
+    // display_setcursor(0, fb_cursor_pos);
+    // display_data(display_pointer_char);
 
 
     if(fb_window_pos > 0)

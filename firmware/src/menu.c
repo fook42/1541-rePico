@@ -157,7 +157,11 @@ void menu_refresh()
 
     for(int i=0; (i<current_menu->lcd_row_count) && (i<current_menu->entry_count); i++)
     {
-        display_setcursor(1,i);
+        display_setcursor(0,i);
+        if (current_menu->lcd_cursor_pos == i)
+        {
+            display_setinverse();
+        }
         display_string(current_menu->entry_list[i+current_menu->lcd_window_pos].name);
 
         switch(current_menu->entry_list[i+current_menu->lcd_window_pos].type)
@@ -184,8 +188,8 @@ void menu_refresh()
 
     }
 
-    display_setcursor(0, current_menu->lcd_cursor_pos);
-    display_data(current_menu->lcd_cursor_char);
+    // display_setcursor(0, current_menu->lcd_cursor_pos);
+    // display_data(current_menu->lcd_cursor_char);
 
     if(current_menu->lcd_window_pos > 0)
     {

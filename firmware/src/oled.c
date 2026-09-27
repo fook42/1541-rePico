@@ -12,6 +12,7 @@
 extern uint8_t DEV_I2C_ADDR;
 uint8_t oled_cursor_x, oled_cursor_y;
 bool oled_bright = false;
+bool oled_inverse = false;
 
 const uint8_t OLED_customchars[][8] = {
 { // Menü More Top
@@ -141,6 +142,7 @@ void oled_clear( void )
 
         i2c_write_blocking(I2C_PORT, DEV_I2C_ADDR, buffer, count_of(buffer), false);
     }
+    oled_inverse = false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -152,6 +154,7 @@ void oled_home( void )
     ssd1306_command(SSD1306_COLUMN_START_H );
     oled_cursor_x = 0;
     oled_cursor_y = 0;
+    oled_inverse = false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -163,6 +166,7 @@ void oled_setcursor( const uint8_t spalte, const uint8_t zeile )
     ssd1306_command(SSD1306_COLUMN_START_H | (((FONT_WIDTH*spalte)>>4) & 0x0f));
     oled_cursor_x = spalte;
     oled_cursor_y = zeile;
+    oled_inverse = false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -170,7 +174,11 @@ void oled_setcursor( const uint8_t spalte, const uint8_t zeile )
 void oled_data( const uint8_t data )
 {
     if (0 == data) { return; }
-
+    if (0xFF == data)   // switch on/off inverse-mode
+    {
+        oled_inverse = !oled_inverse;
+        return;
+    }
     uint8_t buffer[FONT_HEIGHT+1];
     buffer[0] = SSD1306_I2C_DATA;
 
@@ -182,6 +190,14 @@ void oled_data( const uint8_t data )
         memcpy((void*) &buffer[1], (const void*) &FontData[FONT_MAXCHAR-FONT_MINCHAR][0], FONT_HEIGHT);
     } else {
         memcpy((void*) &buffer[1], (const void*) &FontData[data-FONT_MINCHAR][0], FONT_HEIGHT);
+    }
+
+    if (oled_inverse)
+    {
+        for (int i=1; i<(FONT_HEIGHT+1); i++)
+        {
+            buffer[i]=~buffer[i];
+        }
     }
 
     i2c_write_blocking(I2C_PORT, DEV_I2C_ADDR, buffer, count_of(buffer), false);
@@ -196,7 +212,9 @@ void oled_data( const uint8_t data )
     }
 
     ++oled_cursor_x;
-    oled_setcursor(oled_cursor_x, oled_cursor_y);
+    ssd1306_command(SSD1306_PAGE_START | (7-oled_cursor_y));
+    ssd1306_command(SSD1306_COLUMN_START_L |  ((FONT_WIDTH*oled_cursor_x)     & 0x0f));
+    ssd1306_command(SSD1306_COLUMN_START_H | (((FONT_WIDTH*oled_cursor_x)>>4) & 0x0f));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -235,3 +253,11 @@ void oled_setbright( bool bright_on )
 {
     oled_bright = bright_on;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// set "inverse" mode for next display data
+void oled_setinverse(void)
+{
+    oled_inverse = true;
+}
+

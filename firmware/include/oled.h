@@ -48,6 +48,10 @@ void oled_generatechar( const uint8_t code, const uint8_t *data );
 void oled_setbright( bool bright_on );
 
 ////////////////////////////////////////////////////////////////////////////////
+// set "inverse" mode for next display data
+void oled_setinverse(void);
+
+////////////////////////////////////////////////////////////////////////////////
 // SSD1306 I2C Modes
 
 #define SSD1306_I2C_COMMAND         (0x80)
