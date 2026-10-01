@@ -176,6 +176,10 @@ int main()
 
     set_gui_mode(GUI_SELECTOR);
 
+    display_setcursor(0,2);
+    display_data(SND_GPIO_PWM_SLICE+'0');
+    display_data(SND_GPIO_PWM_CHAN+'0');
+
     // set root of sd-card as current path
     current_path[0]='/';
     current_path[1]=0;
