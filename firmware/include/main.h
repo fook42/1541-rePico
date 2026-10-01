@@ -107,6 +107,10 @@ FILINFO     fb_dir_entry[LCD_LINE_COUNT];
 #define soundtimer_value    ((1000*1000)/440)       // 440 Hz = "A"
 int SND_GPIO_PWM_SLICE;
 uint SND_GPIO_PWM_CHAN;
+int SND_DMA_CHANNEL;
+
+#define WAV_SAMPLERATE          22050
+#define WAV_PWM_RATE            (125000000 / WAV_SAMPLERATE)
 
 alarm_id_t input_debounce_alarm = 0;
 // timer_t key_longpress_timer;
