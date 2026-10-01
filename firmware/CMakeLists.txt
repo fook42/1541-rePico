@@ -37,9 +37,11 @@ add_subdirectory(./buildtools)
 
 add_subdirectory(./SoftwareC64)
 
+add_subdirectory(./sounds)
+
 add_executable(1541-rePico)
 
-add_dependencies(1541-rePico GenSelector GenMenuC64Pal GenMenuC64Ntsc GenMenuC16 GenIntro)
+add_dependencies(1541-rePico GenWavData GenSelector GenMenuC64Pal GenMenuC64Ntsc GenMenuC16 GenIntro)
 
 # Add executable. Default name is the project name, version 0.1
 file(GLOB_RECURSE mysources  CONFIGURE_DEPENDS "src/*.c")
