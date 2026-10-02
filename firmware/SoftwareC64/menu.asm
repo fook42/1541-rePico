@@ -9,6 +9,7 @@
     TYPE_D64 = 2
     TYPE_G64 = 3
     TYPE_PRG = 4
+    TYPE_SID = 5
     TYPE_UNKNOWN = 255
 
 
@@ -338,7 +339,7 @@ do_space:
         sta do_run
         jsr get_current_type
         sta current_type
-        cmp #TYPE_PRG+1
+        cmp #TYPE_SID+1
         bcs do_keyloop
         cmp #TYPE_DIR
         bcc do_keyloop

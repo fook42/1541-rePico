@@ -1270,6 +1270,10 @@ uint8_t open_disk_image(FIL* fd, FILINFO *file_entry)
     else if(0 == strcmp(extension,".prg"))
     {
         image_type = PRG_IMAGE;
+    }
+    else if(0 == strcmp(extension,".sid"))
+    {
+        image_type = SIDPLAY_IMAGE;
     } else {
         // extension unknown -> we wont try to open the file at all..
         return UNDEF_IMAGE;

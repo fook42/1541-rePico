@@ -233,6 +233,52 @@ int8_t read_disk(FIL* fd, const int image_type, FILINFO fileinfo)
             // done
         }
         break;
+
+        case SIDPLAY_IMAGE: // SID Datei
+        {
+            const uint8_t id_buffer[]={" 1541"};      // disk-id
+            id1 = id_buffer[0];
+            id2 = id_buffer[1];
+            const uint8_t num_max_tracks = NUM_TRACKS_STD;
+            generate_empty_image(id1,id2,num_max_tracks);
+
+            // generates a prg_file starting from PRGFILE_TRACK
+            size_t file_size = fileinfo.fsize;
+            uint8_t* file_buffer_pointer = g64_tracks[SCRATCH_TRACK];
+
+            if (FR_OK != f_lseek(fd, 0))
+            {
+                break;
+            }
+            fr = f_read(fd, file_buffer_pointer, file_size, &bytes_read);
+            if ((FR_OK != fr) || (bytes_read!=file_size))
+            {
+                last_track = -bytes_read;
+                break;
+            }
+
+            (void) fill_tracks_with_file(PRGFILE_TRACK, file_buffer_pointer, file_size, FILL_UP, num_max_tracks, id1, id2);
+
+            // need to clean out temporary data from "f_read" in track-buffer memory
+            memset(d64_sector_puffer, 0, sizeof(d64_sector_puffer));
+            for(uint8_t track_nr=SCRATCH_TRACK; track_nr<num_max_tracks; ++track_nr)
+            {
+                convert_d64track2gcr(track_nr, id1, id2);
+            }
+
+            generate_bam("SID-PLAYER", id_buffer);
+            // create a file-entry in the directory...
+            char FILENAME[16]={0xA0};
+            size_t namelen = strlen(fileinfo.fname)-4;  //remove the ".prg"
+            if (namelen>16) {namelen=16;}
+            memcpy(FILENAME,fileinfo.fname,namelen);
+            generate_directory_entry(FILENAME, CBMDOS_TYPE_PRG, PRGFILE_TRACK,0,((uint16_t) (fileinfo.fsize/254))+1);
+            convert_d64track2gcr(DIRECTORY_TRACK,id1,id2);
+
+            last_track = num_max_tracks-1;
+            // done
+        }
+        break;
         default: break;
     }
     return last_track;

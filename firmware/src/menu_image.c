@@ -167,6 +167,10 @@ size_t generate_menu_file(DIR* dir_obj, const uint8_t* dir_path, const uint8_t d
                 {
                     *P++ = TYPE_PRG;   // PRG file
                 }
+                else if (0 == strcmp(file_extension,".sid"))
+                {
+                    *P++ = TYPE_SID;   // SID file
+                }
                 else
                 {
                     *P++ = TYPE_UNKNOWN;// unknown file
