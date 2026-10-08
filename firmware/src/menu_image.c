@@ -15,6 +15,7 @@
 #include "c64_menu_pal.h"
 #include "c64_menu_ntsc.h"
 #include "c16_menu.h"
+#include "vic20_menu.h"
 
 #define MAX_DIR_ENTRIES (128)
 
@@ -206,6 +207,8 @@ void create_menu_image(const char* menu_path, DIR* dir_obj, uint8_t* id1_p, uint
         ..   ====
         Txx  v/ start MENU_NTSC_C64             - start: C64 Ntsc MenuPRG variable
         ..   ====
+        Txx  v/ start MENU_VIC20                - start: VIC20 MenuPRG variable
+        ..   ====
 
         Txx  v/ start INTRO                     - start: intro_track variable
         ..   |
@@ -244,6 +247,9 @@ void create_menu_image(const char* menu_path, DIR* dir_obj, uint8_t* id1_p, uint
     uint8_t menu_ntsc_track = last_track+1;
     last_track = fill_tracks_with_file(menu_ntsc_track,(uint8_t*) &menu_ntsc_prg[0],menu_ntsc_prg_len,FILL_DOWN, num_max_tracks, my_id1, my_id2);
 
+    uint8_t menu_vc20_track = last_track+1;
+    last_track = fill_tracks_with_file(menu_vc20_track,(uint8_t*) &menu_20_prg[0],  menu_20_prg_len,  FILL_DOWN, num_max_tracks, my_id1, my_id2);
+
     uint8_t intro_track = last_track+1;
     last_track = fill_tracks_with_file(intro_track,    (uint8_t*) &intro_prg[0],    intro_prg_len,    FILL_DOWN, num_max_tracks, my_id1, my_id2);
 
@@ -254,6 +260,7 @@ void create_menu_image(const char* menu_path, DIR* dir_obj, uint8_t* id1_p, uint
     generate_directory_entry("P",        CBMDOS_TYPE_PRG, menu_pal_track ,0,((uint16_t) (menu_pal_prg_len/254))+1);
     generate_directory_entry("+",        CBMDOS_TYPE_PRG, menu_16_track  ,0,((uint16_t) (menu_16_prg_len/254))+1);
     generate_directory_entry("N",        CBMDOS_TYPE_PRG, menu_ntsc_track,0,((uint16_t) (menu_ntsc_prg_len/254))+1);
+    generate_directory_entry("V",        CBMDOS_TYPE_PRG, menu_vc20_track,0,((uint16_t) (menu_20_prg_len/254))+1);
     generate_directory_entry("DATAFILE", CBMDOS_TYPE_PRG, MENU_DATA_TRACK,0,((uint16_t) (menu_file_len/254))+1);
     generate_directory_entry("INTRO",    CBMDOS_TYPE_PRG, intro_track    ,0,((uint16_t) (intro_prg_len/254))+1);
     convert_d64track2gcr(DIRECTORY_TRACK, my_id1, my_id2);
