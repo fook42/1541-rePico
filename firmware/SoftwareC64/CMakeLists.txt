@@ -74,6 +74,13 @@ if(BUILD_MENUPRG)
       OUTPUT ${MENU_VIC20_PRG_BINARY}
       COMMAND ${ACME_TOOL} ${ACME_OPTIONS} -DVIC20=1 -o ${MENU_VIC20_PRG_BINARY} menu.asm
     )
+
+    add_custom_command(
+      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+      DEPENDS menu.asm vic20loader.asm
+      OUTPUT ${MENU_20_PRG_BINARY}
+      COMMAND ${ACME_TOOL} ${ACME_OPTIONS} -DVIC20=1 -o ${MENU_20_PRG_BINARY} menu.asm
+    )
   else()
     MESSAGE("### ACME not found - using precompiled prgs ###")
   endif()
