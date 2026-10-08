@@ -172,10 +172,6 @@ int main()
 
     set_gui_mode(GUI_SELECTOR);
 
-    display_setcursor(0,2);
-    display_data(SND_GPIO_PWM_SLICE+'0');
-    display_data(SND_GPIO_PWM_CHAN+'0');
-
     // set root of sd-card as current path
     current_path[0]='/';
     current_path[1]=0;
@@ -183,6 +179,7 @@ int main()
     while (true) {
         check_stepper_signals();
         update_gui();
+//        __wfi();
     }
 }
 /////////////////////////////////////////////////////////////////////
@@ -1629,38 +1626,118 @@ void stop_bytetimer(void)
 /////////////////////////////////////////////////////////////////////
 
 #if PCB_VERSION>=17
+
+// ideas and code adopted from :
+//    https://gregchadwick.co.uk/blog/playing-with-the-pico-pt3/
+
+#define REPETITION_RATE 4
+
+uint32_t single_sample = 0;
+uint32_t* single_sample_ptr = &single_sample;
+int trigger_dma_chan, sample_dma_chan;
+
+void dma_irh() {
+    dma_hw->ch[sample_dma_chan].al1_read_addr = (io_rw_32) &wav_data[0];
+    dma_hw->ch[trigger_dma_chan].al3_read_addr_trig = (io_rw_32) &single_sample_ptr;
+
+    dma_hw->ints0 = (1u << trigger_dma_chan);
+}
+
 void init_sound(void)
 {
     gpio_set_function(GPIO_SND, GPIO_FUNC_PWM);
-    SND_GPIO_PWM_SLICE = pwm_gpio_to_slice_num(GPIO_SND);
-    SND_GPIO_PWM_CHAN  = pwm_gpio_to_channel(GPIO_SND);
-    SND_DMA_CHANNEL = dma_claim_unused_channel(true);
+    SND_GPIO_PWM_SLICE  = pwm_gpio_to_slice_num(GPIO_SND);
+    SND_GPIO_PWM_CHAN   = pwm_gpio_to_channel(GPIO_SND);
 
-    pwm_set_wrap(SND_GPIO_PWM_SLICE, WAV_PWM_RATE);
-    pwm_set_chan_level(SND_GPIO_PWM_SLICE, SND_GPIO_PWM_CHAN, 0);
-    pwm_set_enabled(SND_GPIO_PWM_SLICE,true);
+    pwm_config my_pwm_config = pwm_get_default_config();
+    pwm_config_set_clkdiv(&my_pwm_config, 22.1f / REPETITION_RATE);
+    pwm_config_set_wrap(&my_pwm_config, 254);
+    pwm_init(SND_GPIO_PWM_SLICE, &my_pwm_config, true);
+
+    SND_DMA_CHANNEL  = dma_claim_unused_channel(true);
+    trigger_dma_chan = dma_claim_unused_channel(true);
+    sample_dma_chan  = dma_claim_unused_channel(true);
+
+    // Setup PWM DMA channel
+    dma_channel_config pwm_dma_chan_config = dma_channel_get_default_config(SND_DMA_CHANNEL);
+    // Transfer 32-bits at a time
+    channel_config_set_transfer_data_size(&pwm_dma_chan_config, DMA_SIZE_32);
+    // Read from a fixed location, always writes to the same address
+    channel_config_set_read_increment(&pwm_dma_chan_config, false);
+    channel_config_set_write_increment(&pwm_dma_chan_config, false);
+    // Chain to sample DMA channel when done
+    channel_config_set_chain_to(&pwm_dma_chan_config, sample_dma_chan);
+    // Transfer on PWM cycle end
+    channel_config_set_dreq(&pwm_dma_chan_config, pwm_get_dreq(SND_GPIO_PWM_SLICE));
+
+    dma_channel_configure(
+        SND_DMA_CHANNEL,
+        &pwm_dma_chan_config,
+        // Write to PWM slice CC register
+        &pwm_hw->slice[SND_GPIO_PWM_SLICE].cc,
+        // Read from single_sample
+        &single_sample,
+        // Transfer once per desired sample repetition
+        REPETITION_RATE,
+        // Don't start yet
+        false
+    );
+
+    // Setup trigger DMA channel
+    dma_channel_config trigger_dma_chan_config = dma_channel_get_default_config(trigger_dma_chan);
+    // Transfer 32-bits at a time
+    channel_config_set_transfer_data_size(&trigger_dma_chan_config, DMA_SIZE_32);
+    // Always read and write from and to the same address
+    channel_config_set_read_increment(&trigger_dma_chan_config, false);
+    channel_config_set_write_increment(&trigger_dma_chan_config, false);
+    // Transfer on PWM cycle end
+    channel_config_set_dreq(&trigger_dma_chan_config, pwm_get_dreq(SND_GPIO_PWM_SLICE));
+
+    dma_channel_configure(
+        trigger_dma_chan,
+        &trigger_dma_chan_config,
+        // Write to PWM DMA channel read address trigger
+        &dma_hw->ch[SND_DMA_CHANNEL].al3_read_addr_trig,
+        // Read from location containing the address of single_sample
+        &single_sample_ptr,
+        // Need to trigger once for each audio sample but as the PWM DREQ is
+        // used need to multiply by repetition rate
+        REPETITION_RATE * wav_data_len,
+        false
+    );
+
+    // Fire interrupt when trigger DMA channel is done
+    dma_channel_set_irq0_enabled(trigger_dma_chan, true);
+    irq_set_exclusive_handler(DMA_IRQ_0, dma_irh);
+    irq_set_enabled(DMA_IRQ_0, true);
+
+    // Setup sample DMA channel
+    dma_channel_config sample_dma_chan_config = dma_channel_get_default_config(sample_dma_chan);
+    // Transfer 8-bits at a time
+    channel_config_set_transfer_data_size(&sample_dma_chan_config, DMA_SIZE_8);
+    // Increment read address to go through audio buffer
+    channel_config_set_read_increment(&sample_dma_chan_config, true);
+    // Always write to the same address
+    channel_config_set_write_increment(&sample_dma_chan_config, false);
+
+    dma_channel_configure(
+        sample_dma_chan,
+        &sample_dma_chan_config,
+        // Write to single_sample
+        &single_sample,
+        // Read from audio buffer
+        wav_data,
+        // Only do one transfer (once per PWM DMA completion due to chaining)
+        1,
+        // Don't start yet
+        false
+    );
 }
 
 void turn_sound_on(void)
 {
-    if (dma_channel_is_busy(SND_DMA_CHANNEL)) { return; }
-
-    dma_channel_config my_channel_config;
-    my_channel_config = dma_channel_get_default_config(SND_DMA_CHANNEL);
-    channel_config_set_irq_quiet(&my_channel_config, true);
-    channel_config_set_read_increment(&my_channel_config, true);
-    channel_config_set_write_increment(&my_channel_config, false);
-    channel_config_set_transfer_data_size(&my_channel_config, DMA_SIZE_32);
-    // @TODO : problem.. SND_GPIO is on "Channel B" -> only "upper 16bits of 32bit are relevant"... need to shift the WAV data to upper bits <<16
-    channel_config_set_dreq(&my_channel_config, pwm_get_dreq(SND_GPIO_PWM_SLICE));
-    dma_channel_configure(SND_DMA_CHANNEL, &my_channel_config, &pwm_hw->slice[SND_GPIO_PWM_SLICE].cc, wav_data, wav_data_len/4, false);
-
-    dma_hw->ints0 = (1 << SND_DMA_CHANNEL);
-    dma_start_channel_mask(1 << SND_DMA_CHANNEL);
-
-    // pwm_set_wrap(SND_GPIO_PWM_SLICE,akt_half_track*32+1024);
-    // pwm_set_chan_level(SND_GPIO_PWM_SLICE, SND_GPIO_PWM_CHAN, akt_half_track*16+512);
-    // pwm_set_enabled(SND_GPIO_PWM_SLICE,true);
+    // Kick things off with the trigger DMA channel
+    dma_channel_start(trigger_dma_chan);
 }
 
 void turn_sound_off(void)
