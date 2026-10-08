@@ -43,7 +43,7 @@ one size fits for all 1541 models.
 - read and write access for both D64 & G64
 - sd-card hotswap feature (refresh of directory content)
 
-#### C64/C16 Image Selector ####
+#### C64/C16/VIC20 Image Selector ####
 
 - browsing through sd-card content via "virtual disk-image"
   - subdirectory support
