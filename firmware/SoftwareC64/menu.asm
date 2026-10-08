@@ -634,6 +634,7 @@ print_big_loop:
 +
         ldy #$00
         lax (ptr1),y
+        inx
         +inc_word ptr1        
 
         lda x_pos
@@ -666,7 +667,7 @@ do_print:
         beq string_ends
         +conv_to_screen
         sta (ptr2),y
-        lda filetypecolor-1,x
+        lda filetypecolor,x
         sta (ptr3),y
         iny
         cpy #MAX_X
@@ -1038,11 +1039,15 @@ mw_end:
 
 filetypecolor:
     !ifdef C16 {
+        !byte $52   ; unknown
+        !byte $52   ; none
         !byte $5e   ; dir
         !byte $53   ; d64
         !byte $43   ; g64
         !byte $51   ; prg
     } else {
+        !byte $0a   ; unknown
+        !byte $0a   ; none
         !byte $0e   ; dir
         !byte $03   ; d64
         !byte $03   ; g64
