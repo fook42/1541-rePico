@@ -13,12 +13,14 @@ set(SELECTOR_PRG_BINARY  "selector.prg")
 set(MENU_PAL_PRG_BINARY  "menu.prg")
 set(MENU_NTSC_PRG_BINARY "menu_ntsc.prg")
 set(MENU_16_PRG_BINARY   "menu_16.prg")
+set(MENU_20_PRG_BINARY   "menu_20.prg")
 
 set(INTRO_HEADER         "${PROJECT_INCLUDE}/c64_intro.h")
 set(SELECTOR_HEADER      "${PROJECT_INCLUDE}/boot_selector.h")
 set(MENU_PAL_HEADER      "${PROJECT_INCLUDE}/c64_menu_pal.h")
 set(MENU_NTSC_HEADER     "${PROJECT_INCLUDE}/c64_menu_ntsc.h")
 set(MENU_C16_HEADER      "${PROJECT_INCLUDE}/c16_menu.h")
+set(MENU_VIC20_HEADER    "${PROJECT_INCLUDE}/vic20_menu.h")
 
 set(ACME_OPTIONS --format cbm --cpu 6510 -DNO_BASIC_HEADER=1)
 set(DALI_OPTIONS_C64 --sfx 0x0808)
@@ -65,6 +67,13 @@ if(BUILD_MENUPRG)
       OUTPUT ${MENU_16_PRG_BINARY}
       COMMAND dali_tool ${DALI_OPTIONS_C16} -o ${MENU_16_PRG_BINARY} tmp_c16.prg
     )
+
+    add_custom_command(
+      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+      DEPENDS menu.asm vic20loader.asm
+      OUTPUT ${MENU_20_PRG_BINARY}
+      COMMAND ${ACME_TOOL} ${ACME_OPTIONS} -DVIC20=1 -o ${MENU_20_PRG_BINARY} menu.asm
+    )
   else()
     MESSAGE("### ACME not found - using precompiled prgs ###")
   endif()
@@ -106,6 +115,15 @@ add_custom_target(GenMenuC16
   COMMAND xxd -i -n \"menu_16_prg\" ${MENU_16_PRG_BINARY} >> ${MENU_C16_HEADER}
   COMMAND sed -i \"s!unsigned!const unsigned!g\" ${MENU_C16_HEADER}
   COMMAND echo \"\#endif\" >> ${MENU_C16_HEADER}
+)
+
+add_custom_target(GenMenuVIC20
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  DEPENDS ${MENU_20_PRG_BINARY}
+  COMMAND echo \"\#ifndef _MENU_20_PRG_H_\\n\#define _MENU_20_PRG_H_\" > ${MENU_VIC20_HEADER}
+  COMMAND xxd -i -n \"menu_20_prg\" ${MENU_20_PRG_BINARY} >> ${MENU_VIC20_HEADER}
+  COMMAND sed -i \"s!unsigned!const unsigned!g\" ${MENU_VIC20_HEADER}
+  COMMAND echo \"\#endif\" >> ${MENU_VIC20_HEADER}
 )
 
 add_dependencies(GenSelector    GenDali)

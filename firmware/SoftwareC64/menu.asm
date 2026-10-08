@@ -12,6 +12,25 @@
     TYPE_UNKNOWN = 255
 
 
+!ifdef VIC20 {
+    MAX_X = 22	    ;screen width
+    MAX_LINE = 21
+
+
+    VIDEORAM = $1000
+    COLORRAM = $9400
+    E518 = $E55F
+    BORDER_COLOR = $04
+    SELECTOR_COLOR = $0a
+    LOAD = $ffd5
+    BA = $ba
+    ptr1 = $fb
+    ptr2 = $fd
+    ptr3 = $f7
+    D020 = $900f
+
+} else  { ; VIC20
+
     MAX_X = 40	    ;screen width
     MAX_LINE = 23
 
@@ -58,6 +77,7 @@
     ptr2 = $fd
     ptr3 = $f7
 }
+} ; VIC20
 
     STACK_START = $0138
 
@@ -70,6 +90,10 @@ current_pos = $c1
 current_endpos = $c3
 
 current_cursor_position = $9e
+!ifdef VIC20 {
+current_cursor_last_position = $9f
+}
+
 current_index_number = $ac
 
 DRIVECODE_START = $0146
@@ -114,9 +138,9 @@ LINE_SIZES = $033c  ;"MAX_LINE"-bytes to line lengths
         }
         ;rts
 
-        !ifndef NO_BASIC_HEADER {
-        *= $0801
-        !by $0b,$08,$00,$00,$9e,$32,$30,$36,$31,$00,$00,$00
+        !ifdef VIC20 {
+        *= $1201
+        !by $0b,$12,$00,$00,$9e,$34,$36,$32,$31,$00,$00,$00
         } else {
         !ifndef C16 {
         * = $0808
@@ -125,32 +149,48 @@ LINE_SIZES = $033c  ;"MAX_LINE"-bytes to line lengths
         }
         }
         jsr fastload_init
+        !ifdef VIC20 {
+        } else { ; VIC20
         !ifdef C16 {
         lda #$08
         sta BA
         } else {
         dec $01
         }
+        } ; VIC20
 restart:
         jsr load_menu_file
+        !ifdef VIC20 {
+        lda #$02
+        sta current_cursor_last_position
+        }        
         jsr E518
         ldy #MAX_X
 -       lda buttomline-1,y
         ora #$80
-        sta VIDEORAM+24*MAX_X-1,y
+        sta VIDEORAM+(MAX_LINE+1)*MAX_X-1,y
         lda #BORDER_COLOR
         sta COLORRAM-1,y
-        sta COLORRAM+24*MAX_X-1,y
+        sta COLORRAM+(MAX_LINE+1)*MAX_X-1,y
         dey
         bne -
+        !ifdef VIC20 {
+        lda #BORDER_COLOR+8
+        sta $900f
+        } else { ; VIC20
         sta D020
         sty D021
+        }
         !ifdef C16 {
         lda #$39
         } else {
         lda #$1b
         sta $d011
         }
+        !ifdef VIC20 {
+        lda #$c2
+        sta $9005
+        } else {   ; VIC20
         sta RASTER_LINE
         !ifdef C16 {
         lda #$d5
@@ -177,6 +217,7 @@ restart:
         } else {
         inc VIC_IRQ_STATUS
         }
+        }  ; VIC20
 
         ;ldy #<directory_start  ; is zero now
         sty ptr1
@@ -225,7 +266,18 @@ end_top_line:
 
 repaint:
         jsr print_at_current_pos
+        !ifdef VIC20 {
+        ldx current_cursor_position
+        beq +
+        dex
+        !byte $89
++       inx
+        stx current_cursor_last_position
+        }
 keyloop:
+        !ifdef VIC20 {
+        jsr set_scroll_bar
+        }
         jsr $ffe4
         beq keyloop
         cmp #17    ;cursor down
@@ -304,6 +356,11 @@ no_crsr_left:
 no_home:
         cmp #134
         bne no_f3
+        !ifdef VIC20 {
+        lda #$2c
+        sta skip_vic20_fastload
+        jmp do_space
+        } else { ; VIC20
         !ifdef C16 {
         ldx #$2c
         stx fastload_c16_deactivated
@@ -325,6 +382,7 @@ no_home:
         bne do_space    ;unconditional
         }
         }
+        } ; VIC20
 no_f3:       
         cmp #$20
         beq do_space
@@ -343,6 +401,8 @@ do_space:
         cmp #TYPE_DIR
         bcc do_keyloop
         lda #$00
+        !ifdef VIC20 {
+        } else { ; VIC20
         !ifdef C16 {
         lda #$cc
         sta RASTER_LINE
@@ -362,6 +422,7 @@ do_space:
         sta $dc0d
         }
         ;lda $dc0d
+        } ; VIC20
         
         lda current_cursor_position
         ;sec        ; carry is set because no "bcc do_keyloop"
@@ -377,8 +438,11 @@ do_space:
         }
         jsr block_write
         jsr wait_for_flipdisk
+        !ifdef VIC20 {
+        } else {
         !ifdef DRIVE_RESET {
         jsr drive_initialize
+        }
         }
 current_type = *+1
         lda #$00
@@ -422,6 +486,15 @@ fastload_c16_deactivated:
         dex
         bne -
 do_exit:
+        !ifdef VIC20 {
+        ldx #$00
+        ldy #$00
+-       inx
+        bne -
+        iny
+        bne -
+        jmp $fd35   ;jump to basic warm start
+        } else { ; VIC20
         !ifdef C16 {
         jsr 32962   ;init screen
         cli
@@ -436,7 +509,9 @@ do_exit:
         jsr $fda3
         jmp $fcf8   ;part of reset, jumps to ($a000)
         }
+        } ; VIC20
 
+        !ifndef VIC20 {
 irq:    ldy #SELECTOR_COLOR
         !ifndef C16 {
         lda RASTER_LINE_READ
@@ -518,6 +593,7 @@ c16irqcont:
     !if >irq2 != >irq {
         !error "irq and irq in different pages"
     }
+    }   ;!ifndef VIC20 
 
 get_current_type:
         lda current_pos
@@ -649,6 +725,11 @@ line_size = *+1
         ldy #$00
         lda #$20
 -       sta (ptr2),y
+        !ifdef VIC20 {
+        lda filetypecolor,x        
+        sta (ptr3),y
+        lda #$20       
+        }
         iny
         cpy #MAX_X
         bne -
@@ -682,6 +763,11 @@ string_ends:
         sty tmp2
         lda #$20
 -       sta (ptr2),y
+        !ifdef VIC20 {
+        lda filetypecolor,x        
+        sta (ptr3),y
+        lda #$20       
+        }
         iny
         cpy #MAX_X
         bne -
@@ -722,7 +808,6 @@ end_printing:
         adc #$00
         sta current_pos+1
         }
-
 
 try_scroll_up:
         lda current_index_number
@@ -772,11 +857,72 @@ try_scroll_down_do_search:
         +current_pos_equ_ptr1_plus_1
         +inc_word current_index_number
         sec
+ret_vic20:
         rts
 
 
+        !ifdef VIC20 {
+set_scroll_bar:
+        ldx current_cursor_last_position
+        cpx current_cursor_position
+        beq ret_vic20
+        jsr get_curser_ptr1
+        ldy #22-1
+-       lda (ptr1),y
+        and #$7f
+        sta (ptr1),y
+        dey
+        bpl -
+        
+        ldx current_cursor_position
+        stx current_cursor_last_position
+        jsr get_curser_ptr1
+        ldy #22-1
+-       lda (ptr1),y
+        ora #$80
+        sta (ptr1),y
+        dey
+        bpl -         
+        rts
+        
+get_curser_ptr1:
+        lda screen_low_bytes,x
+        sta ptr1
+        lda screen_high_bytes,x
+        sta ptr1+1
+        rts
+
+
+screen_low_bytes:
+        !for i,1,22 {
+        !byte <(VIDEORAM+22*i)
+        }
+ 
+screen_high_bytes:
+        !for i,1,22 {
+        !byte >(VIDEORAM+22*i)
+        }
+        
+
+        }
+
 
 load_menu_file:
+        !ifdef VIC20 {
+        jsr L1476   ;initialize
+        jsr L14DC   ;execute fastloader
+        ldx #<directory_start
+        ldy #>directory_start
+        lda #$05
+        sec
+        jsr vicload
+        ldx L16A0+1
+        ldy L16A0+2
+        stx directory_end
+        sty directory_end+1
+        lda #$ff
+        jsr vicload
+        } else { ; VIC20
         lda #fname_end-fname
         ldx #<fname
         ldy #>fname
@@ -798,12 +944,14 @@ load_menu_file:
         stx directory_end
         sty directory_end+1
         }
+        } ; VIC20
         lda #$00
         sta current_index_number
         sta current_index_number+1
         sta current_cursor_position
         sta x_pos
         rts
+
 .error
         ; Accumulator contains BASIC error code
 
@@ -994,11 +1142,15 @@ load_run_text:
 load_run_text_len = *-load_run_text
 
 buttomline:
+        !ifdef VIC20 {
+        !scr "<SPC>=mnt <ret/F3>=run"
+        } else { ; VIC20
         !ifdef C16 {
         !scr "<SPC>=mnt <ret/F2>=run F1=pgup HLP=pgdwn"
         } else {
         !scr "<SPC>=mnt <ret/F3>=run  F1=pgup F7=pgdwn"
         }
+        } ; VIC20
 
 mw_comm:
          !text "M-W"
@@ -1038,6 +1190,53 @@ diskdrive_code_len = * - diskdrive_code
 mw_end:
 
 filetypecolor:
+    !ifdef VIC20 {
+        !byte $02   ; unknown
+        !byte $02   ; none
+        !byte $05   ; dir
+        !byte $03   ; d64
+        !byte $03   ; g64
+        !byte $01   ; prg
+
+L1476:  LDA $ba
+        JSR LISTEN
+        LDA #$6F
+        JSR SECOND
+        LDA #$49
+        JSR CIOUT
+        JSR UNLSN
+        RTS
+
+
+L14DC:  LDA $ba
+        JSR LISTEN
+        LDA #$6F
+        JSR SECOND
+        LDX #$00
+L14E8:  LDA L14FD,X
+        JSR CIOUT
+        INX
+        CPX #$05
+        BNE L14E8
+        JSR UNLSN
+
+        ;LDA #$02
+        LDY #$00
+        LDX #$00
+L1425:  DEX
+        BNE L1425
+        DEY
+        BNE L1425
+        ;SEC
+        ;SBC #$01
+        ;BNE L1425
+
+        RTS
+
+L14FD:  !byte $4D,$2D,$45,<L041A, >L041A
+
+
+    } else { ; VIC20
     !ifdef C16 {
         !byte $52   ; unknown
         !byte $52   ; none
@@ -1053,6 +1252,7 @@ filetypecolor:
         !byte $03   ; g64
         !byte $0f   ; prg
     }
+    } ; VIC20
 
 sector_address:
 index:  !word 0
@@ -1067,6 +1267,53 @@ directory_start = (*+$ff) & $ff00
         ;all stuff after this is erased
         ;by loading "DATAFILE"
 
+        !ifdef VIC20 {
+fastload_init:
+        ldx #fastload_stack_len
+-       lda fastload_stack-1,x
+        sta STACK_START-1,x
+        dex
+        bne -
+        lda #>vicload
+        !src "vic20loader.asm"
+
+fastload_stack:
+!pseudopc STACK_START {
+skip_vic20_fastload:
+        jmp do_vic_fastload
+        lda #load_star_name_len
+        ldx #<load_star_name
+        ldy #>load_star_name
+        jsr $ffbd     ; call SETNAM
+        lda #$01
+        ldx BA
+        tay           ; $01 means: load to origin address
+        jsr $ffba     ; call SETLFS
+        lda #$00
+        jsr $ffd5
+        lda $ae
+        sta $2d
+        lda $af
+        sta $2e
+        rts        
+load_star_name:
+        !text ":*"
+load_star_name_len = * - load_star_name
+
+do_vic_fastload:
+        jsr L1476   ;initialize
+        jsr L14DC   ;execute fastloader
+        lda #$00    ; file #0
+        clc
+        jmp vicload
+        ;!byte $02
+}
+fastload_stack_len = * - fastload_stack 
+
+        rts
+        
+
+        } else { ;VIC20
         !ifdef C16 {
 ;;;;;;;;;;;;;;;;;;; PLUS4 START ;;;;;;;;;;;;;;;;;;;;;;;
 c16keyb:
@@ -1187,6 +1434,10 @@ fix_for_normal_load_ntsc:
         sta $01
         lda #$00
         jsr $ffd5
+        lda $ae
+        sta $2d
+        lda $af
+        sta $2e
         pla
         sta $01
         cli
@@ -1254,4 +1505,4 @@ fastload_main_len = *-1
         ;;;;;;;;;;;;;;;;;;; PAL C64 END ;;;;;;;;;;;;;;;;;;;;;;;
 
         }
-
+        }   ;VIC20
