@@ -236,33 +236,33 @@ void create_menu_image(const char* menu_path, DIR* dir_obj, uint8_t* id1_p, uint
     }
 
     int8_t last_track;
-    last_track = fill_tracks_with_file(SELECTOR_TRACK, (uint8_t*) &selector_prg[0], selector_prg_len, FILL_DOWN, num_max_tracks, my_id1, my_id2);
+    last_track = fill_tracks_with_file(SELECTOR_TRACK,  (uint8_t*) &selector_prg[0],     selector_prg_len,     FILL_DOWN, num_max_tracks, my_id1, my_id2);
 
     uint8_t menu_pal_track = last_track+1;
-    last_track = fill_tracks_with_file(menu_pal_track, (uint8_t*) &menu_pal_prg[0], menu_pal_prg_len, FILL_DOWN, num_max_tracks, my_id1, my_id2);
+    last_track = fill_tracks_with_file(menu_pal_track,  (uint8_t*) &menu_c64_pal_prg[0], menu_c64_pal_prg_len, FILL_DOWN, num_max_tracks, my_id1, my_id2);
 
-    uint8_t menu_16_track = last_track+1;
-    last_track = fill_tracks_with_file(menu_16_track,  (uint8_t*) &menu_16_prg[0],  menu_16_prg_len,  FILL_DOWN, num_max_tracks, my_id1, my_id2);
+    uint8_t menu_c16_track = last_track+1;
+    last_track = fill_tracks_with_file(menu_c16_track,  (uint8_t*) &menu_c16_prg[0],     menu_c16_prg_len,     FILL_DOWN, num_max_tracks, my_id1, my_id2);
 
     uint8_t menu_ntsc_track = last_track+1;
-    last_track = fill_tracks_with_file(menu_ntsc_track,(uint8_t*) &menu_ntsc_prg[0],menu_ntsc_prg_len,FILL_DOWN, num_max_tracks, my_id1, my_id2);
+    last_track = fill_tracks_with_file(menu_ntsc_track, (uint8_t*) &menu_c64_ntsc_prg[0],menu_c64_ntsc_prg_len,FILL_DOWN, num_max_tracks, my_id1, my_id2);
 
-    uint8_t menu_vc20_track = last_track+1;
-    last_track = fill_tracks_with_file(menu_vc20_track,(uint8_t*) &menu_20_prg[0],  menu_20_prg_len,  FILL_DOWN, num_max_tracks, my_id1, my_id2);
+    uint8_t menu_vic20_track = last_track+1;
+    last_track = fill_tracks_with_file(menu_vic20_track,(uint8_t*) &menu_vic20_prg[0],   menu_vic20_prg_len,   FILL_DOWN, num_max_tracks, my_id1, my_id2);
 
     uint8_t intro_track = last_track+1;
-    last_track = fill_tracks_with_file(intro_track,    (uint8_t*) &intro_prg[0],    intro_prg_len,    FILL_DOWN, num_max_tracks, my_id1, my_id2);
+    last_track = fill_tracks_with_file(intro_track,     (uint8_t*) &intro_prg[0],        intro_prg_len,        FILL_DOWN, num_max_tracks, my_id1, my_id2);
 
     memset(d64_sector_puffer, 0, sizeof(d64_sector_puffer));
     generate_bam("- 1541 REPICO -", id_buffer);
     // create a file-entry in the directory...
-    generate_directory_entry("SELECTOR", CBMDOS_TYPE_PRG, SELECTOR_TRACK ,0,((uint16_t) (selector_prg_len/254))+1);
-    generate_directory_entry("P",        CBMDOS_TYPE_PRG, menu_pal_track ,0,((uint16_t) (menu_pal_prg_len/254))+1);
-    generate_directory_entry("+",        CBMDOS_TYPE_PRG, menu_16_track  ,0,((uint16_t) (menu_16_prg_len/254))+1);
-    generate_directory_entry("N",        CBMDOS_TYPE_PRG, menu_ntsc_track,0,((uint16_t) (menu_ntsc_prg_len/254))+1);
-    generate_directory_entry("V",        CBMDOS_TYPE_PRG, menu_vc20_track,0,((uint16_t) (menu_20_prg_len/254))+1);
-    generate_directory_entry("DATAFILE", CBMDOS_TYPE_PRG, MENU_DATA_TRACK,0,((uint16_t) (menu_file_len/254))+1);
-    generate_directory_entry("INTRO",    CBMDOS_TYPE_PRG, intro_track    ,0,((uint16_t) (intro_prg_len/254))+1);
+    generate_directory_entry("SELECTOR", CBMDOS_TYPE_PRG, SELECTOR_TRACK  ,0,((uint16_t) (selector_prg_len/254))+1);
+    generate_directory_entry("P",        CBMDOS_TYPE_PRG, menu_pal_track  ,0,((uint16_t) (menu_c64_pal_prg_len/254))+1);
+    generate_directory_entry("+",        CBMDOS_TYPE_PRG, menu_c16_track  ,0,((uint16_t) (menu_c16_prg_len/254))+1);
+    generate_directory_entry("N",        CBMDOS_TYPE_PRG, menu_ntsc_track ,0,((uint16_t) (menu_c64_ntsc_prg_len/254))+1);
+    generate_directory_entry("V",        CBMDOS_TYPE_PRG, menu_vic20_track,0,((uint16_t) (menu_vic20_prg_len/254))+1);
+    generate_directory_entry("DATAFILE", CBMDOS_TYPE_PRG, MENU_DATA_TRACK ,0,((uint16_t) (menu_file_len/254))+1);
+    generate_directory_entry("INTRO",    CBMDOS_TYPE_PRG, intro_track     ,0,((uint16_t) (intro_prg_len/254))+1);
     convert_d64track2gcr(DIRECTORY_TRACK, my_id1, my_id2);
 
     strcpy(image_name_p, "\06 ONSCREEN MENU");
