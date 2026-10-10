@@ -195,25 +195,25 @@ void create_menu_image(const char* menu_path, DIR* dir_obj, uint8_t* id1_p, uint
     /* create this disklayout
 
         T01  ====== upper limit
-        T17  ^\_start DATAFILE (MENU_DATA_FILE) - start: MENU_DATA_TRACK fixed
+        ..   |
+        T17  ^\_start DATAFILE (MENU_DATA_FILE) - start: MENU_DATA_TRACK    fixed
 
         T18  DIRECTORY TRACK
 
-        T19  v/ start SELECTOR                  - start: SELECTOR_TRACK fixed
+        T19  v/ start SELECTOR                  - start: SELECTOR_TRACK     fixed
         ..   ====
-        Txx  v/ start MENU_PAL_C64              - start: C64 Pal MenuPRG variable
+        Txx  v/ start MENU_C64_PAL              - start: C64 Pal MenuPRG    variable
         ..   ====
-        Txx  v/ start MENU_C16                  - start: C16 MenuPRG variable
+        Txx  v/ start MENU_C16                  - start: C16 MenuPRG        variable
         ..   ====
-        Txx  v/ start MENU_NTSC_C64             - start: C64 Ntsc MenuPRG variable
+        Txx  v/ start MENU_C64_NTSC             - start: C64 Ntsc MenuPRG   variable
         ..   ====
-        Txx  v/ start MENU_VIC20                - start: VIC20 MenuPRG variable
+        Txx  v/ start MENU_VIC20                - start: VIC20 MenuPRG      variable
         ..   ====
 
-        Txx  v/ start INTRO                     - start: intro_track variable
+        Txx  v/ start INTRO                     - start: intro_track        variable
         ..   |
         T35  ====== lower limit
-    
     */
 
     const uint8_t id_buffer[]={" F00K"};            // disk-id

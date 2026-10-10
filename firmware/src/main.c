@@ -120,7 +120,7 @@ int main()
 {
     stdio_init_all();
 
-    sleep_ms(2000);
+    sleep_ms(500);
 
     printf("1541repico boot\n");
 
@@ -756,7 +756,19 @@ void handle_menu_image(void)
             if (DIRECTORY_TRACK == track_write_nr)
             {
                 // something was changed on the image.. lets fetch the image-number
-
+                // waste some time to make sure a complete block has been written
+                display_setcursor(disp_scrollfilename_p);
+                for(uint8_t i=0; i<LCD_LINE_SIZE; i++)
+                {
+                    display_data(display_cursor_char);
+                    sleep_ms(250/LCD_LINE_SIZE);
+                }
+                display_setcursor(disp_scrollfilename_p);
+                for(uint8_t i=0; i<LCD_LINE_SIZE; i++)
+                {
+                    display_data(' ');
+                    sleep_ms(250/LCD_LINE_SIZE);
+                }
                 // simple approach: convert the complete track, all 19 sectors.. then select sector 2 and read 2 bytes
                 convert_gcr2d64track(DIRECTORY_TRACK);
                 selected_image_nr = *((uint16_t*) &d64_sector_puffer[1+2*D64_SECTOR_SIZE]);
@@ -764,18 +776,6 @@ void handle_menu_image(void)
                 if (0 != selected_image_nr)
                 {
                     FRESULT fr;
-                    display_setcursor(disp_scrollfilename_p);
-                    for(uint8_t i=0; i<LCD_LINE_SIZE; i++)
-                    {
-                        display_data(display_cursor_char);
-                        sleep_ms(250/LCD_LINE_SIZE);
-                    }
-                    display_setcursor(disp_scrollfilename_p);
-                    for(uint8_t i=0; i<LCD_LINE_SIZE; i++)
-                    {
-                        display_data(' ');
-                        sleep_ms(250/LCD_LINE_SIZE);
-                    }
 
                     if ((1 < strlen(current_path)) && (1 == selected_image_nr))
                     {
