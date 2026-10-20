@@ -13,7 +13,7 @@
             "device": "${command:raspberry-pi-pico.getChipUppercase}",
             "configFiles": [
                 "interface/cmsis-dap.cfg",
-                "target/${command:raspberry-pi-pico.getTarget}.cfg"
+                "target/rp2350.cfg"
             ],
             "runToEntryPoint": "main",
             "overrideLaunchCommands": [

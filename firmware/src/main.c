@@ -1694,7 +1694,7 @@ bool repeating_timer_callback(__unused struct repeating_timer *t)
                 {
                     // BYTE_READY für 3µs löschen
                     clear_byte_ready();
-                    sleep_us(3);
+                    busy_wait_us(3);
                     set_byte_ready();
                 }
             }
@@ -1719,7 +1719,7 @@ bool repeating_timer_callback(__unused struct repeating_timer *t)
                 {
                     // BYTE_READY für 3µs löschen
                     clear_byte_ready();
-                    sleep_us(3);
+                    busy_wait_us(3);
                     set_byte_ready();
                 }
             }
