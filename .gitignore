@@ -5,5 +5,7 @@ firmware/include/c16_*.h
 firmware/include/vic20_*.h
 firmware/include/wavData.h
 firmware/SoftwareC64/tmp*
+firmware/SoftwareC64/labels.lab
 analysis-reports/*
 build-analysis/*
+build/
