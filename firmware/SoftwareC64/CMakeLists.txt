@@ -21,6 +21,7 @@ set(MENU_C64_NTSC_PRG_BINARY "menu_ntsc.prg")
 set(MENU_C16_PRG_BINARY      "menu_16.prg")
 set(MENU_P4_PRG_BINARY       "menu_p4.prg")
 set(MENU_VIC20_PRG_BINARY    "menu_20.prg")
+set(EF3LOADER_PRG_BINARY     "ef3loader.prg")
 
 set(INTRO_HEADER         "${PROJECT_INCLUDE}/c64_intro.h")
 set(SELECTOR_HEADER      "${PROJECT_INCLUDE}/boot_selector.h")
@@ -29,6 +30,7 @@ set(MENU_C64_NTSC_HEADER "${PROJECT_INCLUDE}/c64_menu_ntsc.h")
 set(MENU_C16_HEADER      "${PROJECT_INCLUDE}/c16_menu.h")
 set(MENU_P4_HEADER       "${PROJECT_INCLUDE}/p4_menu.h")
 set(MENU_VIC20_HEADER    "${PROJECT_INCLUDE}/vic20_menu.h")
+set(EF3LOADER_HEADER     "${PROJECT_INCLUDE}/ef3loader.h")
 
 set(ACME_OPTIONS --format cbm --cpu 6510 -DNO_BASIC_HEADER=1)
 set(DALI_OPTIONS_C64 --sfx 0x0808)
@@ -186,3 +188,13 @@ add_custom_target(GenIntro
   COMMAND sed -i \"s!unsigned!const unsigned!g\" ${INTRO_HEADER}
   COMMAND echo \"\#endif\" >> ${INTRO_HEADER}
 )
+
+add_custom_target(GenEf3loader
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  DEPENDS ${EF3LOADER_PRG_BINARY}
+  COMMAND echo \"\#ifndef _EF3LOADER_PRG_H_\\n\#define _EF3LOADER_PRG_H_\" > ${EF3LOADER_HEADER}
+  COMMAND xxd -i -n \"ef3loader_prg\" ${EF3LOADER_PRG_BINARY} >> ${EF3LOADER_HEADER}
+  COMMAND sed -i \"s!unsigned!const unsigned!g\" ${EF3LOADER_HEADER}
+  COMMAND echo \"\#endif\" >> ${EF3LOADER_HEADER}
+)
+
