@@ -232,6 +232,7 @@ restart:
         }
         }  ; VIC20
 
+restart_home:
         ;ldy #<directory_start  ; is zero now
         sty ptr1
         lda #>directory_start
@@ -444,16 +445,23 @@ no_crsr_right:
         cmp #157    ;cursor left
         bne no_crsr_left
         lda x_pos
-        beq do_keyloop
+        beq do_keyloop2
         dec x_pos
         jmp repaint
-        
+
+do_keyloop2:
+        jmp keyloop
+
 no_crsr_left:
         cmp #$13    ; home
         bne no_home
         lda #$00
+        tay
+        sta current_index_number
+        sta current_index_number+1
+        sta current_cursor_position
         sta x_pos
-        jmp repaint
+        jmp restart_home
 
 no_home:
         cmp #134
