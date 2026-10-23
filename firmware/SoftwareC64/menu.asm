@@ -11,6 +11,10 @@
     TYPE_PRG = 4
     TYPE_UNKNOWN = 255
 
+!ifdef PLUS4 {
+    C16_64K = 1
+    C16 = 1
+}
 
 !ifdef VIC20 {
     MAX_X = 22	    ;screen width
@@ -55,7 +59,11 @@
     ptr1 = $03
     ptr2 = $05
     ptr3 = $9f
+    !ifdef C16_64K {
     NUM_PAGES = >($f300-directory_start)
+    } else {
+    NUM_PAGES = >($4000-directory_start)
+    }
 
     TED_JOY    = $ff08        ; TED joystick/keyboard register
     KB_LATCH   = $fd30        ; Keyboard latch
@@ -475,8 +483,10 @@ no_home:
         }
         
         !ifdef C16 {
+        !ifdef C16_64K {
         lda #$2c
         sta fastload_c16_deactivated
+        }
         }
         lda #'0'
         sta load_run_text_patch
@@ -613,8 +623,10 @@ do_run = *+1
         !ifdef C16 {
         ;jsr drive_reset
         ;jsr 32814   ;basic reset
+        !ifdef C16_64K {
 fastload_c16_deactivated:
         jsr $0700
+        }
         ldx #load_run_text_len
         stx $ef
         } else {
@@ -1083,7 +1095,7 @@ load_menu_file:
         jsr L14DC   ;execute fastloader
         ldx #<directory_start
         ldy #>directory_start
-        lda #$05
+        lda #$06    ; sixth file !!!!
         sec
         jsr vicload
         stx directory_end
@@ -1547,6 +1559,14 @@ fkey_clear_loop:
         bpl fkey_clear_loop 
 
         php
+
+        ldx #fastload_stack_len
+-       lda fastload_stack-1,x
+        sta STACK_START-1,x
+        dex
+        bne -
+
+        !ifdef C16_64K {
         sei
         sta $ff3f
         ldy #>(fastload_main_len+$ff)
@@ -1564,12 +1584,6 @@ dst = *+1
         bne -
         sta $ff3e
         
-        ldx #fastload_stack_len
--       lda fastload_stack-1,x
-        sta STACK_START-1,x
-        dex
-        bne -
-
         ldx #fastload_0700_len
 -       lda fastload_0700-1,x
         sta $0700-1,x
@@ -1579,9 +1593,11 @@ dst = *+1
         ;lda #$60
         ;sta $0700
         jsr $0700
+        }
         plp
         rts
 
+        !ifdef C16_64K {
 fastload_main:
         !bin "fastload_16_f300.bin",,2
 fastload_main_len = *-fastload_main
@@ -1589,9 +1605,12 @@ fastload_main_len = *-fastload_main
 fastload_0700:
         !bin "fastload_16_0700.bin",,2
 fastload_0700_len = *-fastload_0700
+        }
+
 fastload_stack:
 !pseudopc STACK_START {
         jmp print_load
+        !ifdef C16_64K {
 load_fast:
         lda #load_star_name_len
         ldx #<load_star_name
@@ -1615,6 +1634,9 @@ load_fast:
 load_star_name:
         !text ":*"
 load_star_name_len = * - load_star_name
+        } else {
+        jmp print_load  ; no fastloader, print "dload"
+        }
 }
 fastload_stack_len = *-fastload_stack
 

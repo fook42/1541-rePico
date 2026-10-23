@@ -19,6 +19,7 @@ set(SELECTOR_PRG_BINARY      "selector.prg")
 set(MENU_C64_PAL_PRG_BINARY  "menu.prg")
 set(MENU_C64_NTSC_PRG_BINARY "menu_ntsc.prg")
 set(MENU_C16_PRG_BINARY      "menu_16.prg")
+set(MENU_P4_PRG_BINARY       "menu_p4.prg")
 set(MENU_VIC20_PRG_BINARY    "menu_20.prg")
 
 set(INTRO_HEADER         "${PROJECT_INCLUDE}/c64_intro.h")
@@ -26,6 +27,7 @@ set(SELECTOR_HEADER      "${PROJECT_INCLUDE}/boot_selector.h")
 set(MENU_C64_PAL_HEADER  "${PROJECT_INCLUDE}/c64_menu_pal.h")
 set(MENU_C64_NTSC_HEADER "${PROJECT_INCLUDE}/c64_menu_ntsc.h")
 set(MENU_C16_HEADER      "${PROJECT_INCLUDE}/c16_menu.h")
+set(MENU_P4_HEADER       "${PROJECT_INCLUDE}/p4_menu.h")
 set(MENU_VIC20_HEADER    "${PROJECT_INCLUDE}/vic20_menu.h")
 
 set(ACME_OPTIONS --format cbm --cpu 6510 -DNO_BASIC_HEADER=1)
@@ -79,7 +81,7 @@ if(BUILD_MENUPRG)
 
     add_custom_command(
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-      DEPENDS ${MENU_PRG_SOURCE} fastload_16_0700.bin fastload_16_f300.bin
+      DEPENDS ${MENU_PRG_SOURCE}
       OUTPUT tmp_c16.prg
       COMMAND ${ACME_TOOL} ${ACME_OPTIONS} -DC16=1 -o tmp_c16.prg ${MENU_PRG_SOURCE}
     )
@@ -88,6 +90,19 @@ if(BUILD_MENUPRG)
       DEPENDS tmp_c16.prg
       OUTPUT ${MENU_C16_PRG_BINARY}
       COMMAND dali_tool ${DALI_OPTIONS_C16} -o ${MENU_C16_PRG_BINARY} tmp_c16.prg
+    )
+
+    add_custom_command(
+      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+      DEPENDS ${MENU_PRG_SOURCE} fastload_16_0700.bin fastload_16_f300.bin
+      OUTPUT tmp_p4.prg
+      COMMAND ${ACME_TOOL} ${ACME_OPTIONS} -DPLUS4=1 -o tmp_p4.prg ${MENU_PRG_SOURCE}
+    )
+    add_custom_command(
+      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+      DEPENDS tmp_p4.prg
+      OUTPUT ${MENU_P4_PRG_BINARY}
+      COMMAND dali_tool ${DALI_OPTIONS_C16} -o ${MENU_P4_PRG_BINARY} tmp_p4.prg
     )
 
     add_custom_command(
@@ -139,6 +154,15 @@ add_custom_target(GenMenuC16
   COMMAND echo \"\#endif\" >> ${MENU_C16_HEADER}
 )
 
+add_custom_target(GenMenuP4
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  DEPENDS ${MENU_P4_PRG_BINARY}
+  COMMAND echo \"\#ifndef _MENU_P4_PRG_H_\\n\#define _MENU_P4_PRG_H_\" > ${MENU_P4_HEADER}
+  COMMAND xxd -i -n \"menu_p4_prg\" ${MENU_P4_PRG_BINARY} >> ${MENU_P4_HEADER}
+  COMMAND sed -i \"s!unsigned!const unsigned!g\" ${MENU_P4_HEADER}
+  COMMAND echo \"\#endif\" >> ${MENU_P4_HEADER}
+)
+
 add_custom_target(GenMenuVIC20
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   DEPENDS ${MENU_VIC20_PRG_BINARY}
@@ -152,6 +176,7 @@ add_dependencies(GenSelector    GenDali)
 add_dependencies(GenMenuC64Pal  GenDali)
 add_dependencies(GenMenuC64Ntsc GenDali)
 add_dependencies(GenMenuC16     GenDali)
+add_dependencies(GenMenuP4      GenDali)
 
 add_custom_target(GenIntro
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
