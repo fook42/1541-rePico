@@ -306,7 +306,7 @@ keyloop:
             bmi     +
             and     #$ef
 +
-            stx $9112
+            stx $9122
             and #$1f
             cmp #$1f
         } else {
