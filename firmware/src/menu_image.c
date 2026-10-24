@@ -174,6 +174,10 @@ size_t generate_menu_file(DIR* dir_obj, const uint8_t* dir_path, const uint8_t d
                 {
                     *P++ = TYPE_PRG;   // PRG file
                 }
+                else if (0 == strcmp(file_extension,".t64"))
+                {
+                    *P++ = TYPE_DIR;   // T64 file - handle like a DIR
+                }
                 else
                 {
                     *P++ = TYPE_UNKNOWN;// unknown file
@@ -280,4 +284,93 @@ void create_menu_image(const char* menu_path, DIR* dir_obj, uint8_t* id1_p, uint
     *id1_p = my_id1;
     *id2_p = my_id2;
     *num_tracks_p = num_max_tracks;
+}
+
+int create_T64_menu_image(FIL* t64_fd, uint8_t* id1_p, uint8_t* id2_p, uint8_t* num_tracks_p, char* image_name_p)
+{
+    const uint8_t id_buffer[]={" F00K"};            // disk-id
+    const uint8_t num_max_tracks = NUM_TRACKS_STD;  // 35 Tracks should be enough
+    const uint8_t my_id1 = id_buffer[0];
+    const uint8_t my_id2 = id_buffer[1];
+
+    generate_empty_image(my_id1,my_id2,num_max_tracks);
+
+    // generates menu-datafile..
+
+    uint8_t* file_buffer_pointer = g64_tracks[MENU_DATA_TRACK];
+    uint8_t* P = g64_tracks[SCRATCH_TRACK];
+    FRESULT fr;
+    UINT    bytes_read;
+    size_t  menu_file_len;
+
+    if (FR_OK != f_lseek(t64_fd, 0))
+    {
+        return -1;
+    }
+    fr = f_read(t64_fd, file_buffer_pointer, T64_HEADER_SIZE, &bytes_read);
+    if ((FR_OK != fr) || (bytes_read!=T64_HEADER_SIZE))
+    {
+        return -2;
+    }
+    /*  It is important that the string "C64" be at the  beginning  of  the  file
+        because it is the string which is common enough to be used to identify  the
+        file type. There are several variations of  this  string  like  "C64S  tape
+        file" or "C64 tape image file". The string is stored in ASCII.
+    */
+    if( 0 != strncmp(&file_buffer_pointer[0], "C64", 3))
+    {
+        return -3;
+    }
+    // correct header start
+
+    uint16_t used_entries = *((uint16_t*) &file_buffer_pointer[0x24]);
+ 
+    *P++ = 0x01;
+    *P++ = 0x08;
+    
+    memcpy(P, &file_buffer_pointer[0x28], T64_CONTNAME_SIZE);   // set title to T64 Container-name
+    P += T64_CONTNAME_SIZE;
+    *P++ = 0x00;
+
+    // create an "exit" entry to be able to leave the T64 menu-image again
+    *P++ = TYPE_DIR;
+    *P++ = '.';
+    *P++ = '.';
+    *P++ = 0;
+
+    // now fetch all used entries as PRG and copy their names to the menu
+    for(;used_entries > 0; used_entries--)
+    {
+        fr = f_read(t64_fd, file_buffer_pointer, T64_ENTRY_SIZE, &bytes_read);
+        if ((FR_OK != fr) || (T64_ENTRY_SIZE != bytes_read))
+        {
+            return -4;
+        }
+        *P++ = TYPE_PRG;   // PRG file as default entry
+        memcpy(P, &file_buffer_pointer[0x10],T64_ENTRYNAME_SIZE);
+        P += T64_ENTRYNAME_SIZE;
+        *P++ = 0x00;
+    }
+
+    menu_file_len = P-g64_tracks[SCRATCH_TRACK];
+
+    (void) fill_tracks_with_file(MENU_DATA_TRACK, g64_tracks[SCRATCH_TRACK], menu_file_len, FILL_UP, num_max_tracks, my_id1, my_id2);
+
+    // need to clean out temporary data from "generate_menu_file" in track-buffer memory
+    memset(d64_sector_puffer, 0, sizeof(d64_sector_puffer));
+    for(uint8_t track_nr=SCRATCH_TRACK; track_nr<num_max_tracks; ++track_nr)
+    {
+        convert_d64track2gcr(track_nr, my_id1, my_id2);
+    }
+
+    generate_bam("T64-MENU", id_buffer);
+    // create a file-entry in the directory...
+    generate_directory_entry("DATAFILE", CBMDOS_TYPE_PRG, MENU_DATA_TRACK ,0,((uint16_t) (menu_file_len/254))+1);
+    convert_d64track2gcr(DIRECTORY_TRACK, my_id1, my_id2);
+
+    strcpy(image_name_p, "\x06\xff T64 MENU \xff\x06");
+    *id1_p = my_id1;
+    *id2_p = my_id2;
+    *num_tracks_p = num_max_tracks;
+    return 0;
 }

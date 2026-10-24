@@ -32,6 +32,7 @@ void infomode_update(void);
 
 void handle_menu_image(void);
 void insert_menu_image(char* menu_path, const uint8_t max_blocks);
+void insert_t64_menu_image(char* menu_path);
 
 uint16_t get_dir_entry_count(const char* entrycount_path);
 uint16_t seek_to_dir_entry(uint16_t entry_num, const char* seek_path);
@@ -146,7 +147,7 @@ uint8_t fb_line_scroll_end_begin_wait = 10;
 
 
 // floppydisk emulation
-uint8_t akt_image_type = UNDEF_IMAGE;     // 0=kein Image, 1=G64, 2=D64, 3=Selector
+uint8_t akt_image_type = UNDEF_IMAGE;     // 0=no Image, 1=G64, 2=D64, 3=PRG, 4=T64, 5=Selector
 bool is_image_mount;
 
 bool floppy_wp = true;  // Hier wird der aktuelle WriteProtection Zustand gespeichert

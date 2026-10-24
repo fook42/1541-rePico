@@ -44,6 +44,11 @@
 #define G64_TRACKCOUNT  NUM_TRACKS_MAX
 #define G64_TRACKSIZE   (7928)  // = 0x1ef8
 
+#define T64_HEADER_SIZE    (64)
+#define T64_CONTNAME_SIZE  (24)
+#define T64_ENTRY_SIZE     (32)
+#define T64_ENTRYNAME_SIZE (16)
+
 extern const uint16_t d64_track_offset[NUM_TRACKS_MAX];
 extern const uint8_t d64_sector_count[NUM_SPEEDZONES];
 extern uint8_t d64_track_zone[NUM_TRACKS_MAX];
@@ -68,7 +73,7 @@ extern uint8_t g64_tracks[G64_TRACKCOUNT][G64_TRACKSIZE];
 extern uint8_t id1;    // id1 and id2 identify a floppy-disk
 extern uint8_t id2;    // - these need to change to .. signal a disk-change or after a format...
 
-enum {UNDEF_IMAGE, G64_IMAGE, D64_IMAGE, PRG_IMAGE, SELECTOR_IMAGE};
+enum {UNDEF_IMAGE, G64_IMAGE, D64_IMAGE, PRG_IMAGE, T64_IMAGE, SELECTOR_IMAGE};
 
 extern const int64_t bytetimer_values[NUM_SPEEDZONES];
 

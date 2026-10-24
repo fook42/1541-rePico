@@ -787,22 +787,29 @@ void handle_menu_image(void)
                         hmi_dir_entry.fattrib = AM_DIR;
                         fr = FR_OK;
                     } else {
+
                         seek_to_dir_entry(selected_image_nr-1, current_path);
                         fr = f_readdir(&dir_object, &hmi_dir_entry);
                     }
 
                     if((0 != hmi_dir_entry.fname[0]) && (FR_OK == fr))
-                    {
-                        if (TYPE_VALID != open_dir_entry(hmi_dir_entry))
+                    {   
+                        uint8_t entry_type = open_dir_entry(hmi_dir_entry);
+                        if (TYPE_VALID == entry_type)
                         {
+                            set_gui_mode(GUI_INFO_MODE);
+                        } else if (TYPE_T64 == entry_type)
+                        {
+                            is_image_mount=false;
+                            // T64 file to open.. we handle it like a directory
+                            insert_t64_menu_image(current_path);
+                            infomode_update();
+                        } else {
                             // no valid image available / or we jumped into a folder
                             is_image_mount=false;
                             //rebuild the data-file
                             insert_menu_image(current_path, datafile_blklimit);
                             infomode_update();
-                        } else
-                        {
-                            set_gui_mode(GUI_INFO_MODE);
                         }
                     }
                 }
@@ -863,6 +870,36 @@ void insert_menu_image(char* menu_path, const uint8_t max_blocks)
         show_fs_error(fr);
     }
 }
+
+void insert_t64_menu_image(char* menu_path)
+{
+    stop_bytetimer();
+    send_byte_ready = false;            // disable VIA transfer
+
+    int ret_ct64_menu = create_T64_menu_image(&fd, &id1, &id2, &num_max_tracks, image_filename);
+
+    (void) f_close(&fd);
+    (void) f_closedir(&dir_object);
+
+    akt_track_pos = 0;
+    selected_track = 1;
+    akt_half_track = selected_track;
+
+    send_byte_ready = true;             // enable VIA transfer
+    is_image_mount = true;
+
+    akt_image_type = SELECTOR_IMAGE;    // to identify the write-back-channel handling
+    track_is_written = false;
+
+    disable_write_protection();         // we need to be able to receive the answer of menu-selector as "write"
+
+    send_disk_change();
+
+    start_bytetimer(akt_half_track);    // start the track-spinning
+
+    menu_set_entry_var1(&image_menu, M_WP_IMAGE, floppy_wp);
+}
+
 
 /////////////////////////////////////////////////////////////////////
 
@@ -1084,6 +1121,11 @@ uint8_t open_dir_entry(FILINFO od_file_entry)
         return TYPE_NONE;
     }
 
+    if(T64_IMAGE == akt_image_type)
+    {
+        return TYPE_T64;
+    }
+
     strcpy(image_filename, od_file_entry.fname);
 
     // read complete image
@@ -1279,6 +1321,10 @@ uint8_t open_disk_image(FIL* fd, FILINFO *file_entry)
     else if(0 == strcmp(extension,".prg"))
     {
         image_type = PRG_IMAGE;
+    }
+    else if(0 == strcmp(extension,".t64"))
+    {
+        image_type = T64_IMAGE;
     } else {
         // extension unknown -> we wont try to open the file at all..
         return UNDEF_IMAGE;
