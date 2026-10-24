@@ -297,6 +297,8 @@ repaint:
         stx current_cursor_last_position
         }
 keyloop:
+        jsr get_current_type
+        sta current_type
         
         !ifdef VIC20 {
         jsr set_scroll_bar
@@ -474,6 +476,10 @@ no_crsr_left:
 no_home:
         cmp #134
         bne no_f3
+
+        lda current_type
+        cmp #TYPE_DIR
+        beq do_keyloop
         
         !ifndef C16 {
         lda BA
@@ -548,8 +554,12 @@ do_keyloop:
 do_space:
         sbc #$20
         sta do_run
-        jsr get_current_type
-        sta current_type
+        bne +
+        lda current_type
+        cmp #TYPE_DIR
+        beq do_keyloop
++
+        lda current_type
         cmp #TYPE_PRG+1
         bcs do_keyloop
         cmp #TYPE_DIR
