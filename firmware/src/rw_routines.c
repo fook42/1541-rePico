@@ -147,6 +147,7 @@ int8_t read_disk(FIL* fd, const int image_type, FILINFO fileinfo)
 
             // extract id-fields from directory track for checksum calculation
             // assumption, disk has a dir in track 18 in DOS-format where ID fiels are populated
+
             offset = (((uint32_t) d64_track_offset[DIRECTORY_TRACK]) << 8) + DIR_ID_OFFSET;
             if (FR_OK == f_lseek(fd, offset))
             {
@@ -164,6 +165,7 @@ int8_t read_disk(FIL* fd, const int image_type, FILINFO fileinfo)
 
             for(uint8_t track_nr=0; track_nr<G64_TRACKCOUNT; ++track_nr)
             {
+                char sektor_buffer[5476];
                 offset = ((uint32_t) d64_track_offset[track_nr]) << 8;   // we store only 16bit values;
                 uint8_t num_of_sectors = d64_sector_count[d64_track_zone[track_nr]];
 
@@ -172,12 +174,12 @@ int8_t read_disk(FIL* fd, const int image_type, FILINFO fileinfo)
                     break;
                 }
 
-                fr = f_read(fd, &d64_sector_puffer[1], num_of_sectors*D64_SECTOR_SIZE, &bytes_read);
+                fr = f_read(fd, sektor_buffer, num_of_sectors*D64_SECTOR_SIZE, &bytes_read);
                 if ((FR_OK != fr) || ((num_of_sectors*D64_SECTOR_SIZE) != bytes_read))
                 {
                     break;
                 }
-
+                memcpy(&d64_sector_puffer[1], sektor_buffer, num_of_sectors*D64_SECTOR_SIZE);
                 g64_jumptable[track_nr*2]  = (uint32_t) (G64_HEADERSIZE+track_nr*(G64_TRACKSIZE+sizeof(g64_tracklen[0])));
                 g64_speedtable[track_nr*2] = (uint32_t) (g64_speedzones[d64_track_zone[track_nr]]);
 
