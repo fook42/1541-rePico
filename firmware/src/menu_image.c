@@ -17,7 +17,7 @@
 #include "c16_menu.h"
 #include "p4_menu.h"
 #include "vic20_menu.h"
-#include "ef3loader.h"
+#include "fe3loader.h"
 
 #define MAX_DIR_ENTRIES (128)
 
@@ -229,7 +229,7 @@ void create_menu_image(const char* menu_path, DIR* dir_obj, uint8_t* id1_p, uint
         Txx  v/ start INTRO                     - start: intro_track        variable
         ..   |
 
-        Txx  v/ start EF3loader                 - start: ef3loader_track    variable
+        Txx  v/ start FE3loader                 - start: fe3loader_track    variable
         ..   |
 
         T35  ====== lower limit
@@ -275,8 +275,8 @@ void create_menu_image(const char* menu_path, DIR* dir_obj, uint8_t* id1_p, uint
     uint8_t intro_track = last_track+1;
     last_track = fill_tracks_with_file(intro_track,     (uint8_t*) &intro_prg[0],        intro_prg_len,        FILL_DOWN, num_max_tracks, my_id1, my_id2);
 
-    uint8_t ef3loader_track = last_track+1;
-    last_track = fill_tracks_with_file(ef3loader_track,  (uint8_t*) &ef3loader_prg[0],   ef3loader_prg_len,    FILL_DOWN, num_max_tracks, my_id1, my_id2);
+    uint8_t fe3loader_track = last_track+1;
+    last_track = fill_tracks_with_file(fe3loader_track,  (uint8_t*) &fe3loader_prg[0],   fe3loader_prg_len,    FILL_DOWN, num_max_tracks, my_id1, my_id2);
 
     memset(d64_sector_puffer, 0, sizeof(d64_sector_puffer));
     generate_bam("- 1541 REPICO -", id_buffer);
@@ -288,7 +288,7 @@ void create_menu_image(const char* menu_path, DIR* dir_obj, uint8_t* id1_p, uint
     generate_directory_entry("V",        CBMDOS_TYPE_PRG, menu_vic20_track,0,((uint16_t) (menu_vic20_prg_len/254))+1);
     generate_directory_entry("C",        CBMDOS_TYPE_PRG, menu_c16_track  ,0,((uint16_t) (menu_c16_prg_len/254))+1);
     generate_directory_entry("DATAFILE", CBMDOS_TYPE_PRG, MENU_DATA_TRACK ,0,((uint16_t) (menu_file_len/254))+1);
-    generate_directory_entry("LOADER",   CBMDOS_TYPE_PRG, ef3loader_track ,0,((uint16_t) (ef3loader_prg_len/254))+1);
+    generate_directory_entry("LOADER",   CBMDOS_TYPE_PRG, fe3loader_track ,0,((uint16_t) (fe3loader_prg_len/254))+1);
     generate_directory_entry("INTRO",    CBMDOS_TYPE_PRG, intro_track     ,0,((uint16_t) (intro_prg_len/254))+1);
     convert_d64track2gcr(DIRECTORY_TRACK, my_id1, my_id2);
 
