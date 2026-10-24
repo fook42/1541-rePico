@@ -49,7 +49,7 @@ jobs:
           configFile: .devcontainer/.devcontainer.json
           imageName: ghcr.io/${{ github.repository_owner }}/repico_devcontainer
           runCmd: |
-            cd /workspaces/1541-rePico
+            cd /workspaces/1541-rePico/firmware
             if [ "${{ matrix.variant }}" = "pcb16-legacy" ]; then
               cmake --preset pcb16-legacy
               cmake --build --preset pcb16-legacy --config Release
@@ -63,7 +63,7 @@ jobs:
         with:
           name: rePico-binaries-${{ matrix.variant }}
           path: |
-            build/1541-rePico.uf2
-            build/1541-rePico.elf
-            build-pcb16/1541-rePico.uf2
-            build-pcb16/1541-rePico.elf
+            firmware/build/1541-rePico.uf2
+            firmware/build/1541-rePico.elf
+            firmware/build-pcb16/1541-rePico.uf2
+            firmware/build-pcb16/1541-rePico.elf
