@@ -7,7 +7,9 @@
 #include "hw_config.h"
 #include "f_util.h"
 #include "ff.h"
+#include "lcd.h"
 #include "globals.h"
+#include "mymenu.h"
 
 // functions
 int64_t input_debounce_callback(alarm_id_t id, void *user_data);
@@ -101,67 +103,72 @@ void start_stepper_timer(void);
 #endif
 
 // Filesystem-variables:
-FATFS       fs;             // filesystem handle - only created once
-DIR         dir_object;
-FIL         fd;             // file descriptor for every open file
-FILINFO     fb_dir_entry[LCD_LINE_COUNT];
+extern FATFS       fs;             // filesystem handle - only created once
+extern DIR         dir_object;
+extern FIL         fd;             // file descriptor for every open file
+extern FILINFO     fb_dir_entry[LCD_LINE_COUNT];
 //
 //
 #define ROTARY_DEBOUNCE_TIME    (200)
 #define BUTTON_DEBOUNCE_TIME    (100)
 
-alarm_id_t input_debounce_alarm = 0;
+extern alarm_id_t input_debounce_alarm;
 // timer_t key_longpress_timer;
 
-volatile uint16_t akt_track_pos = 0;
+extern volatile uint16_t akt_track_pos;
 
-uint8_t selected_track;     // this holds the selected tracknumber
-volatile uint8_t akt_half_track;     // this will be the one to be transfered
-uint8_t old_half_track;
+extern uint8_t num_max_tracks;
+extern uint8_t selected_track;     // this holds the selected tracknumber
+extern volatile uint8_t akt_half_track;     // this will be the one to be transfered
+extern uint8_t old_half_track;
 
 // timer definition
 
-struct repeating_timer bytetimer;
+extern struct repeating_timer bytetimer;
 
 
-char image_filename[256]; //Maximal 256 Zeichen
-char current_path[512];
+extern char image_filename[256]; //Maximal 256 Zeichen
+extern char current_path[512];
 
-uint8_t current_gui_mode;
+extern volatile uint8_t irq_key_value;
+extern volatile bool input_block;
 
-uint8_t gui_current_line_offset;         // >0 dann ist der Name länger als die maximale Anzeigelaenge
-uint8_t gui_line_scroll_pos;             // Kann zwischen 0 und fb_current_line_offset liegen
-uint8_t gui_line_scroll_direction;       // Richtung des Scrollings
-uint8_t gui_line_scroll_end_begin_wait;
+extern uint64_t key2_down_time;
+extern uint8_t current_gui_mode;
+
+extern uint8_t gui_current_line_offset;         // >0 dann ist der Name länger als die maximale Anzeigelaenge
+extern uint8_t gui_line_scroll_pos;             // Kann zwischen 0 und fb_current_line_offset liegen
+extern uint8_t gui_line_scroll_direction;       // Richtung des Scrollings
+extern uint8_t gui_line_scroll_end_begin_wait;
 
 // Alles für den FilebrowserSS
-uint16_t fb_dir_entry_count = 0;         // Anzahl der Einträge im aktuellen Direktory
-uint8_t fb_cursor_pos = 0;               // Position des Cursors auf dem LCD Display
-uint8_t fb_window_pos = 0;               // Position des Anzeigebereichs innerhablb der Menüeinträge
+extern uint16_t fb_dir_entry_count;         // Anzahl der Einträge im aktuellen Direktory
+extern uint8_t fb_cursor_pos;               // Position des Cursors auf dem LCD Display
+extern uint8_t fb_window_pos;               // Position des Anzeigebereichs innerhablb der Menüeinträge
 
-uint8_t fb_current_line_offset = 0;         // >0 dann ist der Name länger als die maximale Anzeigelaenge
-uint8_t fb_line_scroll_pos = 0;             // Kann zwischen 0 und fb_current_line_offset liegen
-uint8_t fb_line_scroll_direction = 0;       // Richtung des Scrollings
-uint8_t fb_line_scroll_end_begin_wait = 10;
+extern uint8_t fb_current_line_offset;         // >0 dann ist der Name länger als die maximale Anzeigelaenge
+extern uint8_t fb_line_scroll_pos;             // Kann zwischen 0 und fb_current_line_offset liegen
+extern uint8_t fb_line_scroll_direction;       // Richtung des Scrollings
+extern uint8_t fb_line_scroll_end_begin_wait;
 
 
 // floppydisk emulation
-uint8_t akt_image_type = UNDEF_IMAGE;     // 0=kein Image, 1=G64, 2=D64, 3=Selector
-bool is_image_mount;
+extern uint8_t akt_image_type;     // 0=kein Image, 1=G64, 2=D64, 3=Selector
+extern bool is_image_mount;
 
-bool floppy_wp = true;  // Hier wird der aktuelle WriteProtection Zustand gespeichert
+extern bool floppy_wp;  // Hier wird der aktuelle WriteProtection Zustand gespeichert
                         // false=Nicht Schreibgeschützt , true=Schreibgeschützt
 
 #define STEP_MIN_TIME (2000)    // us between 2 step changes.
 
-uint8_t stepper_signal_puffer[256]; // Ringpuffer für Stepper Signale (256 Bytes)
-volatile uint8_t stepper_signal_r_pos = 0;
-volatile uint8_t stepper_signal_w_pos = 0;
+extern uint8_t stepper_signal_puffer[256]; // Ringpuffer für Stepper Signale (256 Bytes)
+extern volatile uint8_t stepper_signal_r_pos;
+extern volatile uint8_t stepper_signal_w_pos;
 
-alarm_id_t stepper_alarm = 0;
+extern alarm_id_t stepper_alarm;
 
-volatile bool track_is_written   = false;
-volatile bool send_byte_ready    = true;
+extern volatile bool track_is_written;
+extern volatile bool send_byte_ready;
 
-volatile uint8_t  track_write_nr;
-volatile uint16_t track_write_pos;
+extern volatile uint8_t  track_write_nr;
+extern volatile uint16_t track_write_pos;

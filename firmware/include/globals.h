@@ -50,7 +50,7 @@ extern uint8_t d64_track_zone[NUM_TRACKS_MAX];
 extern const uint8_t default_d64_track_zone[NUM_TRACKS_MAX];
 
 #define D64_SECTOR_SIZE (256)
-extern uint8_t d64_sector_puffer[21*D64_SECTOR_SIZE+5];
+extern uint8_t d64_sector_puffer[21*D64_SECTOR_SIZE+50];
 
 extern const uint8_t g64_head[12];
 extern uint32_t g64_jumptable[2*G64_TRACKCOUNT];

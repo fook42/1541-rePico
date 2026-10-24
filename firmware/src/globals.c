@@ -26,7 +26,7 @@ const uint8_t default_d64_track_zone[NUM_TRACKS_MAX] = {0,0,0,0,0,0,0,0,0,0,0,0,
                                             2,2,2,2,2,2,                        //Spuren 25-30
                                             3,3,3,3,3,3,3,3,3,3,3,3};           //Spuren 31-42
 
-uint8_t d64_sector_puffer[21*D64_SECTOR_SIZE+5];
+uint8_t d64_sector_puffer[21*D64_SECTOR_SIZE+50];
 
 
 const uint8_t g64_head[] = {'G','C','R','-','1','5','4','1', G64_VERSION, G64_TRACKCOUNT*2, (G64_TRACKSIZE&0xff), ((G64_TRACKSIZE>>8)&0xff)};
