@@ -23,3 +23,22 @@ add_custom_target(GenDali ALL
 add_executable(dali_tool IMPORTED GLOBAL)
 
 set_property(TARGET dali_tool PROPERTY IMPORTED_LOCATION ${DALI_EXECUTABLE} )
+
+### build tok64 ...
+
+set(TOK64_WORKDIR ${CMAKE_CURRENT_SOURCE_DIR}/tok64)
+set(TOK64_EXECUTABLE ${TOK64_WORKDIR}/tok64)
+
+add_custom_command(
+	WORKING_DIRECTORY ${TOK64_WORKDIR}
+	OUTPUT ${TOK64_EXECUTABLE}
+	COMMAND make tok64
+)
+
+add_custom_target(GenTok64 ALL
+      DEPENDS ${TOK64_EXECUTABLE})
+
+add_executable(tok64_tool IMPORTED GLOBAL)
+
+set_property(TARGET tok64_tool PROPERTY IMPORTED_LOCATION ${TOK64_EXECUTABLE} )
+
