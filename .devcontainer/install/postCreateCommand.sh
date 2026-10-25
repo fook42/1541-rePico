@@ -72,15 +72,4 @@ fi
 
 cd -
 
-if [[ ! -d build/tok64 ]]; then
-    echo "Cloning tok64"
-    git clone https://github.com/burinm/tok64.git build/tok64
-    cd build/tok64
-    make
-    sudo cp tok64 /usr/local/bin/
-else
-    echo "tok64 already cloned" 
-    cd build/tok64
-    sudo cp tok64 /usr/local/bin/
-fi
 cd ${WS}
