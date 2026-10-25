@@ -46,7 +46,13 @@ if(BUILD_SELECTORPRG)
       COMMAND ${PETCAT_TOOL} -w2 -o ${SELECTOR_PRG_BINARY} -- ${SELECTOR_PRG_SOURCE}
     )
   else()
-    MESSAGE("### PETCAT not found - using precompiled selector prg ###")
+    MESSAGE("### PETCAT not found - using tok64 instead ###")
+    add_custom_command(
+      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+      DEPENDS ${SELECTOR_PRG_SOURCE}
+      OUTPUT ${SELECTOR_PRG_BINARY}
+      COMMAND tok64 /toprg /stomp ${SELECTOR_PRG_SOURCE}
+    )
   endif()
 else()
   MESSAGE("### using precompiled selector prg ###")
