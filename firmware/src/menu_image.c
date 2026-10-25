@@ -63,28 +63,37 @@ void generate_bam(const char* const image_name, const uint8_t* const image_id_bu
 
 void generate_directory_entry(const uint8_t* filename, const uint8_t filetype, const uint8_t des_track, const uint8_t des_sector, const uint16_t size)
 {
+#define DIR_SECTOR_INTERLEAVE   (3)
+
     // assumption: d64_sector_puffer holds entire DIRECTORY_TRACK 18!!
     uint8_t*    P;
-    uint8_t*    dir_sector_P = &d64_sector_puffer[1];
-    uint8_t     next_sector = 3;
+    uint8_t*    dir_basesector_P = &d64_sector_puffer[1];
+    uint8_t*    dir_sector_P = dir_basesector_P;
+    uint8_t     next_sector = 1;    // first dir sector (after bam)
+    const uint8_t num_of_sectors = d64_sector_count[d64_track_zone[DIRECTORY_TRACK]];
 
-    dir_sector_P += D64_SECTOR_SIZE;    // skip bam sector
-    P = dir_sector_P;
-
-    while (0 != P[2])
+    do
     {
-        P+=0x20;
-        if (D64_SECTOR_SIZE<=(P-dir_sector_P))
+        dir_sector_P[0] = DIRECTORY_TRACK+1;
+        dir_sector_P[1] = next_sector;
+        dir_sector_P = dir_basesector_P+next_sector*D64_SECTOR_SIZE;  // every 3rd block is for directory entries.
+        P = dir_sector_P;
+
+        while(D64_SECTOR_SIZE > (P-dir_sector_P))
         {
-            dir_sector_P[0] = DIRECTORY_TRACK+1;
-            dir_sector_P[1] = next_sector;
-            next_sector += 2;
-            dir_sector_P += 2*D64_SECTOR_SIZE;  // every 2nd block is for directory entries.
-            P=dir_sector_P;
-            // we are in a new directory sector..
-            
+            if(0 == P[2])
+            {
+                break;
+            }
+
+            P+=0x20;
         }
-    }  // skip existing entries
+
+        next_sector = (next_sector+DIR_SECTOR_INTERLEAVE)%num_of_sectors;
+        // we are in a new directory sector..       
+    } while ((2 < next_sector) && (0 != P[2]));
+
+      // skip existing entries
 
     P=&P[2]; // skip the "next-sector"-pointer
 
@@ -272,7 +281,7 @@ void create_menu_image(const char* menu_path, DIR* dir_obj, uint8_t* id1_p, uint
     last_track = fill_tracks_with_file(menu_pal_track,  (uint8_t*) &menu_c64_pal_prg[0], menu_c64_pal_prg_len, FILL_DOWN, num_max_tracks, my_id1, my_id2);
 
     uint8_t menu_p4_track = last_track+1;
-    last_track = fill_tracks_with_file(menu_p4_track,  (uint8_t*) &menu_p4_prg[0],     menu_p4_prg_len,     FILL_DOWN, num_max_tracks, my_id1, my_id2);
+    last_track = fill_tracks_with_file(menu_p4_track,   (uint8_t*) &menu_p4_prg[0],      menu_p4_prg_len,      FILL_DOWN, num_max_tracks, my_id1, my_id2);
 
     uint8_t menu_ntsc_track = last_track+1;
     last_track = fill_tracks_with_file(menu_ntsc_track, (uint8_t*) &menu_c64_ntsc_prg[0],menu_c64_ntsc_prg_len,FILL_DOWN, num_max_tracks, my_id1, my_id2);
@@ -287,7 +296,7 @@ void create_menu_image(const char* menu_path, DIR* dir_obj, uint8_t* id1_p, uint
     last_track = fill_tracks_with_file(intro_track,     (uint8_t*) &intro_prg[0],        intro_prg_len,        FILL_DOWN, num_max_tracks, my_id1, my_id2);
 
     uint8_t fe3loader_track = last_track+1;
-    last_track = fill_tracks_with_file(fe3loader_track,  (uint8_t*) &fe3loader_prg[0],   fe3loader_prg_len,    FILL_DOWN, num_max_tracks, my_id1, my_id2);
+    last_track = fill_tracks_with_file(fe3loader_track, (uint8_t*) &fe3loader_prg[0],    fe3loader_prg_len,    FILL_DOWN, num_max_tracks, my_id1, my_id2);
 
     memset(d64_sector_puffer, 0, sizeof(d64_sector_puffer));
     generate_bam("- 1541 REPICO -", id_buffer);
