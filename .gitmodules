@@ -5,3 +5,6 @@
 	path = firmware/buildtools/bitfire
 	url = https://github.com/bboxy/bitfire.git
 	ignore = untracked
+[submodule "firmware/buildtools/tok64"]
+	path = firmware/buildtools/tok64
+	url = https://github.com/burinm/tok64.git

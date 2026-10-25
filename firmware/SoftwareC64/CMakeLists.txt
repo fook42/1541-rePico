@@ -3,7 +3,6 @@ cmake_minimum_required(VERSION 3.13)
 set(PROJECT_INCLUDE ${PROJECT_SOURCE_DIR}/include)
 
 find_program(ACME_TOOL   "acme"   PATHS "/usr/local/bin;/usr/bin;/bin" NO_CACHE )
-find_program(PETCAT_TOOL "petcat" PATHS "/usr/local/bin;/usr/bin;/bin" NO_CACHE )
 
 option(BUILD_MENUPRG     "Enable compilation of menu.prg" ON)
 option(COMPRESS_MENUPRG  "Enable compression of menu.prg with dali" ON)
@@ -37,17 +36,12 @@ set(DALI_OPTIONS_C64 --sfx 0x0808)
 set(DALI_OPTIONS_C16 --sfx_plus4 0x1008)
 
 if(BUILD_SELECTORPRG)
-  if(PETCAT_TOOL)
-    ## convert selector basic-code to "prg" tokenized code
-    add_custom_command(
-      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-      DEPENDS ${SELECTOR_PRG_SOURCE}
-      OUTPUT ${SELECTOR_PRG_BINARY}
-      COMMAND ${PETCAT_TOOL} -w2 -o ${SELECTOR_PRG_BINARY} -- ${SELECTOR_PRG_SOURCE}
-    )
-  else()
-    MESSAGE("### PETCAT not found - using precompiled selector prg ###")
-  endif()
+  add_custom_command(
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    DEPENDS ${SELECTOR_PRG_SOURCE}
+    OUTPUT ${SELECTOR_PRG_BINARY}
+    COMMAND tok64_tool /toprg /stomp ${SELECTOR_PRG_SOURCE}
+  )
 else()
   MESSAGE("### using precompiled selector prg ###")
 endif()
@@ -174,7 +168,7 @@ add_custom_target(GenMenuVIC20
   COMMAND echo \"\#endif\" >> ${MENU_VIC20_HEADER}
 )
 
-add_dependencies(GenSelector    GenDali)
+add_dependencies(GenSelector    GenTok64)
 add_dependencies(GenMenuC64Pal  GenDali)
 add_dependencies(GenMenuC64Ntsc GenDali)
 add_dependencies(GenMenuC16     GenDali)

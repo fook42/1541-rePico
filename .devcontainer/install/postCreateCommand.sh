@@ -19,16 +19,29 @@ if [[ ! -d build/pico-sdk ]]; then
     git clone https://github.com/raspberrypi/pico-sdk.git build/pico-sdk
     export PICO_SDK_PATH=$(pwd)/build/pico-sdk
     echo "export PICO_SDK_PATH=$PICO_SDK_PATH" >> ~/.profile
+    echo "export PICOTOOL_FETCH_FROM_GIT_PATH=$PICO_SDK_PATH" >> ~/.profile
     cd build/pico-sdk
     git submodule update --init lib/mbedtls
     cd ${WS}
-fi   
+else
+    echo "picoSDK already cloned"
+    export PICO_SDK_PATH=$(pwd)/build/pico-sdk
+    echo "export PICO_SDK_PATH=$PICO_SDK_PATH" >> ~/.profile
+    echo "export PICOTOOL_FETCH_FROM_GIT_PATH=$PICO_SDK_PATH" >> ~/.profile
+fi
 
 echo "checking for openocd for RP2350"
 if [[ ! -f build/openocd_rp2350 ]]  && [[ ${BUILD_OPENOCD} == "ON" ]]; then
     echo "Installing OpenOCD for RP2350"
     $WS/.devcontainer/install/build_openocd.sh 
     touch build/openocd_rp2350
+    cd ${WS}
+else
+    echo "OpenOCD for RP2350 already build, i install it"
+    cd build/openocd/jimtcl
+    sudo make install
+    cd ..
+    sudo make install
     cd ${WS}
 fi
 
@@ -56,5 +69,7 @@ if [[ ! -e objdump-multiarch ]]; then
     sudo ln -s /usr/bin/objdump objdump-multiarch  
     sudo ln -s /usr/bin/nm nm-multiarch 
 fi
- 
+
 cd -
+
+cd ${WS}
