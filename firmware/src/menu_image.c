@@ -66,13 +66,24 @@ void generate_directory_entry(const uint8_t* filename, const uint8_t filetype, c
     // assumption: d64_sector_puffer holds entire DIRECTORY_TRACK 18!!
     uint8_t*    P;
     uint8_t*    dir_sector_P = &d64_sector_puffer[1];
+    uint8_t     next_sector = 3;
 
-    dir_sector_P += D64_SECTOR_SIZE;
+    dir_sector_P += D64_SECTOR_SIZE;    // skip bam sector
     P = dir_sector_P;
 
     while (0 != P[2])
     {
         P+=0x20;
+        if (D64_SECTOR_SIZE<=(P-dir_sector_P))
+        {
+            dir_sector_P[0] = DIRECTORY_TRACK+1;
+            dir_sector_P[1] = next_sector;
+            next_sector += 2;
+            dir_sector_P += 2*D64_SECTOR_SIZE;  // every 2nd block is for directory entries.
+            P=dir_sector_P;
+            // we are in a new directory sector..
+            
+        }
     }  // skip existing entries
 
     P=&P[2]; // skip the "next-sector"-pointer
