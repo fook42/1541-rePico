@@ -8,3 +8,4 @@
 [submodule "firmware/buildtools/tok64"]
 	path = firmware/buildtools/tok64
 	url = https://github.com/burinm/tok64.git
+	ignore = untracked
