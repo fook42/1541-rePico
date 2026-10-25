@@ -19,6 +19,7 @@ if [[ ! -d build/pico-sdk ]]; then
     git clone https://github.com/raspberrypi/pico-sdk.git build/pico-sdk
     export PICO_SDK_PATH=$(pwd)/build/pico-sdk
     echo "export PICO_SDK_PATH=$PICO_SDK_PATH" >> ~/.profile
+    echo "export PICOTOOL_FETCH_FROM_GIT_PATH=$PICO_SDK_PATH" >> ~/.profile
     cd build/pico-sdk
     git submodule update --init lib/mbedtls
     cd ${WS}
@@ -26,6 +27,7 @@ else
     echo "picoSDK already cloned"
     export PICO_SDK_PATH=$(pwd)/build/pico-sdk
     echo "export PICO_SDK_PATH=$PICO_SDK_PATH" >> ~/.profile
+    echo "export PICOTOOL_FETCH_FROM_GIT_PATH=$PICO_SDK_PATH" >> ~/.profile
 fi
 
 echo "checking for openocd for RP2350"

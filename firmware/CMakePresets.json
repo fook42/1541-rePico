@@ -12,6 +12,7 @@
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build",
       "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
         "PICO_BOARD": "pico2",
         "PCB_VERSION": "17"
       }
@@ -22,6 +23,7 @@
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build-pcb16",
       "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
         "PICO_BOARD": "pico2",
         "PCB_VERSION": "16"
       }
