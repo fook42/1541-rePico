@@ -52,7 +52,7 @@
     E518 = 55435
     D020 = $ff19
     D021 = $ff15
-    BORDER_COLOR = $3b
+    BORDER_COLOR = $31
     SELECTOR_COLOR = $18
     LOAD = $ffd5
     BA = $0134
