@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.21)
 
 set(PROJECT_INCLUDE ${PROJECT_SOURCE_DIR}/include)
 
@@ -13,14 +13,19 @@ option(BUILD_SELECTORPRG "Enable creation of selector.prg" ON)
 set(SELECTOR_PRG_SOURCE      "selector.bas")
 set(MENU_PRG_SOURCE          "menu.asm")
 
-set(INTRO_PRG_BINARY         "intro.prg")
-set(SELECTOR_PRG_BINARY      "selector.prg")
-set(MENU_C64_PAL_PRG_BINARY  "menu.prg")
-set(MENU_C64_NTSC_PRG_BINARY "menu_ntsc.prg")
-set(MENU_C16_PRG_BINARY      "menu_16.prg")
-set(MENU_P4_PRG_BINARY       "menu_p4.prg")
-set(MENU_VIC20_PRG_BINARY    "menu_20.prg")
-set(FE3LOADER_PRG_BINARY     "fe3loader.prg")
+set(INTRO_PRG_BINARY         "${CMAKE_CURRENT_SOURCE_DIR}/intro.prg")
+set(SELECTOR_PRG_BINARY      "${CMAKE_CURRENT_SOURCE_DIR}/selector.prg")
+set(MENU_C64_PAL_PRG_BINARY  "${CMAKE_CURRENT_SOURCE_DIR}/menu.prg")
+set(MENU_C64_NTSC_PRG_BINARY "${CMAKE_CURRENT_SOURCE_DIR}/menu_ntsc.prg")
+set(MENU_C16_PRG_BINARY      "${CMAKE_CURRENT_SOURCE_DIR}/menu_16.prg")
+set(MENU_P4_PRG_BINARY       "${CMAKE_CURRENT_SOURCE_DIR}/menu_p4.prg")
+set(MENU_VIC20_PRG_BINARY    "${CMAKE_CURRENT_SOURCE_DIR}/menu_20.prg")
+set(FE3LOADER_PRG_BINARY     "${CMAKE_CURRENT_SOURCE_DIR}/fe3loader.prg")
+
+set(TMP_MENU_C64_PAL_PRG     "${CMAKE_CURRENT_SOURCE_DIR}/tmp_pal.prg")
+set(TMP_MENU_C64_NTSC_PRG    "${CMAKE_CURRENT_SOURCE_DIR}/tmp_ntsc.prg")
+set(TMP_MENU_C16_PRG         "${CMAKE_CURRENT_SOURCE_DIR}/tmp_c16.prg")
+set(TMP_MENU_P4_PRG          "${CMAKE_CURRENT_SOURCE_DIR}/tmp_p4.prg")
 
 set(INTRO_HEADER         "${PROJECT_INCLUDE}/c64_intro.h")
 set(SELECTOR_HEADER      "${PROJECT_INCLUDE}/boot_selector.h")
@@ -52,53 +57,53 @@ if(BUILD_MENUPRG)
     add_custom_command(
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
       DEPENDS ${MENU_PRG_SOURCE} fastload_0140.bin fastload_e000.bin
-      OUTPUT tmp_pal.prg
-      COMMAND ${ACME_TOOL} ${ACME_OPTIONS} -o tmp_pal.prg ${MENU_PRG_SOURCE}
+      OUTPUT ${TMP_MENU_C64_PAL_PRG}
+      COMMAND ${ACME_TOOL} ${ACME_OPTIONS} -o ${TMP_MENU_C64_PAL_PRG} ${MENU_PRG_SOURCE}
     )
     add_custom_command(
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-      DEPENDS tmp_pal.prg
+      DEPENDS ${TMP_MENU_C64_PAL_PRG}
       OUTPUT ${MENU_C64_PAL_PRG_BINARY}
-      COMMAND dali_tool ${DALI_OPTIONS_C64} -o ${MENU_C64_PAL_PRG_BINARY} tmp_pal.prg
+      COMMAND dali_tool ${DALI_OPTIONS_C64} -o ${MENU_C64_PAL_PRG_BINARY} ${TMP_MENU_C64_PAL_PRG}
     )
 
     add_custom_command(
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
       DEPENDS ${MENU_PRG_SOURCE} exos_ntsc.asm
-      OUTPUT tmp_ntsc.prg
-      COMMAND ${ACME_TOOL} ${ACME_OPTIONS} -DNTSC=1 -o tmp_ntsc.prg ${MENU_PRG_SOURCE}
+      OUTPUT ${TMP_MENU_C64_NTSC_PRG}
+      COMMAND ${ACME_TOOL} ${ACME_OPTIONS} -DNTSC=1 -o ${TMP_MENU_C64_NTSC_PRG} ${MENU_PRG_SOURCE}
     )
     add_custom_command(
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-      DEPENDS tmp_ntsc.prg
+      DEPENDS ${TMP_MENU_C64_NTSC_PRG}
       OUTPUT ${MENU_C64_NTSC_PRG_BINARY}
-      COMMAND dali_tool ${DALI_OPTIONS_C64} -o ${MENU_C64_NTSC_PRG_BINARY} tmp_ntsc.prg
+      COMMAND dali_tool ${DALI_OPTIONS_C64} -o ${MENU_C64_NTSC_PRG_BINARY} ${TMP_MENU_C64_NTSC_PRG}
     )
 
     add_custom_command(
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
       DEPENDS ${MENU_PRG_SOURCE}
-      OUTPUT tmp_c16.prg
-      COMMAND ${ACME_TOOL} ${ACME_OPTIONS} -DC16=1 -o tmp_c16.prg ${MENU_PRG_SOURCE}
+      OUTPUT ${TMP_MENU_C16_PRG}
+      COMMAND ${ACME_TOOL} ${ACME_OPTIONS} -DC16=1 -o ${TMP_MENU_C16_PRG} ${MENU_PRG_SOURCE}
     )
     add_custom_command(
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-      DEPENDS tmp_c16.prg
+      DEPENDS ${TMP_MENU_C16_PRG}
       OUTPUT ${MENU_C16_PRG_BINARY}
-      COMMAND dali_tool ${DALI_OPTIONS_C16} -o ${MENU_C16_PRG_BINARY} tmp_c16.prg
+      COMMAND dali_tool ${DALI_OPTIONS_C16} -o ${MENU_C16_PRG_BINARY} ${TMP_MENU_C16_PRG}
     )
 
     add_custom_command(
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
       DEPENDS ${MENU_PRG_SOURCE} fastload_16_0700.bin fastload_16_f300.bin
-      OUTPUT tmp_p4.prg
-      COMMAND ${ACME_TOOL} ${ACME_OPTIONS} -DPLUS4=1 -o tmp_p4.prg ${MENU_PRG_SOURCE}
+      OUTPUT ${TMP_MENU_P4_PRG}
+      COMMAND ${ACME_TOOL} ${ACME_OPTIONS} -DPLUS4=1 -o ${TMP_MENU_P4_PRG} ${MENU_PRG_SOURCE}
     )
     add_custom_command(
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-      DEPENDS tmp_p4.prg
+      DEPENDS ${TMP_MENU_P4_PRG}
       OUTPUT ${MENU_P4_PRG_BINARY}
-      COMMAND dali_tool ${DALI_OPTIONS_C16} -o ${MENU_P4_PRG_BINARY} tmp_p4.prg
+      COMMAND dali_tool ${DALI_OPTIONS_C16} -o ${MENU_P4_PRG_BINARY} ${TMP_MENU_P4_PRG}
     )
 
     add_custom_command(
