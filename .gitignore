@@ -4,7 +4,7 @@ firmware/include/c64_*.h
 firmware/include/c16_*.h
 firmware/include/p4_*.h
 firmware/include/vic20_*.h
-firmware/include/ef3loader.h
+firmware/include/fe3loader.h
 firmware/include/wavData.h
 firmware/SoftwareC64/tmp*
 firmware/SoftwareC64/labels.lab
