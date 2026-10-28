@@ -12,7 +12,7 @@ thanks to [BensonRSI](https://github.com/BensonRSI) for adding debugging documen
 ## Features ##
 
 latest version:
-- software: 1.7.2
+- software: 1.7.3
 - hardware: 1.7.0
 
 ### Hardware ###
@@ -49,9 +49,10 @@ one size fits for all 1541 models.
 - browsing through sd-card content via "virtual disk-image"
   - subdirectory support
   - 4 way scrolling
+  - usage of joystick for browsing possible
 - highlighting and selecting of different file-types (D64,G64,PRG,Folder)
 - simple mounting and also fastloading of selected entry
-- supports C64-PAL, C64-NTSC,VC20 and C16 computers
+- supports C64-PAL, C64-NTSC, VC20 and C16 computers
 
 ## how to build ##
 
