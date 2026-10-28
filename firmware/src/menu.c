@@ -1,8 +1,9 @@
-/* menu structure handling */
-
-// taken over from 1541-rebuild from Th.Kattanek
-
-// last change: 31/10/2025
+/**********************************
+ * menu structure handling
+ *
+ * Author: Th.Kattanek
+ * Last change: 2025/10/31
+***********************************/
 
 #include "menu.h"
 #include "display.h"

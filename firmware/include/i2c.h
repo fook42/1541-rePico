@@ -4,6 +4,7 @@
  * Author: F00K42
  * Last change: 2025/10/11
 ***********************************/
+
 #ifndef _I2C_INCLUDE_
 #define _I2C_INCLUDE_
 

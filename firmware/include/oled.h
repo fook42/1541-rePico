@@ -1,7 +1,9 @@
-/* routines for OLED display */
-// header
-// implementation: F00K42
-// last change: 18/09/2021
+/**********************************
+ * header - routines for OLED display
+ *
+ * Author: F00K42
+ * Last change: 2021/09/18
+ ***********************************/
 
 #ifndef _OLED_H_INCLUDE_
 #define _OLED_H_INCLUDE_

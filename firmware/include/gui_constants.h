@@ -1,10 +1,11 @@
 /**********************************
  * header - GUI constants and layout
  *
- * original Author: Th.Kathanek
+ * original Author: Th.Kattanek
  * modified/adopted: F00K42
  * Last change: 2026/05/25
 ***********************************/
+
 #ifndef GUI_CONSTANCY_H
 #define GUI_CONSTANCY_H
 

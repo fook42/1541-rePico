@@ -1,9 +1,11 @@
-/* routines for OLED display */
-//
+/**********************************
+ * routines for OLED display
+ *
+ * Author: F00K42
+ * Last change: 2021/09/19
+ ***********************************/
+
 // access OLED display controller SSD1306 via I2C 
-//
-// implementation: F00K42
-// last change: 19/09/2021
 
 #include "i2c.h"
 #include "oled.h"

@@ -1,5 +1,5 @@
 /**********************************
- * header - GUI state and menu handling
+ * header - GUI state updates, menu handling and display logic
  *
  * Author: F00K42
  * Last change: 2026/10/24

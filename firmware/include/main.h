@@ -4,6 +4,7 @@
  * Author: F00K42
  * Last change: 2026/07/24
 ***********************************/
+
 #include "hw_config.h"
 #include "f_util.h"
 #include "ff.h"

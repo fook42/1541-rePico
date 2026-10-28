@@ -1,12 +1,15 @@
+/**********************************
+ * lcd routines for HD44780 displays
+ *
+ * Author: F00K42 / Th.Kattanek
+ * Last change: 2026/10/28
+ ***********************************/
+
 // Ansteuerung eines HD44780 kompatiblen LCD im 4-Bit-Interfacemodus
 // http://www.mikrocontroller.net/articles/HD44780
 // http://www.mikrocontroller.net/articles/AVR-GCC-Tutorial/LCD-Ansteuerung
 //
-// Die Pinbelegung ist über defines in lcd-routines.h einstellbar
-//
-// adoption for portexpander PCF8574 via I2C:
-// implementation: F00K42
-// last change: 11/10/2025
+// adoption for portexpander PCF8574 via I2C
 
 #include "lcd.h"
 

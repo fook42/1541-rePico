@@ -4,6 +4,7 @@
  * Author: F00K42
  * Last change: 2026/02/09
 ***********************************/
+
 #include "display.h"
 
 extern uint8_t DEV_I2C_ADDR;

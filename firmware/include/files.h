@@ -2,7 +2,7 @@
  * header - file browser and image handling
  *
  * Author: F00K42
- * Last change: 2026/10/24
+ * Last change: 2026/10/28
  ***********************************/
 
 #ifndef _FILES_H_

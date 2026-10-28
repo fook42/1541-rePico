@@ -1,9 +1,10 @@
 /**********************************
  * header - menu structure handling
  *
- * Author: Th.Kathanek
+ * Author: Th.Kattanek
  * Last change: 2021/09/18
 ***********************************/
+
 #ifndef MENUE_H
 #define MENUE_H
 

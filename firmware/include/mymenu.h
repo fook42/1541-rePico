@@ -1,5 +1,9 @@
-/* mymenu definition */
-// last change: 09/11/2025
+/**********************************
+ * header - mymenu definition
+ *
+ * Author: F00K42
+ * Last change: 2025/11/09
+***********************************/
 
 #ifndef MYMENUE_H
 #define MYMENUE_H

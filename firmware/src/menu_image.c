@@ -2,7 +2,7 @@
  * generate menu image header
  *
  * Author: F00K42
- * Last change: 2026/09/23
+ * Last change: 2026/10/28
  ***********************************/
 
 #include "menu_image.h"

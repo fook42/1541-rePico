@@ -1,6 +1,14 @@
+/**********************************
+ * drive routines and control functions
+ *
+ * Author: F00K42
+ * Last change: 2026/10/28
+ ***********************************/
 
 #include "main.h"
 #include "drive.h"
+
+/////////////////////////////////////////////////////////////////////
 
 int64_t steppertimer_callback(alarm_id_t id, void *user_data)
 {
