@@ -77,5 +77,6 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            rePico-binaries/**/*
+            rePico-binaries-default/**/*
+            rePico-binaries-pcb16-legacy/**/*
           append_body: true
