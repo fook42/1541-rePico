@@ -78,5 +78,4 @@ jobs:
         with:
           files: |
             rePico-binaries-default/**/*
-            rePico-binaries-pcb16-legacy/**/*
           append_body: true
