@@ -59,7 +59,7 @@ one size fits for all 1541 models.
 ### prepare tools (linux) ###
 
 ```
-sudo apt install cmake ninja-build libusb-1.0-0-dev build-essential pkg-config python3 xxd gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib acme
+sudo apt install cmake libusb-1.0-0-dev build-essential pkg-config python3 xxd gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib acme
 ```
 
 ### pico-sdk ###
@@ -106,7 +106,7 @@ prepare build-folder / configure Ninja for build the cmake project
 cd firmware
 mkdir build
 cd build
-cmake -G Ninja .. -D BUILD_MENUPRG=OFF -D COMPRESS_MENUPRG=ON -D PCB_VERSION=17
+cmake .. -D BUILD_MENUPRG=OFF -D COMPRESS_MENUPRG=ON -D PCB_VERSION=17
 ```
 
 optional cmake variables are:
@@ -125,7 +125,7 @@ optional cmake variables are:
 now trigger a build
 
 ```
-ninja
+make -j
 ```
 
 
