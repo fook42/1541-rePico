@@ -169,7 +169,7 @@ void menu_refresh()
         {
         case ENTRY_ONOFF:
                 if(current_menu->entry_list[i+current_menu->lcd_window_pos].var1)
-                    display_string(" On");
+                    display_string(" On ");
                 else
                     display_string(" Off");
             break;
