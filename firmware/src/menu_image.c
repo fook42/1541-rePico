@@ -63,8 +63,6 @@ void generate_bam(const char* const image_name, const uint8_t* const image_id_bu
 
 void generate_directory_entry(const uint8_t* filename, const uint8_t filetype, const uint8_t des_track, const uint8_t des_sector, const uint16_t size)
 {
-#define DIR_SECTOR_INTERLEAVE   (3)
-
     // assumption: d64_sector_puffer holds entire DIRECTORY_TRACK 18!!
     uint8_t*    P;
     uint8_t*    dir_basesector_P = &d64_sector_puffer[1];
@@ -72,44 +70,47 @@ void generate_directory_entry(const uint8_t* filename, const uint8_t filetype, c
     uint8_t     next_sector = 1;    // first dir sector (after bam)
     const uint8_t num_of_sectors = d64_sector_count[d64_track_zone[DIRECTORY_TRACK]];
 
-    do
+    dir_sector_P[0] = DIRECTORY_TRACK+1;
+    dir_sector_P[1] = next_sector;
+    dir_sector_P = dir_basesector_P+next_sector*D64_SECTOR_SIZE;  // every 3rd block is for directory entries.
+    P = dir_sector_P;
+
+    while (0 != P[2])
     {
-        dir_sector_P[0] = DIRECTORY_TRACK+1;
-        dir_sector_P[1] = next_sector;
-        dir_sector_P = dir_basesector_P+next_sector*D64_SECTOR_SIZE;  // every 3rd block is for directory entries.
-        P = dir_sector_P;
-
-        while(D64_SECTOR_SIZE > (P-dir_sector_P))
+        // skip existing entries
+        P += DIR_ENTRY_LENGTH;
+        if (D64_SECTOR_SIZE <= (P-dir_sector_P))
         {
-            if(0 == P[2])
+            next_sector = (next_sector+DIR_SECTOR_INTERLEAVE)%num_of_sectors;
+            if (2 < next_sector)
             {
-                break;
+                dir_sector_P[0] = DIRECTORY_TRACK+1;
+                dir_sector_P[1] = next_sector;
+                dir_sector_P = dir_basesector_P+next_sector*D64_SECTOR_SIZE;  // every 3rd block is for directory entries.
+                P = dir_sector_P;
+            } else {
+                // directory track is full !!!
+                // dont do anything now ->
+                return;
             }
-
-            P+=0x20;
         }
+    }
 
-        next_sector = (next_sector+DIR_SECTOR_INTERLEAVE)%num_of_sectors;
-        // we are in a new directory sector..       
-    } while ((2 < next_sector) && (0 != P[2]));
-
-      // skip existing entries
-
-    P=&P[2]; // skip the "next-sector"-pointer
-
-    P[0]=filetype;      // 0x82 = CBMDOS_TYPE_PRG
-    P[1]=des_track+1;   // track
-    P[2]=des_sector;    // sector
+    //fill in data for the new directory entry
+    // P[0],P[1] are used for "next sector"-pointer, if entry is first in sector, so we skip this
+    P[DIR_ENTRYFIELD_FILETYPE] = filetype;      // 0x82 = CBMDOS_TYPE_PRG
+    P[DIR_ENTRYFIELD_TRACK]    = des_track+1;
+    P[DIR_ENTRYFIELD_SECTOR]   = des_sector;
     uint8_t j=0;
-    for(uint8_t k=3; k<19; k++)
+    for(uint8_t k=DIR_ENTRYFIELD_FILENAME; k<(DIR_ENTRYFIELD_FILENAME+16); k++)
     {
         if (0 != filename[j])
             P[k] = toupper(filename[j++]);
         else
             P[k] = 0xA0;
     }
-    P[28]=(size)&0xFF;    // size low
-    P[29]=(size>>8)&0xFF; // size high
+    P[DIR_ENTRYFIELD_SIZE_L] = (size)&0xFF;
+    P[DIR_ENTRYFIELD_SIZE_H] = (size>>8)&0xFF;
 }
 
 size_t generate_menu_file(DIR* dir_obj, const uint8_t* dir_path, const uint8_t dest_track, const uint8_t max_blocks)

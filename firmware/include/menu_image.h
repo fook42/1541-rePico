@@ -23,6 +23,21 @@ enum {
     TYPE_UNKNOWN = 255
 };
 
+#define CBMDOS_TYPE_PRG         (0x82)
+
+// offset inside directory track of ID1+ID2
+#define DIR_ID_OFFSET           (0xA2)
+
+#define DIR_SECTOR_INTERLEAVE   (3)
+
+#define DIR_ENTRY_LENGTH        (0x20)
+#define DIR_ENTRYFIELD_FILETYPE (2)
+#define DIR_ENTRYFIELD_TRACK    (3)
+#define DIR_ENTRYFIELD_SECTOR   (4)
+#define DIR_ENTRYFIELD_FILENAME (5)
+#define DIR_ENTRYFIELD_SIZE_L   (30)
+#define DIR_ENTRYFIELD_SIZE_H   (31)
+
 void generate_empty_image(const uint8_t image_id1, const uint8_t image_id2, const uint8_t track_number);
 void generate_bam(const char* const image_name, const uint8_t* const image_id_buffer);
 
