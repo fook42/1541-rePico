@@ -385,6 +385,7 @@ uint8_t open_dir_entry(FILINFO od_file_entry)
 
     if(TXT_IMAGE == akt_image_type)
     {
+        strcat(current_path, "/");  // append an empty "directory" for ".." back-traversal
         return TYPE_TXT;
     }
 

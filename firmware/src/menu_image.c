@@ -382,7 +382,7 @@ size_t generate_textmenu_file(FIL* file_obj, FILINFO* file_info, const uint8_t* 
         if (FR_OK==fr)
         {
             i = 0;
-            while ((P[i] != 0x0A) && (P[i] != 0x00) && (i<bytes_read))
+            while ((P[i] != 0x0A) && (P[i] != 0x0D) && (P[i] != 0x00) && (i<bytes_read))
             {
                 i++;
             }
@@ -395,7 +395,7 @@ size_t generate_textmenu_file(FIL* file_obj, FILINFO* file_info, const uint8_t* 
             if(i<bytes_read)
             {
                 i++;        // skip the 0x0A-char when reading
-                if(P[0] == 0x0D) { i++; }   // skip the 0x0D-char
+                if((P[0] == 0x0A) || (P[0] == 0x0D)) { i++; }   // skip the 0x0D-char
             }
             file_offset += i;   // increase pointer inside file only until end of current line or max_size
             if (file_info->fsize <= file_offset)
