@@ -128,7 +128,7 @@ size_t generate_menu_file(DIR* dir_obj, const uint8_t* dir_path, const uint8_t d
     P = file_sector_P;
     if (0 < max_blocks)
     {
-        P_limit = P+256*(max_blocks-1)+1;
+        P_limit = P+D64_SECTOR_SIZE*(max_blocks-1)+1;
     }
     // create file-entry header
     *P++ = 0x01;
@@ -196,6 +196,10 @@ size_t generate_menu_file(DIR* dir_obj, const uint8_t* dir_path, const uint8_t d
                 else if (0 == strcmp(file_extension,".prg"))
                 {
                     *P++ = TYPE_PRG;   // PRG file
+                }
+                else if (0 == strcmp(file_extension,".txt"))
+                {
+                    *P++ = TYPE_DIR;   // handle TXT files like dirs
                 }
                 else
                 {
@@ -265,6 +269,197 @@ void create_menu_image(const char* menu_path, DIR* dir_obj, uint8_t* id1_p, uint
 
     // generates menu-datafile..
     size_t menu_file_len = generate_menu_file(dir_obj, menu_path, SCRATCH_TRACK, datafile_limit);
+
+    (void) fill_tracks_with_file(MENU_DATA_TRACK, g64_tracks[SCRATCH_TRACK], menu_file_len, FILL_UP, num_max_tracks, my_id1, my_id2);
+
+    // need to clean out temporary data from "generate_menu_file" in track-buffer memory
+    memset(d64_sector_puffer, 0, sizeof(d64_sector_puffer));
+    for(uint8_t track_nr=SCRATCH_TRACK; track_nr<num_max_tracks; ++track_nr)
+    {
+        convert_d64track2gcr(track_nr, my_id1, my_id2);
+    }
+
+    int8_t last_track;
+    last_track = fill_tracks_with_file(SELECTOR_TRACK,  (uint8_t*) &selector_prg[0],     selector_prg_len,     FILL_DOWN, num_max_tracks, my_id1, my_id2);
+
+    uint8_t menu_pal_track = last_track+1;
+    last_track = fill_tracks_with_file(menu_pal_track,  (uint8_t*) &menu_c64_pal_prg[0], menu_c64_pal_prg_len, FILL_DOWN, num_max_tracks, my_id1, my_id2);
+
+    uint8_t menu_p4_track = last_track+1;
+    last_track = fill_tracks_with_file(menu_p4_track,   (uint8_t*) &menu_p4_prg[0],      menu_p4_prg_len,      FILL_DOWN, num_max_tracks, my_id1, my_id2);
+
+    uint8_t menu_ntsc_track = last_track+1;
+    last_track = fill_tracks_with_file(menu_ntsc_track, (uint8_t*) &menu_c64_ntsc_prg[0],menu_c64_ntsc_prg_len,FILL_DOWN, num_max_tracks, my_id1, my_id2);
+
+    uint8_t menu_vic20_track = last_track+1;
+    last_track = fill_tracks_with_file(menu_vic20_track,(uint8_t*) &menu_vic20_prg[0],   menu_vic20_prg_len,   FILL_DOWN, num_max_tracks, my_id1, my_id2);
+
+    uint8_t menu_c16_track = last_track+1;
+    last_track = fill_tracks_with_file(menu_c16_track,  (uint8_t*) &menu_c16_prg[0],     menu_c16_prg_len,     FILL_DOWN, num_max_tracks, my_id1, my_id2);
+
+    uint8_t intro_track = last_track+1;
+    last_track = fill_tracks_with_file(intro_track,     (uint8_t*) &intro_prg[0],        intro_prg_len,        FILL_DOWN, num_max_tracks, my_id1, my_id2);
+
+    uint8_t fe3loader_track = last_track+1;
+    last_track = fill_tracks_with_file(fe3loader_track, (uint8_t*) &fe3loader_prg[0],    fe3loader_prg_len,    FILL_DOWN, num_max_tracks, my_id1, my_id2);
+
+    memset(d64_sector_puffer, 0, sizeof(d64_sector_puffer));
+    generate_bam("- 1541 REPICO -", id_buffer);
+    // create a file-entry in the directory...
+    generate_directory_entry("SELECTOR", CBMDOS_TYPE_PRG, SELECTOR_TRACK  ,0,((uint16_t) (selector_prg_len/254))+1);
+    generate_directory_entry("P",        CBMDOS_TYPE_PRG, menu_pal_track  ,0,((uint16_t) (menu_c64_pal_prg_len/254))+1);
+    generate_directory_entry("+",        CBMDOS_TYPE_PRG, menu_p4_track   ,0,((uint16_t) (menu_p4_prg_len/254))+1);
+    generate_directory_entry("N",        CBMDOS_TYPE_PRG, menu_ntsc_track ,0,((uint16_t) (menu_c64_ntsc_prg_len/254))+1);
+    generate_directory_entry("V",        CBMDOS_TYPE_PRG, menu_vic20_track,0,((uint16_t) (menu_vic20_prg_len/254))+1);
+    generate_directory_entry("C",        CBMDOS_TYPE_PRG, menu_c16_track  ,0,((uint16_t) (menu_c16_prg_len/254))+1);
+    generate_directory_entry("DATAFILE", CBMDOS_TYPE_PRG, MENU_DATA_TRACK ,0,((uint16_t) (menu_file_len/254))+1);
+    generate_directory_entry("LOADER",   CBMDOS_TYPE_PRG, fe3loader_track ,0,((uint16_t) (fe3loader_prg_len/254))+1);
+    generate_directory_entry("INTRO",    CBMDOS_TYPE_PRG, intro_track     ,0,((uint16_t) (intro_prg_len/254))+1);
+    convert_d64track2gcr(DIRECTORY_TRACK, my_id1, my_id2);
+
+    strcpy(image_name_p, "\x06\xff ONSCREEN MENU ");
+    *id1_p = my_id1;
+    *id2_p = my_id2;
+    *num_tracks_p = num_max_tracks;
+}
+
+size_t generate_textmenu_file(FIL* file_obj, FILINFO* file_info, const uint8_t* dir_path, const uint8_t dest_track, const uint8_t max_blocks)
+{
+#define TXT_LINESIZE_MAX    (40)
+
+    FILINFO     fb_dir_menu_entry;
+
+    uint8_t*    P;
+    uint8_t*    P_limit = g64_tracks[NUM_TRACKS_STD];
+    uint8_t*    file_sector_P  = g64_tracks[dest_track];
+    const uint8_t*    charP = dir_path;
+    const char last_text[] = {">> OUT OF MEMORY <<"};
+
+    P = file_sector_P;
+    if (0 < max_blocks)
+    {
+        P_limit = P+D64_SECTOR_SIZE*(max_blocks-1)+1;
+    }
+    // create file-entry header
+    *P++ = 0x01;
+    *P++ = 0x08;
+
+    size_t filename_len = strlen(file_info->fname);
+    size_t dirname_len = strlen(dir_path);
+    if ((37-filename_len) < dirname_len)
+    {
+        *P++ = '.';
+        *P++ = '.';
+        charP = &dir_path[dirname_len-(37-filename_len)];
+    }
+
+    while (0 != charP[0])
+    {
+        *P++ = *charP++;
+    }
+    *P++ = '/';
+    strncpy(P,file_info->fname,filename_len);
+    P += filename_len;
+    *P++ = 0;
+
+    // create an "exit"-entry
+    *P++ = TYPE_DIR;
+    *P++ = '.';
+    *P++ = '.';
+    *P++ = 0;
+
+    UINT    bytes_read,i;
+    FSIZE_t file_offset = 0;
+    FRESULT fr;
+    fr = f_lseek(file_obj, file_offset);
+    if (FR_OK != fr) { return 0; }
+
+    while (P < P_limit)
+    {
+        *P++ = TYPE_UNKNOWN;   // UNKNOWN TYPE
+
+        fr = f_read(file_obj, P, TXT_LINESIZE_MAX, &bytes_read);
+        if (FR_OK==fr)
+        {
+            i = 0;
+            while ((P[i] != 0x0A) && (P[i] != 0x00) && (i<bytes_read))
+            {
+                i++;
+            }
+            if (0 == i)
+            {
+                *P++ =' ';  // create "something" in this line
+            }
+            P += i;
+            *P++ = 0x00;    // terminate this line
+            if(i<bytes_read)
+            {
+                i++;        // skip the 0x0A-char when reading
+                if(P[0] == 0x0D) { i++; }   // skip the 0x0D-char
+            }
+            file_offset += i;   // increase pointer inside file only until end of current line or max_size
+            if (file_info->fsize <= file_offset)
+            {
+                // we are done.. file read completely
+                break;
+            }
+            fr = f_lseek(file_obj, file_offset);
+        } else {
+            return 0;
+        }
+    }
+
+    if (P_limit < P)
+    {
+        *P++ = TYPE_UNKNOWN;
+        strcpy(P, last_text);
+        P += count_of(last_text);
+    }
+
+    return (size_t)(P-file_sector_P);
+}
+
+void create_textmenu_image(const char* menu_path, FIL* file_obj, FILINFO* file_info, uint8_t* id1_p, uint8_t* id2_p, uint8_t* num_tracks_p, char* image_name_p, const uint8_t datafile_limit)
+{
+    /* create this disklayout
+
+        T01  ====== upper limit
+        ..   | {size limited to "datafile_limit"}
+        T17  ^\_start DATAFILE (MENU_DATA_FILE) - start: MENU_DATA_TRACK    fixed
+
+        T18  DIRECTORY TRACK
+
+        T19  v/ start SELECTOR                  - start: SELECTOR_TRACK     fixed
+        ..   ====
+        Txx  v/ start MENU_C64_PAL              - start: C64 Pal MenuPRG    variable
+        ..   ====
+        Txx  v/ start MENU_P4                   - start: P4 MenuPRG         variable
+        ..   ====
+        Txx  v/ start MENU_C64_NTSC             - start: C64 Ntsc MenuPRG   variable
+        ..   ====
+        Txx  v/ start MENU_VIC20                - start: VIC20 MenuPRG      variable
+        ..   ====
+        Txx  v/ start MENU_C16                  - start: C16 MenuPRG        variable
+        ..   ====
+
+        Txx  v/ start INTRO                     - start: intro_track        variable
+        ..   |
+
+        Txx  v/ start FE3loader                 - start: fe3loader_track    variable
+        ..   |
+
+        T35  ====== lower limit
+    */
+
+    const uint8_t id_buffer[]={" F00K"};            // disk-id
+    const uint8_t num_max_tracks = NUM_TRACKS_STD;  // 35 Tracks should be enough
+    const uint8_t my_id1 = id_buffer[0];
+    const uint8_t my_id2 = id_buffer[1];
+
+    generate_empty_image(my_id1,my_id2,num_max_tracks);
+
+    // generates menu-datafile..
+    size_t menu_file_len = generate_textmenu_file(file_obj, file_info, menu_path, SCRATCH_TRACK, datafile_limit);
 
     (void) fill_tracks_with_file(MENU_DATA_TRACK, g64_tracks[SCRATCH_TRACK], menu_file_len, FILL_UP, num_max_tracks, my_id1, my_id2);
 
