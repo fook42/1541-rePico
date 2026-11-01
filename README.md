@@ -35,6 +35,8 @@ one size fits for all 1541 models.
 
 -> [interactive BOM](/hardware/bom/ibom.html)
 
+-> [step-by-step guide](/doc/HWSetup.md)
+
 ### Software ###
 
 #### Pico2 Firmware ####
