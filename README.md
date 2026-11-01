@@ -51,6 +51,7 @@ one size fits for all 1541 models.
   - 4 way scrolling
   - usage of joystick for browsing possible
 - highlighting and selecting of different file-types (D64,G64,PRG,Folder)
+- shows TXT files onscreen
 - simple mounting and also fastloading of selected entry
 - supports C64-PAL, C64-NTSC, VC20 and C16 computers
 
