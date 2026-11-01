@@ -49,6 +49,7 @@ void show_fs_error(FRESULT error_code);
 
 void handle_menu_image(void);
 void insert_menu_image(char* menu_path, const uint8_t max_blocks);
+void insert_txt_image(char* menu_path, FILINFO* entry_info, const uint8_t max_blocks);
 
 void filebrowser_update(uint8_t key_code);
 void filebrowser_refresh(void);

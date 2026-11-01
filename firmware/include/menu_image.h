@@ -19,6 +19,7 @@ enum {
     TYPE_D64 = 2,
     TYPE_G64 = 3,
     TYPE_PRG = 4,
+    TYPE_TXT = 5,
     TYPE_VALID = 255,
     TYPE_UNKNOWN = 255
 };
@@ -43,7 +44,9 @@ void generate_bam(const char* const image_name, const uint8_t* const image_id_bu
 
 void generate_directory_entry(const uint8_t* filename, const uint8_t filetype, const uint8_t des_track, const uint8_t des_sector, const uint16_t size);
 size_t generate_menu_file(DIR* dir_obj, const uint8_t* dir_path, const uint8_t dest_track, const uint8_t max_blocks);
-
 void create_menu_image(const char* menu_path, DIR* dir_obj, uint8_t* id1_p, uint8_t* id2_p, uint8_t* num_tracks_p, char* image_name_p, const uint8_t datafile_limit);
+
+size_t generate_textmenu_file(FIL* file_obj, FILINFO* file_info, const uint8_t* dir_path, const uint8_t dest_track, const uint8_t max_blocks);
+void create_textmenu_image(const char* menu_path, FIL* file_obj, FILINFO* file_info, uint8_t* id1_p, uint8_t* id2_p, uint8_t* num_tracks_p, char* image_name_p, const uint8_t datafile_limit);
 
 #endif
