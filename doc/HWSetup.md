@@ -64,8 +64,8 @@ now have a look at the cables:\
 ---
 important: the "red" cable connects the original WriteProtect-signal of your 1541 to the single-pinheader J5 of rePico.\
 its connected to ...
-| floppy-device | VIA IC-designator |
-| ------------- | ----------------- |
+| floppy-device | write-protect signal location |
+| ------------- | ----------------------------- |
 | 1541-1 longboard / PCB 251830 | P6 - Pin 12 |
 | 1541-1 shortboard / PCB 251854 | P3 - Pin 12 |
 | 1541-2 / ASSY 340503 | CN4 - Pin 3 (where Pin 1+2 are not populated) |
