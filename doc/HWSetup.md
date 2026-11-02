@@ -50,11 +50,11 @@ you need to identify the right VIA, which needs to be pulled off your 1541 and p
 [<img src="pictures/setup/06.installed1541-1.jpg" alt="pinheader top" width="20%"/>](pictures/setup/06.installed1541-1.jpg)
 
 this table may help you to find out, which VIA chip is the right one:
-| floppy-device | IC-number | search-area |
-| ------------- | --------- | ----------- |
-| 1541-1 longboard / PCB 251830 | UC2 | |
-| 1541-1 shortboard / PCB 251854 | UC3 | |
-| 1541-2 / ASSY 340503 | U8 | |
+| floppy-device | VIA IC-designator |
+| ------------- | ----------------- |
+| 1541-1 longboard / PCB 251830 | UC2 |
+| 1541-1 shortboard / PCB 251854 | UC3 |
+| 1541-2 / ASSY 340503 | U8 |
 
 ### cables
 
@@ -62,9 +62,14 @@ now have a look at the cables:\
 [<img src="pictures/setup/07.cabling-1541-1.jpg" alt="pinheader top" width="20%"/>](pictures/setup/07.cabling-1541-1.jpg)
 
 ---
-important: the "red" cable connects the original WriteProtect-Signal of your 1541 to the single-pinheader of rePico. its connected to ...
-- 1541-1: Pin 12 of the original motor/drive-connector (P3)
-- 1541-2: Pin 3 on CN4 (where Pin 1+2 are not populated!!)
+important: the "red" cable connects the original WriteProtect-signal of your 1541 to the single-pinheader J5 of rePico.\
+its connected to ...
+| floppy-device | VIA IC-designator |
+| ------------- | ----------------- |
+| 1541-1 longboard / PCB 251830 | P6 - Pin 12 |
+| 1541-1 shortboard / PCB 251854 | P3 - Pin 12 |
+| 1541-2 / ASSY 340503 | CN4 - Pin 3 (where Pin 1+2 are not populated) |
+
 ---
 
 
@@ -75,6 +80,6 @@ and here you find the same cables on your peripherals (display, sdcard, rotary)\
 
 ### 3d-printed front
 
-thanks to @Mares74 we have a nice replacement front available:\
+thanks to [Mares74](https://github.com/Mares74) we have a nice replacement front available:\
 [<img src="pictures/setup/08.3d-front-1541.jpg" alt="pinheader top" width="20%"/>](pictures/setup/08.3d-front-1541.jpg)
 [<img src="pictures/setup/08.3d-front-back.jpg" alt="pinheader top" width="20%"/>](pictures/setup/08.3d-front-back.jpg)
