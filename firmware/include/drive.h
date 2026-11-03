@@ -10,9 +10,13 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
 
 #include "pico/stdlib.h"
 #include "hardware/timer.h"
+#include "hardware/clocks.h"
+#include "hardware/pwm.h"
+#include "hardware/dma.h"
 
 #include "menu.h"
 #include "lcd.h"
@@ -28,6 +32,11 @@ extern void (*display_string)(const char* char_array);
 extern void (*display_print)(const char* char_array, const uint8_t array_offset, const uint8_t print_length);
 
 extern MENU_STRUCT image_menu;
+
+#define soundtimer_value    ((1000*1000)/440)       // 440 Hz = "A"
+#define REPETITION_RATE     (4)
+#define WAV_SAMPLERATE      (22050)
+#define WAV_PWM_RATE        (125000000 / WAV_SAMPLERATE)
 
 // drive state and control functions
 int64_t steppertimer_callback(alarm_id_t id, void *user_data);
