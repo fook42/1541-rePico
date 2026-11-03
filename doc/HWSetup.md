@@ -42,26 +42,24 @@ when you're done it looks like this:\
 [<img src="pictures/setup/05.buzzer_cap.jpg" alt="pinheader top" width="20%"/>](pictures/setup/05.buzzer_cap.jpg)
 [<img src="pictures/setup/05.buzzer_cap_top.jpg" alt="pinheader top" width="20%"/>](pictures/setup/05.buzzer_cap_top.jpg)
 
-## installation into 1541-1
+## installation into 1541
 
 ### replace VIA with rePico
 
 you need to identify the right VIA, which needs to be pulled off your 1541 and placed into the socket of your 1541-rePico.\
-[<img src="pictures/setup/06.installed1541-1.jpg" alt="pinheader top" width="20%"/>](pictures/setup/06.installed1541-1.jpg)
-
 this table may help you to find out, which VIA chip is the right one:
-| floppy-device | VIA IC-designator |
-| ------------- | ----------------- |
-| 1541-1 longboard / PCB 251830 | UC2 |
-| 1541-1 shortboard / PCB 251854 | UC3 |
-| 1541-2 / ASSY 340503 | U8 |
+
+| floppy-device | VIA IC-designator | overview |
+| ------------- | ----------------- | -------- |
+| 1541-1 longboard / PCB 251830 | UC2 | [<img src="pictures/setup/06.installed1541-1_long_a.jpg" alt="pinheader top" width="20%"/>](pictures/setup/06.installed1541-1_long_a.jpg) [<img src="pictures/setup/06.installed1541-1_long_b.jpg" alt="pinheader top" width="20%"/>](pictures/setup/06.installed1541-1_long_b.jpg) |
+| 1541-1 shortboard / PCB 251854 | UC3 | [<img src="pictures/setup/06.installed1541-1.jpg" alt="pinheader top" width="20%"/>](pictures/setup/06.installed1541-1.jpg) [<img src="pictures/setup/07.cabling-1541-1.jpg" alt="pinheader top" width="20%"/>](pictures/setup/07.cabling-1541-1.jpg) |
+| 1541-2 / ASSY 340503 | U8 | [<img src="pictures/setup/06.installed1541-2a.jpg" alt="pinheader top" width="20%"/>](pictures/setup/06.installed1541-2a.jpg) [<img src="pictures/setup/06.installed1541-2b.jpg" alt="pinheader top" width="20%"/>](pictures/setup/06.installed1541-2b.jpg) |
+
 
 ### cables
 
-now have a look at the cables:\
-[<img src="pictures/setup/07.cabling-1541-1.jpg" alt="pinheader top" width="20%"/>](pictures/setup/07.cabling-1541-1.jpg)
+now have a look at the cables
 
----
 important: the "red" cable connects the original WriteProtect-signal of your 1541 to the single-pinheader J5 of rePico.\
 its connected to ...
 | floppy-device | write-protect signal location |
@@ -70,13 +68,31 @@ its connected to ...
 | 1541-1 shortboard / PCB 251854 | P3 - Pin 12 |
 | 1541-2 / ASSY 340503 | CN4 - Pin 3 (where Pin 1+2 are not populated) |
 
----
-
 
 and here you find the same cables on your peripherals (display, sdcard, rotary)\
 [<img src="pictures/setup/07.cabling-display.jpg" alt="pinheader top" width="20%"/>](pictures/setup/07.cabling-display.jpg)
 [<img src="pictures/setup/07.cabling-sdcard.jpg" alt="pinheader top" width="20%"/>](pictures/setup/07.cabling-sdcard.jpg)
 [<img src="pictures/setup/07.cabling-rotary.jpg" alt="pinheader top" width="20%"/>](pictures/setup/07.cabling-rotary.jpg)
+
+### connectors/jumper
+
+the following image shows all existing pinheaders & jumpers on PCB version 1.7:\
+[<img src="pictures/setup/09.jumper.jpg" alt="pinheader top" width="20%"/>](pictures/setup/09.jumper.jpg)
+
+(hint: numbering of pinheaders start with pin that is marked by an edge)
+
+| designator | type | pinout | function | remarks |
+| ---------- | ---- | ------ | -------- | ------- |
+| J1 | connector | 1- GND<br />2- VCC<br />3- SCL<br />4- SDA | I2C display connector | OLED & LCD displays supported<br />VCC is selected by J2 |
+| J2 | jumper | 1- +5V<br />2- out<br />3- +3.3V | selects display voltage | 1-2 = 5V output<br />2-3 = 3.3V output |
+| J3 | connector | 1- GND<br />2- 3.3V<br />3- Button<br />4- Rotary CLK<br />5- Rotary Data | Rotary+Switch connector | swapping connection 4 and 5 changes rotary-direction |
+| J4 | connector | 1- GND<br />2- MISO<br />3- SCK<br />4- MOSI<br />5- CS<br />6- VCC<br />7- n.c.<br />8- GND | SD-card module connector | SD-card modules and micro-SD-card modules can be used, select VCC accordingly!<br />VCC is selected by J9<br />CS is tied to GND |
+| J5 | connector | 1- WriteProtect / DiskChange | connect to 1541-writeProtect signal | "red cable" connection see above^^ |
+| J6 | connector | 1- GND<br />2- 5V | external Power-supply | for development only !<br />should not be used if installed into a 1541 ! |
+| J7 | jumper | 1- 1541-reset<br />2- rePico-reset | enable 1541-reset when SW1 is pressed | 1-2 = reset signal of SW1 affects both rePico AND 1541 device |
+| J8 | connector | 1- 3.3V<br />2- sound<br />3- GND | sound module output | not populated when buzzer is installed on BZ1 |
+| J9 | jumper | 1- +5V<br />2- out<br />3- +3.3V | selects SD-card voltage | 1-2 = 5V output<br />2-3 = 3.3V output |
+
 
 ### 3d-printed front
 
