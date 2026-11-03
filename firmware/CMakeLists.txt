@@ -37,9 +37,11 @@ add_subdirectory(./buildtools)
 
 add_subdirectory(./SoftwareC64)
 
+add_subdirectory(./sounds)
+
 add_executable(1541-rePico)
 
-add_dependencies(1541-rePico GenSelector GenMenuC64Pal GenMenuC64Ntsc GenMenuC16 GenMenuP4 GenMenuVIC20 GenIntro GenFe3loader)
+add_dependencies(1541-rePico GenWavData GenSelector GenMenuC64Pal GenMenuC64Ntsc GenMenuC16 GenMenuP4 GenMenuVIC20 GenIntro GenFe3loader)
 
 # Add executable. Default name is the project name, version 0.1
 file(GLOB_RECURSE mysources  CONFIGURE_DEPENDS "src/*.c")
@@ -79,6 +81,7 @@ target_link_libraries(1541-rePico
         hardware_interp
         hardware_timer
         hardware_clocks
+        hardware_pwm
         no-OS-FatFS-SD-SDIO-SPI-RPi-Pico
         )
 
