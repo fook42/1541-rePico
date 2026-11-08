@@ -249,6 +249,7 @@ void filebrowser_update(uint8_t key_code)
         }
         break;
     case KEY2_UP:
+        {
         //fn open dir_entry...
         uint8_t ode_return = open_dir_entry(fb_dir_entry[fb_cursor_pos]);
         if (TYPE_VALID != ode_return)
@@ -266,6 +267,7 @@ void filebrowser_update(uint8_t key_code)
         } else {
             selected_image_nr = fb_window_pos+fb_cursor_pos+1;
             set_gui_mode(GUI_INFO_MODE);
+        }
         }
         break;
     case KEY2_TIMEOUT1:
@@ -285,6 +287,7 @@ void filebrowser_update(uint8_t key_code)
         break;
 
     default:
+        { }
     }
 
     //// Filename Scrolling
