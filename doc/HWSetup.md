@@ -99,3 +99,6 @@ the following image shows all existing pinheaders & jumpers on PCB version 1.7:\
 thanks to [Mares74](https://github.com/Mares74) we have a nice replacement front available:\
 [<img src="pictures/setup/08.3d-front-1541.jpg" alt="pinheader top" width="20%"/>](pictures/setup/08.3d-front-1541.jpg)
 [<img src="pictures/setup/08.3d-front-back.jpg" alt="pinheader top" width="20%"/>](pictures/setup/08.3d-front-back.jpg)
+
+Files and details of the cad files can be found here:
+[1541-1 rePico-Front CAD Files](../cad/1541)
