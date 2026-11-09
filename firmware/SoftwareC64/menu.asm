@@ -1510,6 +1510,9 @@ fastload_init:
         sta STACK_START-1,x
         dex
         bne -
+
+        CODE_IN_MENU = 1    ;some code is needed in the menu
+                            ;and the loader itself will be overwritten
         !src "vic20loader.asm"
 
 fastload_stack:

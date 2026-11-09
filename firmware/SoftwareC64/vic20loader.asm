@@ -47,14 +47,16 @@ L1431:
         RTS
 
 
-;L1476:  LDA $ba
-;        JSR LISTEN
-;        LDA #$6F
-;        JSR SECOND
-;        LDA #$49
-;        JSR CIOUT
-;        JSR UNLSN
-;        RTS
+        !ifndef CODE_IN_MENU {
+L1476:  LDA $ba
+        JSR LISTEN
+        LDA #$6F
+        JSR SECOND
+        LDA #$49
+        JSR CIOUT
+        JSR UNLSN
+        RTS
+        }
 
 L1489:  LDA $ba
         JSR LISTEN
@@ -94,7 +96,7 @@ L14A2:  LDA floppy_code,X
         STA L14A2+2
         RTS
 
-        !ifdef CODE_FROM_MENU {
+        !ifndef CODE_IN_MENU {
 L14DC:  LDA $ba
         JSR LISTEN
         LDA #$6F
