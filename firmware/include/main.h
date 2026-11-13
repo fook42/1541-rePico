@@ -15,62 +15,12 @@
 // functions
 int64_t input_debounce_callback(alarm_id_t id, void *user_data);
 
-FRESULT mount_sdcard(const char* mount_path);
-FRESULT umount_sdcard(void);
-void show_fs_error(FRESULT error_code);
-
-void check_stepper_signals(void);
-void check_motor_signal(void);
-
 void init_key_inputs(void);
 uint8_t get_key_from_buffer(void);
-void show_longpress(void);
-void update_gui(void);
-void check_menu_events(const uint16_t menu_event);
-void set_gui_mode(const uint8_t gui_mode);
-void filebrowser_update(uint8_t key_code);
-void filebrowser_refresh(void);
-
-void infomode_update(void);
-
-void handle_menu_image(void);
-void insert_menu_image(char* menu_path, const uint8_t max_blocks);
-
-uint16_t get_dir_entry_count(const char* entrycount_path);
-uint16_t seek_to_dir_entry(uint16_t entry_num, const char* seek_path);
-
-void show_start_message(void);
-void show_sdcard_info_message(void);
-
-void init_stepper(void);
-void stepper_inc(void);
-void stepper_dec(void);
-void init_motor(void);
-void init_control_signals(void);
-void init_soe_gatearray(void);
-
-uint8_t open_dir_entry(FILINFO od_file_entry);
-
-uint8_t open_disk_image(FIL* fd, FILINFO *file_entry);
-void close_disk_image(FIL* fd);
-void unmount_image(void);
-
-void init_writeprot(void);
-void send_disk_change(void);
-
-void init_sound(void);
-
-bool repeating_timer_callback(__unused struct repeating_timer *t);
-void init_bytetimer(void);
-void start_bytetimer(uint8_t half_track);
-void stop_bytetimer(void);
-
-int64_t steppertimer_callback(alarm_id_t id, void *user_data);
-void start_stepper_timer(void);
 
 /////////////
-#define set_byte_ready()    gpio_set_dir(GPIO_BRDY,GPIO_IN)    // HiZ
-#define clear_byte_ready()  {gpio_set_dir(GPIO_BRDY,GPIO_OUT);gpio_put(GPIO_BRDY,false);}   // auf Ground ziehen
+#define set_byte_ready()    gpio_set_dir(GPIO_BRDY,GPIO_IN)     // HiZ
+#define clear_byte_ready()  {gpio_set_dir(GPIO_BRDY,GPIO_OUT);gpio_put(GPIO_BRDY,false);}   // pull low
 
 #define get_soe_status()    gpio_get(GPIO_SOE)
 
@@ -81,8 +31,8 @@ void start_stepper_timer(void);
 
 // WPS will be generated via inverter 74ls04 on 1541*-mainboard
 // ... thus we send the inverse here (clear_wps = "1" on WPS)
-#define clear_wps()          gpio_set_dir(GPIO_WPS,GPIO_IN)    // HiZ
-#define set_wps()           {gpio_set_dir(GPIO_WPS,GPIO_OUT);gpio_put(GPIO_WPS,false);}   // pull low
+#define clear_wps()          gpio_set_dir(GPIO_WPS,GPIO_IN)     // HiZ
+#define set_wps()           {gpio_set_dir(GPIO_WPS,GPIO_OUT);gpio_put(GPIO_WPS,false);}     // pull low
 
 #define get_motor_status()  gpio_get(GPIO_MTR)
 
@@ -95,13 +45,6 @@ void start_stepper_timer(void);
 #define enable_write_protection()   {clear_wps();floppy_wp=true;}
 #define disable_write_protection()  {set_wps();floppy_wp=false;}
 
-#if PCB_VERSION>=17
-#define turn_sound_on()     gpio_put(GPIO_SND,true)
-#define turn_sound_off()    gpio_put(GPIO_SND,false)
-#else
-#define turn_sound_on()     {}
-#define turn_sound_off()    {}
-#endif
 
 // Filesystem-variables:
 extern FATFS       fs;             // filesystem handle - only created once

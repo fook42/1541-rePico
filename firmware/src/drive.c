@@ -7,6 +7,8 @@
 
 #include "main.h"
 #include "drive.h"
+#include "files.h"
+#include "sound.h"
 
 /////////////////////////////////////////////////////////////////////
 
@@ -409,13 +411,6 @@ void stop_bytetimer(void)
 }
 
 /////////////////////////////////////////////////////////////////////
-
-void init_sound(void)
-{
-    gpio_init(GPIO_SND);
-    gpio_set_dir(GPIO_SND, GPIO_OUT);
-    turn_sound_off();
-}
 
 ///////////////////////////////////////
 ///////// ISR

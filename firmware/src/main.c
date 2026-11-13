@@ -40,6 +40,7 @@
 #include "drive.h"
 #include "files.h"
 #include "gui.h"
+#include "sound.h"
 
 #define START_MESSAGE_TIME 1500
 

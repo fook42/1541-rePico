@@ -47,7 +47,6 @@ void init_soe_gatearray(void);
 void init_bytetimer(void);
 void start_bytetimer(uint8_t half_track);
 void stop_bytetimer(void);
-void init_sound(void);
 
 bool repeating_timer_callback(__unused struct repeating_timer *t);
 
