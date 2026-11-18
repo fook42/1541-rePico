@@ -133,6 +133,7 @@ void handle_menu_image(void)
 
 void insert_menu_image(char* menu_path, const uint8_t max_blocks)
 {
+    uint8_t num_max_tracks;
     FRESULT fr = mount_sdcard(menu_path);
     if (FR_OK == fr)
     {
@@ -185,6 +186,8 @@ void insert_menu_image(char* menu_path, const uint8_t max_blocks)
 
 void insert_txt_image(char* menu_path, FILINFO* entry_info, const uint8_t max_blocks)
 {
+    uint8_t num_max_tracks;
+
     stop_bytetimer();
     send_byte_ready = false;            // disable VIA transfer
 
@@ -336,8 +339,6 @@ void filebrowser_update(uint8_t key_code)
 
 uint8_t open_dir_entry(FILINFO od_file_entry)
 {
-    int8_t last_track_read;
-
     stop_bytetimer();
     send_byte_ready = false;      // this blocks current transfers to the VIA
     close_disk_image(&fd);
@@ -395,14 +396,13 @@ uint8_t open_dir_entry(FILINFO od_file_entry)
     }
 
     // read complete image
-    if ((last_track_read=read_disk(&fd, akt_image_type, od_file_entry ))>0)
+    if (0 < read_disk(&fd, akt_image_type, od_file_entry ))
     {
         close_disk_image(&fd);  // we can close the image - everything needed is in ram now.
         akt_track_pos = 0;
 
         send_byte_ready = true;         // enable VIA transfer
         is_image_mount = true;
-        num_max_tracks = last_track_read+1;
 
         enable_write_protection();      // this is the default
         if (0 == (od_file_entry.fattrib & AM_RDO))

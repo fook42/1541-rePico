@@ -61,7 +61,6 @@ extern alarm_id_t input_debounce_alarm;
 
 extern volatile uint16_t akt_track_pos;
 
-extern uint8_t num_max_tracks;
 extern uint8_t selected_track;     // this holds the selected tracknumber
 extern volatile uint8_t akt_half_track;     // this will be the one to be transfered
 extern uint8_t old_half_track;

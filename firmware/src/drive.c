@@ -126,7 +126,6 @@ void unmount_image(void)
     close_disk_image(&fd);
     is_image_mount = 0;
     akt_image_type = UNDEF_IMAGE;
-    num_max_tracks = 0;
     enable_write_protection();
     menu_set_entry_var1(&image_menu, M_WP_IMAGE, 1);
     send_disk_change();
@@ -155,7 +154,7 @@ void show_sdcard_info_message(void)
         }
         display_string(" GB");
 
-        display_setcursor(0,1);
+        display_setcursor(disp_sdinfo_part_p);
         display_string(disp_sdinfo_part_s);
 
         switch (fs.fs_type)
@@ -241,46 +240,6 @@ void show_sdcard_info_message(void)
     // sprintf(out_str,"%04X%04X",(unsigned int) (info.serial >> 16),(unsigned int) (info.serial & 0xffff));
     // display_string(out_str);
 
-    // display_setcursor(disp_sdinfo_part_p);
-    // display_string(disp_sdinfo_part_s);
-    // switch(partition->type)
-    // {
-    //     case 0x01:
-    //         display_string("FAT12");
-    //         break;
-
-    //     case 0x04:
-    //         display_string("FAT16 <32MB");
-    //         break;
-
-    //     case 0x05:
-    //         display_string("EXTENDED");
-    //         break;
-
-    //     case 0x06:
-    //         display_string("FAT16");
-    //         break;
-
-    //     case 0x0b:
-    //         display_string("FAT32");
-    //         break;
-
-    //     case 0x0c:
-    //         display_string("FAT32 LBA");
-    //         break;
-
-    //     case 0x0e:
-    //         display_string("FAT16 LBA");
-    //         break;
-
-    //     case 0x0f:
-    //         display_string("EXT LBA");
-    //         break;
-
-    //     default:
-    //         display_string("UNKNOWN");
-    //         break;
-    // }
     // _delay_ms(START_MESSAGE_TIME);
 }
 

@@ -74,7 +74,6 @@ volatile uint8_t irq_key_value = NO_KEY;
 volatile bool input_block = false;
 
 uint64_t key2_down_time=0;
-uint8_t num_max_tracks;
 uint16_t selected_image_nr = 0xFFFF;
 
 FATFS       fs;             // filesystem handle - only created once

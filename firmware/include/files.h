@@ -30,7 +30,6 @@ extern void (*display_setinverse)(bool inverse);
 
 extern MENU_STRUCT image_menu;
 extern uint16_t selected_image_nr;
-extern uint8_t num_max_tracks;
 extern bool floppy_wp;
 extern bool is_image_mount;
 extern volatile bool track_is_written;

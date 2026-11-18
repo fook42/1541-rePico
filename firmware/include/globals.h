@@ -28,7 +28,8 @@
 #define SCRATCH_TRACK   (18)  // we use Tracks 18..41 for preparing the PRG data
 
 #define NUM_TRACKS_MAX  (42)
-#define NUM_TRACKS_STD  (35)
+#define NUM_TRACKS_MIN  (35)
+#define NUM_TRACKS_STD  NUM_TRACKS_MAX    // used to be (35)... but we can handle 42 tracks always.
 #define NUM_SPEEDZONES  (4)
 
 #define GCR_SYNCMARK    (0xFF)

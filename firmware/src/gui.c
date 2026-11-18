@@ -253,7 +253,7 @@ void check_menu_events(const uint16_t menu_event)
                         if (FR_OK == fr)
                         {
                             display_setcursor(0,1);
-                            file_op_status = write_disk(&fd, G64_IMAGE, num_max_tracks);
+                            file_op_status = write_disk(&fd, G64_IMAGE, NUM_TRACKS_MAX);
                             if (file_op_status>0)
                             {
                                 (void)dez2out(file_op_status+1,2,byte_str);
@@ -279,7 +279,7 @@ void check_menu_events(const uint16_t menu_event)
                         if (FR_OK == fr)
                         {
                             display_setcursor(0,1);
-                            file_op_status = write_disk(&fd, D64_IMAGE, num_max_tracks);
+                            file_op_status = write_disk(&fd, D64_IMAGE, NUM_TRACKS_MAX);
                             if (file_op_status>0)
                             {
                                 (void)dez2out(file_op_status+1,2,byte_str);
