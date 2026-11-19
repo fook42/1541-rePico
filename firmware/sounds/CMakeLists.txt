@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.13)
 
 set(PROJECT_INCLUDE ${PROJECT_SOURCE_DIR}/include)
 
-set(PCMFILE         "testsound_8bit.pcm")
+set(PCMFILE         "song_8bit.pcm")
 set(WAVDATA_HEADER  "${PROJECT_INCLUDE}/wavData.h")
 
 add_custom_target(GenWavData
@@ -11,4 +11,5 @@ add_custom_target(GenWavData
   COMMAND echo \"\#ifndef _WAV_DATA_H_\\n\#define _WAV_DATA_H_\" > ${WAVDATA_HEADER}
   COMMAND xxd -i -n \"wav_data\" ${PCMFILE} >> ${WAVDATA_HEADER}
   COMMAND echo \"\#endif\" >> ${WAVDATA_HEADER}
+  COMMAND sed -i 's/unsigned char/const unsigned char/' ${WAVDATA_HEADER}
 )

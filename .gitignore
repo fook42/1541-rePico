@@ -13,3 +13,5 @@ firmware/SoftwareC64/labels.lab
 analysis-reports/*
 build-analysis/*
 build/
+venv/
+venv/*

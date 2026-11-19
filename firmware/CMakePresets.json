@@ -1,42 +1,57 @@
 {
-  "version": 3,
-  "cmakeMinimumRequired": {
-    "major": 3,
-    "minor": 21,
-    "patch": 0
-  },
-  "configurePresets": [
-    {
-      "name": "default",
-      "displayName": "Default build (PCB v17)",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
-        "PICO_BOARD": "pico2",
-        "PCB_VERSION": "17"
-      }
+    "version": 3,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 21,
+        "patch": 0
     },
-    {
-      "name": "pcb16-legacy",
-      "displayName": "Legacy build (PCB v16)",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build-pcb16",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
-        "PICO_BOARD": "pico2",
-        "PCB_VERSION": "16"
-      }
-    }
-  ],
-  "buildPresets": [
-    {
-      "name": "default",
-      "configurePreset": "default"
-    },
-    {
-      "name": "pcb16-legacy",
-      "configurePreset": "pcb16-legacy"
-    }
-  ]
+    "configurePresets": [
+        {
+            "name": "default",
+            "displayName": "Default build (PCB v17)",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "PICO_BOARD": "pico2",
+                "PCB_VERSION": "17"
+            }
+        },
+        {
+            "name": "pcb16-legacy",
+            "displayName": "Legacy build (PCB v16)",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build-pcb16",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "PICO_BOARD": "pico2",
+                "PCB_VERSION": "16"
+            }
+        },
+        {
+            "name": "pcb17-debug",
+            "description": "Debug build (PCB v17)",
+            "displayName": "PCB v17 Debug",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "PICO_BOARD": "pico2",
+                "PCB_VERSION": "17",
+                "PICO_DEOPTIMIZED_DEBUG": "1"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "default",
+            "configurePreset": "default"
+        },
+        {
+            "name": "pcb17-debug",
+            "configurePreset": "pcb17-debug"
+        },
+        {
+            "name": "pcb16-legacy",
+            "configurePreset": "pcb16-legacy"
+        }
+    ]
 }

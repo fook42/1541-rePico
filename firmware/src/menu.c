@@ -7,6 +7,7 @@
 
 #include "menu.h"
 #include "display.h"
+#include "drive.h"
 #include "gui_constants.h"
 
 static MENU_STRUCT *current_menu;
@@ -43,6 +44,7 @@ uint16_t menu_update(const uint8_t key_code)
     {
         case KEY0_DOWN:
             {
+                turn_sound_on();
                 if(current_menu->lcd_cursor_pos > 0)
                 {
                     current_menu->lcd_cursor_pos--;

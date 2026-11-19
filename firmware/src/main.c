@@ -227,9 +227,10 @@ int main()
     init_writeprot();
     disable_write_protection();
 
-#if PCB_VERSION>=17
+#if 1 // PCB_VERSION>=17
     // Enable Sound-Output-Pin
     init_sound();
+    turn_sound_on();
 #endif
 
     // setup menus
@@ -253,6 +254,7 @@ int main()
     current_path[1]=0;
 
     multicore_launch_core1( start_gui_core );
+   
     while (true) {
         check_stepper_signals();
         

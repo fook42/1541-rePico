@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 
 # Install OpenOCD dependencies
 sudo apt-get update
@@ -13,10 +14,6 @@ sudo apt-get install -y --no-install-recommends \
     libhidapi-dev \
     libudev-dev \
     libusb-dev \
-    libusb-1.0-0-dev \
-    libftdi-dev \
-    libhidapi-dev \
-    libudev-dev \
     autoconf \
     automake \
     make \
@@ -27,12 +24,20 @@ sudo apt-get install -y --no-install-recommends \
     wget \
     unzip       
 
+LIBUSB_INCLUDE_DIR="/usr/include/libusb-1.0"
+if [[ ! -f "${LIBUSB_INCLUDE_DIR}/libusb.h" ]]; then
+    echo "Missing ${LIBUSB_INCLUDE_DIR}/libusb.h after dependency install" >&2
+    exit 1
+fi
+
 # Create build directory
 mkdir -p build/
 cd build/
 
 # Clone OpenOCD repository
-git clone --depth 1 https://github.com/raspberrypi/openocd.git 
+if [[ ! -d openocd ]]; then
+    git clone --depth 1 https://github.com/raspberrypi/openocd.git
+fi
 cd openocd/
 
 # Initialize and update git submodules (including jimtcl)
@@ -47,6 +52,16 @@ cd ..
 
 # Configure and build OpenOCD
 ./bootstrap
-./configure --enable-cmsis-dap --disable-werror --with-jimtcl=jimtcl
+if pkg-config --exists libusb-1.0; then
+    LIBUSB_CFLAGS="$(pkg-config --cflags libusb-1.0)"
+    LIBUSB_LIBS="$(pkg-config --libs libusb-1.0)"
+else
+    LIBUSB_CFLAGS="-I${LIBUSB_INCLUDE_DIR}"
+    LIBUSB_LIBS="-lusb-1.0"
+fi
+
+CPPFLAGS="${CPPFLAGS:-} -I${LIBUSB_INCLUDE_DIR}" \
+LIBUSB1_CFLAGS="${LIBUSB_CFLAGS}" LIBUSB1_LIBS="${LIBUSB_LIBS}" \
+    ./configure --enable-cmsis-dap --disable-werror --with-jimtcl=jimtcl
 make -j$(nproc)
 sudo make install
