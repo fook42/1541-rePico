@@ -1,16 +1,16 @@
-# Speaker Driver — NPN Emitter-Follower (BC337)
+# Speaker Driver — NPN Emitter-Follower (BD165)
 
-Class-A audio amplifier driving a **17.5 Ω** loudspeaker from a Raspberry Pi Pico
-GPIO. The BC337 is wired as an **emitter follower**: the speaker output follows the
+Class-A audio amplifier driving a **7.5 Ω** loudspeaker from a Raspberry Pi Pico
+GPIO. The BD165 is wired as an **emitter follower**: the speaker output follows the
 PWM input, offset by one base-emitter drop. A first-order RC low-pass (R3 + C2)
-removes the 8 kHz PWM carrier before it reaches the transistor, and C1 blocks DC so
+removes the 16 kHz PWM carrier before it reaches the transistor, and C1 blocks DC so
 the speaker only sees the AC audio signal.
 
 - **Supply:** 5 V (VCC)
-- **Input:** GPIO, 0–3.3 V PWM (8 kHz carrier, audio up to ~4 kHz)
-- **Low-pass:** R3 + C2 → f_c ≈ 3.3 kHz (attenuates the 8 kHz carrier by ~8 dB)
-- **Load:** 17.5 Ω loudspeaker
-- **Max output power:** ≈ 16 mW (see calculations below)
+- **Input:** GPIO, 0–3.3 V PWM (16 kHz sample rate / carrier, audio up to ~4 kHz)
+- **Low-pass:** R3 + C2 → f_c ≈ 3.0 kHz (attenuates the 16 kHz carrier by ~14 dB)
+- **Load:** 7.5 Ω loudspeaker
+- **Max output power:** ≈ 261 mW peak (see calculations below)
 
 ---
 
@@ -27,19 +27,19 @@ the speaker only sees the AC audio signal.
                     |
                    / \
                   /   \
-              [R2]    [C2] 220 nF
+              [R2]    [C2] 240 nF
               1.8 kΩ   LPF shunt
                 |        |
                GND      GND
-                        (R3+C2: f_c ≈ 3.3 kHz,
-                         attenuates 8 kHz carrier)
+                        (R3+C2: f_c ≈ 3.0 kHz,
+                         attenuates 16 kHz carrier)
 
- Transistor Q1 (BC337 NPN), emitter follower:
+ Transistor Q1 (BD165 NPN), emitter follower:
 
                       B
                       |
                     +---+
-                    |   |  Q1 BC337
+                    |   |  Q1 BD165
                     |   |
                     +---+
                    /     \
@@ -50,7 +50,7 @@ the speaker only sees the AC audio signal.
              GND       +5 V (VCC)
 
  Speaker output:
-    E ----[SPK] 17.5 Ω ---- GND   (via C1, DC-blocked)
+    E ----[SPK] 7.5 Ω ---- GND   (via C1, DC-blocked)
 ```
 
 ### Signal path
@@ -58,7 +58,7 @@ the speaker only sees the AC audio signal.
 | Stage | Component | Purpose |
 |-------|-----------|---------|
 | Input  | GPIO → R3 (220 Ω) | Series limit from the Pico pin into the base |
-| LPF    | R3 + C2 (220 nF) | First-order low-pass, f_c ≈ 3.3 kHz; attenuates the 8 kHz PWM carrier by ~8 dB before it reaches Q1 |
+| LPF    | R3 + C2 (240 nF) | First-order low-pass, f_c ≈ 3.0 kHz; attenuates the 16 kHz PWM carrier by ~14 dB before it reaches Q1 |
 | Bias   | R1 (1 kΩ) / R2 (1.8 kΩ) | Voltage-divider bias on the base (~3.2 V DC, emitter rests at ~2.5 V — mid-swing so the AC audio can swing ±2.5 V without clipping; low Thevenin resistance for stiff base drive) |
 | Output | Q1 emitter → SPK | Emitter follower: low-impedance drive for the speaker |
 | Coupling | C1 (100 µF) | Blocks DC at the emitter; passes audio AC to the speaker |
@@ -69,13 +69,13 @@ the speaker only sees the AC audio signal.
 
 | Ref  | Value   | Part / Notes                          | Qty |
 |------|---------|---------------------------------------|-----|
-| Q1   | BC337   | NPN general-purpose transistor (TO-92) | 1   |
+| Q1   | BD165   | NPN power transistor (TO-126) | 1   |
 | R1   | 1 kΩ    | Base pull-up to VCC                    | 1   |
 | R2   | 1.8 kΩ  | Base pull-down to GND                  | 1   |
 | R3   | 220 Ω   | GPIO series resistor (also LPF series element) | 1 |
-| C2   | 220 nF  | Ceramic, LPF shunt at base (R3+C2 → f_c ≈ 3.3 kHz) | 1 |
+| C2   | 240 nF  | Ceramic, LPF shunt at base (R3+C2 → f_c ≈ 3.0 kHz) | 1 |
 | C1   | 100 µF  | Electrolytic, DC block (polarity + at emitter) | 1 |
-| SPK  | 17.5 Ω  | Loudspeaker                            | 1   |
+| SPK  | 7.5 Ω   | Loudspeaker                            | 1   |
 
 ---
 
@@ -158,16 +158,16 @@ the divider at all times — small, but worth noting for battery-powered use.
 
 ### Speaker power
 
-Using the peak emitter voltage across the 17.5 Ω load:
+Using the peak emitter voltage across the 7.5 Ω load:
 
 ```text
-P_peak = V_E² / R_L = (2.6 V)² / 17.5 Ω ≈ 0.39 W   (instantaneous peak)
-P_RMS  ≈ P_peak / 2  ≈ 0.19 W                     (sine, full-scale)
+P_peak = V_E² / R_L = (2.6 V)² / 7.5 Ω ≈ 0.90 W   (instantaneous peak)
+P_RMS  ≈ P_peak / 2  ≈ 0.45 W                     (sine, full-scale)
 ```
 
-In practice the PWM-driven average is far lower (~16 mW for a typical C64
-audio signal), which is plenty for a small piezo/speaker in a 1541-style enclosure
-and keeps the transistor comfortably within its safe operating area.
+Measured with the actual BD165 and 7.5 Ω speaker: ~261 mW continuous output power
+(peak emitter current ≈ 187 mA), which is comfortably within the BD165's ratings
+and makes the sound loud and clear in a 1541-style enclosure.
 
 ### Low-pass filter (PWM carrier rejection)
 
@@ -175,37 +175,40 @@ R3 and C2 form a first-order RC low-pass at the base:
 
 ```text
 f_c = 1 / (2π · R3 · C2)
-    = 1 / (2π · 220 Ω · 220 nF)
-    ≈ 3.29 kHz
+    = 1 / (2π · 220 Ω · 240 nF)
+    ≈ 3.02 kHz
 ```
 
-At the 8 kHz PWM carrier:
+At the 16 kHz PWM carrier:
 
 ```text
-|H(8 kHz)| = 1 / sqrt(1 + (f/f_c)²)
-            = 1 / sqrt(1 + (8000/3290)²)
-            ≈ 0.39   →  −8.4 dB  (~61 % amplitude reduction)
+|H(16 kHz)| = 1 / sqrt(1 + (f/f_c)²)
+             = 1 / sqrt(1 + (16000/3020)²)
+             ≈ 0.19   →  −14.2 dB  (~5× amplitude reduction)
 ```
 
-The carrier is reduced by roughly a factor of 2.6 in voltage. Combined with the
-speaker's own mechanical roll-off above ~3 kHz (small cones lose efficiency quickly),
-the residual 8 kHz buzz is well below audibility for normal C64 audio content. Audio
-above ~3.3 kHz is also attenuated, but the SID's output spectrum is already dark in
-that region and a small 1541-style speaker has little presence there anyway.
+The carrier is reduced by a factor of ~5 in voltage. Combined with the speaker's
+own mechanical roll-off above ~3 kHz (small cones lose efficiency quickly), the
+residual 16 kHz buzz is well below audibility for normal audio content. Audio above
+~3 kHz is also attenuated, but the SID's output spectrum is already dark in that
+region and a small 1541-style speaker has little presence there anyway.
 
 > **Note:** R3 was lowered from 470 Ω to 220 Ω for stronger base drive (see above),
 > which would have raised f_c to ~7.2 kHz on its own. C2 was increased from 100 nF
-> to 220 nF to keep the cutoff at ~3.3 kHz and maintain the same carrier rejection.
+> to 240 nF to keep the cutoff at ~3 kHz and maintain strong carrier rejection —
+> required because the sample rate moved from 8 kHz to 16 kHz, where the old
+> 220 nF value only attenuated the carrier by ~4 dB (audible buzz).
 
 ### Coupling capacitor time constant
 
 ```text
-τ = R_L · C1 = 17.5 Ω · 100 µF ≈ 1.75 ms
-f_c = 1 / (2π·τ) ≈ 90 Hz
+τ = R_L · C1 = 7.5 Ω · 100 µF ≈ 0.75 ms
+f_c = 1 / (2π·τ) ≈ 212 Hz
 ```
 
-C1 passes the audio band (≈ 200 Hz – 4 kHz) with little attenuation and blocks the
-DC bias at the emitter.
+C1 passes most of the audio band with little attenuation (−3 dB at ≈ 212 Hz, so
+bass below ~200 Hz is slightly rolled off — acceptable for a small speaker) and
+blocks the DC bias at the emitter.
 
 ---
 
@@ -214,9 +217,8 @@ DC bias at the emitter.
 | File | Description |
 |------|-------------|
 | `speaker_driver.md` | This document |
-| `speaker_driver.png` | Rendered schematic (generated by `make_speaker_driver.py`) |
-| `make_speaker_driver.py` | schemdraw script that produces the PNG |
 
-> **Note:** The PNG is generated with `schemdraw 0.23`. Use a *numeric* unit
-> (`Drawing(unit=1.0)`) — passing the string `unit="mm"` crashes in
-> `Element._place()` because the string leaks into the zoom/scale math.
+> **Note (schemdraw):** if regenerating a PNG, use `schemdraw 0.23` with a *numeric*
+> unit (`Drawing(unit=1.0)`) — passing the string `unit="mm"` crashes in
+> `Element._place()` because the string leaks into the zoom/scale math. The element
+> name is `ResistorIEEE`, and valid wire shapes are `-`, `-|`, `|-`, `n`, `c`, `z`, `N`.
