@@ -56,7 +56,7 @@ if(BUILD_MENUPRG)
     ## Menu_pal - build
     add_custom_command(
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-      DEPENDS ${MENU_PRG_SOURCE} fastload_0140.bin fastload_e000.bin
+      DEPENDS ${MENU_PRG_SOURCE} exos.asm
       OUTPUT ${TMP_MENU_C64_PAL_PRG}
       COMMAND ${ACME_TOOL} ${ACME_OPTIONS} -o ${TMP_MENU_C64_PAL_PRG} ${MENU_PRG_SOURCE}
     )
@@ -69,7 +69,7 @@ if(BUILD_MENUPRG)
 
     add_custom_command(
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-      DEPENDS ${MENU_PRG_SOURCE} exos_ntsc.asm
+      DEPENDS ${MENU_PRG_SOURCE} exos.asm
       OUTPUT ${TMP_MENU_C64_NTSC_PRG}
       COMMAND ${ACME_TOOL} ${ACME_OPTIONS} -DNTSC=1 -o ${TMP_MENU_C64_NTSC_PRG} ${MENU_PRG_SOURCE}
     )

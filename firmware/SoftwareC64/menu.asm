@@ -86,11 +86,7 @@
     SEARCH_COLOR_XOR = 3
     SELECTOR_COLOR = $06
     BA = $ba
-    !ifdef NTSC {
     LOAD = FASTLOAD_EXOS
-    } else {
-    LOAD = $014b
-    }
     ptr1 = $fb
     ptr2 = $fd
     ptr3 = $f7
@@ -1936,8 +1932,7 @@ fastload_stack_len = *-fastload_stack
 
         } else {
 
-        !ifdef NTSC {
-;;;;;;;;;;;;;;;;;;; NTSC C64 START ;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;; C64 START ;;;;;;;;;;;;;;;;;;;;;;;
 
 fastload_init:
         ldx #fastload_stack_len
@@ -1945,7 +1940,7 @@ fastload_init:
         sta STACK_START-1,x
         dex
         bne -
-        !src "exos_ntsc.asm"
+        !src "exos.asm"
 
 fastload_stack:
 !pseudopc STACK_START {
@@ -1979,64 +1974,7 @@ load_star_name_len = * - load_star_name
 }
 fastload_stack_len = * - fastload_stack 
 
-;;;;;;;;;;;;;;;;;;; NTSC C64 END ;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;; C64 END ;;;;;;;;;;;;;;;;;;;;;;;
      
-        } else {
-
-;;;;;;;;;;;;;;;;;;; PAL C64 START ;;;;;;;;;;;;;;;;;;;;;;;
-
-fastload_init:
-        ldx #fastload_stack_len
--       lda fastload_stack-1,x
-        sta STACK_START-1,x
-        dex
-        bne -
-        ldy #>(fastload_main_len)
--       
-fastload_main_src_ptr = *+2
-        lda fastload_main,x
-fastload_main_dst_ptr = *+2
-        sta $e000,x
-        inx
-        bne -
-        inc fastload_main_src_ptr
-        inc fastload_main_dst_ptr
-        dey
-        bpl -
-        rts
-
-fastload_stack:
-!pseudopc STACK_START {
-        jmp print_load
-        lda #load_star_name_len
-        ldx #<load_star_name
-        ldy #>load_star_name
-        jsr $ffbd     ; call SETNAM
-        lda #$01
-        ldx BA
-        tay           ; $01 means: load to origin address
-        jsr $ffba     ; call SETLFS
-
-        lda #$00
-        !bin "fastload_0140.bin",$2c,2+11
-        jmp +
-        !bin "fastload_0140.bin",,2+11+$2f
-load_star_name:     ; bug in fast loader : cannot handle ":*"
-        !text "*"
-load_star_name_len = * - load_star_name
-+       ldx $ae
-        ldy $af
-        stx $2d
-        sty $2e
-        jmp $f5a9
-        }
-fastload_stack_len = * - fastload_stack      
-
-fastload_main:
-        !bin "fastload_e000.bin",,2
-fastload_main_len = *-1
-        }
-        ;;;;;;;;;;;;;;;;;;; PAL C64 END ;;;;;;;;;;;;;;;;;;;;;;;
-
         }
         }   ;VIC20
