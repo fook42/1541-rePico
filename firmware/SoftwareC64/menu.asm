@@ -71,7 +71,7 @@
     TED_JOY    = $ff08        ; TED joystick/keyboard register
     KB_LATCH   = $fd30        ; Keyboard latch
 
-} else {
+} else { ; C16
     VIDEORAM = $0400
     COLORRAM = $d800
     RASTER_LINE = $d012
@@ -84,7 +84,7 @@
     D021 = $d021
     BORDER_COLOR = $0b
     SEARCH_COLOR_XOR = 3
-    SELECTOR_COLOR = $02
+    SELECTOR_COLOR = $06
     BA = $ba
     !ifdef NTSC {
     LOAD = FASTLOAD_EXOS
@@ -95,7 +95,7 @@
     ptr2 = $fd
     ptr3 = $f7
     NUM_PAGES = >($d000-directory_start)
-}
+} ; C16
 } ; VIC20
 
     STACK_START = $0135
@@ -154,7 +154,7 @@ LINE_SIZES = $033c  ;"MAX_LINE"-bytes to line lengths
         * = $1008
         }
         }
-        !ifndef C16 {
+        !ifdef VIC20 {
         ;first, set how much memory will can use
         lda $0284   ;basic end
         sec
@@ -507,7 +507,12 @@ no_f5:
         }
         cmp #$20
         beq do_space
-
+        !ifdef C16 {
+        cmp #$1b
+        bne +
+        jmp 65526   :;reset
++
+        }
         cmp #$0d    ;return
         beq do_space
         jsr enter_search
@@ -632,6 +637,7 @@ enable_5k:
         jmp $fd35   ;jump to basic warm start
         } else { ; VIC20
         !ifdef C16 {
+c16reset:
         jsr 32962   ;init screen
         cli
         ;jmp ($0302)
@@ -1287,14 +1293,6 @@ found_end_of_entry:
         lda #>directory_start
         sta ptr1+1
 no_wrap_around:
-        lda ptr1
-end_ptr_low = *+1
-        cmp #$00
-        bne do_search_next_entry
-+       lda ptr1+1
-end_ptr_high = *+1
-        cmp #$00
-        beq nothing_to_search
         !ifdef VIC20 {
         lda #%11110111  ; Select Column 0 (pull Bit 0 low)
         sta $9120       ; VIA #2 Port B (Keyboard Column Select)
@@ -1313,6 +1311,14 @@ end_ptr_high = *+1
         bpl nothing_to_search
         }
         }
+        lda ptr1
+end_ptr_low = *+1
+        cmp #$00
+        bne do_search_next_entry
++       lda ptr1+1
+end_ptr_high = *+1
+        cmp #$00
+        beq nothing_to_search
 do_search_next_entry:
         jmp search_next_entry
 
