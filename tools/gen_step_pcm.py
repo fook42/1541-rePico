@@ -33,8 +33,7 @@ def generate(
 ) -> bytes:
     rng = random.Random(seed)
 
-    total_samples = int(sample_rate * duration_s)
-    out = bytearray([128] * total_samples)
+    
 
     click_samples = int(sample_rate * click_ms / 1000.0)
     spacing_samples = int(sample_rate * spacing_ms / 1000.0)
@@ -43,7 +42,15 @@ def generate(
     tick_decay = 1.0 / (sample_rate * tick_decay_ms / 1000.0)
     body_decay = 1.0 / (sample_rate * body_decay_ms / 1000.0)
 
-    n_clicks = total_samples // spacing_samples
+    if (duration_s == 0):  # Special case: single click
+        total_samples = int(click_samples)
+        n_clicks = 1
+        spacing_samples = 0
+    else:
+        total_samples = int(sample_rate * duration_s)
+        n_clicks = total_samples // spacing_samples
+
+    out = bytearray([128] * total_samples)
     for c in range(n_clicks):
         start = c * spacing_samples
         amp = rng.uniform(jitter_min, jitter_max)
@@ -75,14 +82,17 @@ def generate(
 
 def main():
     sample_rate = int(sys.argv[1]) if len(sys.argv) > 1 else 16_000
-    duration_s = float(sys.argv[2]) if len(sys.argv) > 2 else 5.0
+    duration_s = float(sys.argv[2]) if len(sys.argv) > 2 else 5.0    
     out_path = sys.argv[3] if len(sys.argv) > 3 else "step_8bit.pcm"
 
     data = generate(sample_rate=sample_rate, duration_s=duration_s)
     with open(out_path, "wb") as f:
         f.write(data)
 
-    n_clicks = int(duration_s * 1000.0 / 120.0)
+    if (duration_s == 0 ):
+        n_clicks=1
+    else:
+        n_clicks = int(duration_s * 1000.0 / 120.0)
     print(f"Wrote {out_path}: {len(data)} bytes ({sample_rate} Hz, {duration_s:.1f} s, ~{n_clicks} clicks)")
 
 

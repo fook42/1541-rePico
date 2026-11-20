@@ -349,7 +349,11 @@ void check_menu_events(const uint16_t menu_event)
                 /// Info Menü
                 case M_VERSION_INFO:
                     show_start_message();
-                    while(irq_key_value != KEY2_DOWN) {};
+                    do {
+                        irq_key_value = NO_KEY;
+                        sleep_ms(50);
+                    }while(irq_key_value > KEY2_UP);                    
+                    sleep_ms(250);
                     irq_key_value = NO_KEY;
                     menu_refresh();
                     break;
@@ -358,7 +362,11 @@ void check_menu_events(const uint16_t menu_event)
                     if (FR_OK == mount_sdcard(current_path))
                     {
                         show_sdcard_info_message();
-                        while(irq_key_value != KEY2_DOWN) {};
+                        do{ 
+                            irq_key_value = NO_KEY; 
+                            sleep_ms(50);
+                        }while(irq_key_value > KEY2_UP);
+                        sleep_ms(250);
                         irq_key_value = NO_KEY;
                     } else {
                         display_clear();

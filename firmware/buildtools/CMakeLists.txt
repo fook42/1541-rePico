@@ -42,3 +42,29 @@ add_executable(tok64_tool IMPORTED GLOBAL)
 
 set_property(TARGET tok64_tool PROPERTY IMPORTED_LOCATION ${TOK64_EXECUTABLE} )
 
+### build gen_shifted_wav ...
+# Host tool (built with the system compiler, NOT the cross-compiler):
+# generates shiftedWavData*.h headers from 8-bit PCM files for the firmware.
+# It is compiled via a custom command that invokes gcc directly, so the
+# Pico SDK's cross-compiler (arm-none-eabi-gcc) can never be picked up.
+find_program(HOST_C_COMPILER NAMES gcc cc clang)
+
+if(NOT HOST_C_COMPILER)
+    MESSAGE(FATAL_ERROR "### No host C compiler (gcc/cc/clang) found - gen_shifted_wav can not be built! ###")
+endif()
+
+set(GEN_SHIFTED_WAV_EXECUTABLE ${CMAKE_CURRENT_BINARY_DIR}/gen_shifted_wav)
+
+add_custom_command(
+        OUTPUT ${GEN_SHIFTED_WAV_EXECUTABLE}
+        COMMAND ${HOST_C_COMPILER} -O2 -Wall -o ${GEN_SHIFTED_WAV_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/gen_shifted_wav.c
+        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/gen_shifted_wav.c
+)
+
+add_custom_target(GenShiftedWav ALL
+        DEPENDS ${GEN_SHIFTED_WAV_EXECUTABLE})
+
+add_executable(gen_shifted_wav_tool IMPORTED GLOBAL)
+
+set_property(TARGET gen_shifted_wav_tool PROPERTY IMPORTED_LOCATION ${GEN_SHIFTED_WAV_EXECUTABLE} )
+

@@ -227,11 +227,9 @@ int main()
     init_writeprot();
     disable_write_protection();
 
-#if 1 // PCB_VERSION>=17
     // Enable Sound-Output-Pin
     init_sound();
-    turn_sound_on();
-#endif
+    turn_sound_on(SOUND_SONG);
 
     // setup menus
     menu_init(&main_menu,     main_menu_entrys,     count_of(main_menu_entrys),     LCD_LINE_SIZE, LCD_LINE_COUNT);

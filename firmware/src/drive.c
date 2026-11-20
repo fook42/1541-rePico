@@ -35,7 +35,7 @@ int64_t steppertimer_callback(alarm_id_t id, void *user_data)
 
 void start_stepper_timer(void)
 {
-    turn_sound_on();
+    turn_sound_on(SOUND_STEP);
 
     if (stepper_alarm) { cancel_alarm(stepper_alarm); }
     stepper_alarm = add_alarm_in_ms(STEPPER_DELAY_TIME, steppertimer_callback, NULL, false);
@@ -371,9 +371,9 @@ void stop_bytetimer(void)
 
 /////////////////////////////////////////////////////////////////////
 
-///////////////////////////////////////
+/////////////////////////////////////
 ///////// ISR
-///////////////////////////////////////
+/////////////////////////////////
 
 
 //ISR (TIMER0_COMPA_vect)

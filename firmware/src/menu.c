@@ -44,7 +44,7 @@ uint16_t menu_update(const uint8_t key_code)
     {
         case KEY0_DOWN:
             {
-                turn_sound_on();
+                turn_sound_on(SOUND_1KHZ);
                 if(current_menu->lcd_cursor_pos > 0)
                 {
                     current_menu->lcd_cursor_pos--;
@@ -67,6 +67,7 @@ uint16_t menu_update(const uint8_t key_code)
 
         case KEY1_DOWN:
             {
+                turn_sound_on(SOUND_1KHZ);
                 if(    (current_menu->lcd_cursor_pos < (current_menu->lcd_row_count-1))
                     && (current_menu->lcd_cursor_pos < (current_menu->entry_count-1)))
                 {
@@ -90,6 +91,7 @@ uint16_t menu_update(const uint8_t key_code)
 
         case KEY2_UP:
             {
+                turn_sound_on(SOUND_500HZ);
                 // menu->lcd_window_pos + menu->lcd_cursor_pos = index in MenuEntryList
                 command = MC_SELECT_ENTRY;
                 uint8_t menu_index = current_menu->lcd_window_pos + current_menu->lcd_cursor_pos;

@@ -1,5 +1,6 @@
 firmware/build*/*
 build*/*
+!firmware/buildtools/gen_shifted_wav.c
 firmware/include/boot_selector.h
 firmware/include/selector.h
 firmware/include/c64_*.h
@@ -8,6 +9,7 @@ firmware/include/p4_*.h
 firmware/include/vic20_*.h
 firmware/include/fe3loader.h
 firmware/include/wavData.h
+firmware/include/shiftedWavData.h
 firmware/SoftwareC64/tmp*
 firmware/SoftwareC64/labels.lab
 analysis-reports/*

@@ -41,9 +41,12 @@ add_subdirectory(./sounds)
 
 add_executable(1541-rePico)
 
-add_dependencies(1541-rePico GenWavData GenSelector GenMenuC64Pal GenMenuC64Ntsc GenMenuC16 GenMenuP4 GenMenuVIC20 GenIntro GenFe3loader)
+add_dependencies(1541-rePico GenShiftedWavData GenSelector GenMenuC64Pal GenMenuC64Ntsc GenMenuC16 GenMenuP4 GenMenuVIC20 GenIntro GenFe3loader)
 
 # Add executable. Default name is the project name, version 0.1
+# Note: sound routines live in src/sound.c (header: include/sound.h).
+# They are picked up automatically by the glob below; shiftedWavData.h is
+# generated from sounds/ by the GenShiftedWavData target above.
 file(GLOB_RECURSE mysources  CONFIGURE_DEPENDS "src/*.c")
 file(GLOB_RECURSE myincludes CONFIGURE_DEPENDS "include/*.h")
 
@@ -67,6 +70,8 @@ add_subdirectory(no-OS-FatFS-SD-SDIO-SPI-RPi-Pico/src build)
 target_include_directories(1541-rePico PRIVATE
         ${PROJECT_SOURCE_DIR}/include
         ${CMAKE_CURRENT_LIST_DIR}
+        # shiftedWavData*.h generated from sounds/*.pcm by GenShiftedWavData
+        ${CMAKE_BINARY_DIR}/generated
 )
 
 # Add the standard library to the build
