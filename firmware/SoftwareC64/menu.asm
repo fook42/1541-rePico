@@ -20,11 +20,11 @@
     MAX_X = 22	    ;screen width
     MAX_LINE = 21
 
-
     VIDEORAM = $1000
     COLORRAM = $9400
     E518 = $E55F
     BORDER_COLOR = $06 
+    SEARCH_COLOR_XOR = 4
     LOAD = $ffd5
     BA = $ba
     ptr1 = $fb
@@ -54,16 +54,19 @@
     D021 = $ff15
     BORDER_COLOR = $31
     SELECTOR_COLOR = $18
+    SEARCH_COLOR_XOR = $40
+
     LOAD = $ffd5
     BA = $0134
     ptr1 = $03
     ptr2 = $05
     ptr3 = $9f
     !ifdef C16_64K {
-    NUM_PAGES = >($f300-directory_start)
+    NUM_PAGES = >($8000-directory_start)
     } else {
     NUM_PAGES = >($4000-directory_start)
     }
+    
 
     TED_JOY    = $ff08        ; TED joystick/keyboard register
     KB_LATCH   = $fd30        ; Keyboard latch
@@ -80,6 +83,7 @@
     D020 = $d020
     D021 = $d021
     BORDER_COLOR = $0b
+    SEARCH_COLOR_XOR = 3
     SELECTOR_COLOR = $02
     BA = $ba
     !ifdef NTSC {
@@ -140,19 +144,6 @@ LINE_SIZES = $033c  ;"MAX_LINE"-bytes to line lengths
 +
 }
 
-!macro conv_to_screen {
-        cmp #$5f
-        bne +
-        lda #$64
-        bne .store_code
-+
-        cmp #$60
-        bcc .store_code
-        sbc #$20
-.store_code:
-        }
-        ;rts
-
         !ifdef VIC20 {
         *= $1201
         !by $0b,$12,$00,$00,$9e,$34,$36,$32,$31,$00,$00,$00
@@ -163,11 +154,13 @@ LINE_SIZES = $033c  ;"MAX_LINE"-bytes to line lengths
         * = $1008
         }
         }
+        !ifndef C16 {
         ;first, set how much memory will can use
         lda $0284   ;basic end
         sec
         sbc #>directory_start
         sta number_of_pages
+        }
         
         jsr fastload_init
         !ifdef VIC20 {
@@ -187,7 +180,7 @@ restart:
         }        
         jsr E518
         ldy #MAX_X
--       lda buttomline-1,y
+-       lda bottomline-1,y
         ora #$80
         sta VIDEORAM+(MAX_LINE+1)*MAX_X-1,y
         lda #BORDER_COLOR
@@ -241,50 +234,7 @@ restart:
         }  ; VIC20
 
 restart_home:
-        ;ldy #<directory_start  ; is zero now
-        sty ptr1
-        lda #>directory_start
-        sta ptr1+1
-        sta current_pos+1
--       lda (ptr1),y
-        beq end_of_top_line_string
-        +conv_to_screen
-        ora #$80
-        sta VIDEORAM,y
-        iny
-        cpy #MAX_X
-        bne -
-        dey
--       iny
-        lda (ptr1),y
-        bne -
-end_of_top_line_string:
-        tya
-        tax
--       cpx #MAX_X
-        bcs end_top_line
-        lda #$a0
-        sta VIDEORAM,x
-        inx
-        bne -
-end_top_line:
-        ;tya
-        ;sec
-        ;adc #<directory_start
-        ;sta current_pos
-        iny
-        sty  current_pos
-        ;lda #$00
-        ;adc #>directory_start
-        ;lda #>directory_start
-        ;sta current_pos+1
-
-        jsr calc_at_current_pos
-        ldx tmp1
-        stx maxline_cmp_value_calc_sizes
-        beq +
-        dex
-+       stx maxline_cmp_value
+        jsr do_restart_home
 
 repaint:
         jsr print_at_current_pos
@@ -391,15 +341,22 @@ jmp_do_space:
         cmp #17    ;cursor down
         bne no_cursor_down
 do_cursordown:
+        jsr call_cursor_down
+        bcs repaint
+        jmp keyloop
+
+call_cursor_down:
         lda current_cursor_position
 maxline_cmp_value = *+1
         cmp #MAX_LINE-1
         bcc do_cursor_down
         jsr try_scroll_down
-        jmp repaint
+        sec
+        rts
 do_cursor_down:
         inc current_cursor_position
-        jmp keyloop
+        clc
+        rts
 
 no_cursor_down:
         cmp #145    ;cursor up
@@ -465,14 +422,18 @@ do_keyloop2:
 no_crsr_left:
         cmp #$13    ; home
         bne no_home
-        lda #$00
+        jsr home
         tay
+        jmp restart_home
+
+home:
+        lda #$00
         sta current_index_number
         sta current_index_number+1
         sta current_cursor_position
         sta x_pos
-        jmp restart_home
-
+        rts
+        
 no_home:
         cmp #134
         bne no_f3
@@ -549,6 +510,9 @@ no_f5:
 
         cmp #$0d    ;return
         beq do_space
+        jsr enter_search
+        bcc do_keyloop
+        jmp repaint
 do_keyloop:
         jmp keyloop
 do_space:
@@ -788,6 +752,31 @@ c16irqcont:
     }
     }   ;!ifndef VIC20 
 
+do_restart_home:
+        ldy #<directory_start  ; is zero now
+        sty ptr1
+        lda #>directory_start
+        sta ptr1+1
+        sta current_pos+1
+        jsr paint_top_line
+        ;tya
+        ;sec
+        ;adc #<directory_start
+        ;sta current_pos
+        iny
+        sty  current_pos
+        ;lda #$00
+        ;adc #>directory_start
+        ;lda #>directory_start
+        ;sta current_pos+1
+
+        jsr calc_at_current_pos
+        ldx tmp1
+        stx maxline_cmp_value_calc_sizes
+        beq +
+        dex
++       stx maxline_cmp_value
+        rts
 get_current_type:
         lda current_pos
         sta ptr1
@@ -813,6 +802,33 @@ get_current_type_loop:
         bne --
         ldy #$00
         lda (ptr1),y
+        rts
+
+
+paint_top_line:
+        ldy #$00
+-       lda directory_start,y
+        beq end_of_top_line_string
+        jsr conv_to_screen
+        ora #$80
+        sta VIDEORAM,y
+        iny
+        cpy #MAX_X
+        bne -
+        dey
+-       iny
+        lda directory_start,y
+        bne -
+end_of_top_line_string:
+        tya
+        tax
+-       cpx #MAX_X
+        bcs end_top_line
+        lda #$a0
+        sta VIDEORAM,x
+        inx
+        bne -
+end_top_line:
         rts
 
 calc_at_current_pos:
@@ -939,7 +955,7 @@ do_print:
 +        
 -       lda (ptr1),y
         beq string_ends
-        +conv_to_screen
+        jsr conv_to_screen
         sta (ptr2),y
         lda filetypecolor,x
         sta (ptr3),y
@@ -1098,6 +1114,251 @@ screen_high_bytes:
 
         }
 
+
+conv_to_screen:
+        cmp #$5f
+        bne +
+        lda #$64
+        bne store_code
++
+        cmp #$60
+        bcc store_code
+        sbc #$20
+store_code:
+        rts
+
+clear_search_buffer:
+        ldx #search_buffer_len-1
+-       lda #$20
+        sta search_buffer,x
+        dex
+        bne -
+        jmp do_search_cursor
+
+enter_search:
+        cmp #$03
+        beq store_code
+        tax
+        lda D020
+        pha
+        txa
+        pha
+        ldx #menu_line_lenght-1
+-       lda menu_line,x
+        sta VIDEORAM,x
+        dex
+        bpl -
+        pla
+        cmp #$14
+        beq print_search_char
+        jmp +
+next_search_char:
+        jsr $ffe4
+        beq next_search_char
+        bmi next_search_char
+        cmp #$13
+        beq clear_search_buffer
+        cmp #$0d
+        beq do_search
+        cmp #$14        ;backspace
+        bne +
+        ldx len_search
+        beq next_search_char
+        lda #$20
+        sta search_buffer,x
+        dex
+        jmp do_search_cursor     
++       cmp #$20
+        bcc next_search_char
+        ldx len_search
+        cpx #search_buffer_len-1
+        beq next_search_char
+        jsr conv_to_screen
+        sta search_buffer,x
+        inx
+do_search_cursor:
+        lda #$a0
+        sta search_buffer,x
+        stx len_search
+print_search_char:
+        ldx #search_buffer_len-1
+-       lda search_buffer,x
+        eor #$80
+        sta VIDEORAM+menu_line_lenght,x
+        dex
+        bpl -
+
+        jmp next_search_char
+
+do_search:
+        lda len_search
+        bne +
+        jmp nothing_to_search        
++
+        sei
+        lda #$2c
+        sta found_jump
+        lda search_buffer
+        sta search_cmp_value
+        
+        jsr get_current_type    ;get current pos in ptr1
+        lda ptr1
+        sta end_ptr_low
+        lda ptr1+1
+        sta end_ptr_high
+search_next_entry:
+        ldy #$01
+search_next_entry_char:
+        lda (ptr1),y
+        beq found_end_of_entry
+        jsr conv_to_screen
+search_cmp_value = *+1
+        cmp #00
+        bne first_char_does_not_fit
+        ;make a deeper check
+
+        tya
+        tax
+        clc
+        adc ptr1
+        sta ptr2
+        lda ptr1+1
+        adc #$00
+        sta ptr2+1
+
+        ldy len_search
+        dey
+-       lda (ptr2),y
+        jsr conv_to_screen
+        cmp search_buffer,y
+        bne search_does_not_fit
+        dey
+        bpl -
+        ;found !
+found_jump:
+        bit found_entry
+
+search_does_not_fit:
+        txa
+        tay
+
+first_char_does_not_fit:
+        iny
+        bne search_next_entry_char
+
+found_end_of_entry:
+        lda D020
+        eor #SEARCH_COLOR_XOR
+        sta D020
+        lda #$4c
+        sta found_jump
+        tya
+        sec
+        adc ptr1
+        sta ptr1
+        bcc +
+        inc ptr1+1
++       lda ptr1
+        pha
+        lda ptr1+1
+        pha
+        jsr call_cursor_down
+        pla
+        sta ptr1+1
+        pla
+        sta ptr1
+        lda ptr1
+        cmp directory_end
+        lda ptr1+1
+        sbc directory_end+1
+        bcc no_wrap_around
+        ;find first entry after directory name
+        ldy #$ff
+-       iny
+        lda directory_start,y
+        bne -
+        iny
+        tya
+        pha
+        jsr home
+        jsr do_restart_home
+        pla
+        sta ptr1
+        lda #>directory_start
+        sta ptr1+1
+no_wrap_around:
+        lda ptr1
+end_ptr_low = *+1
+        cmp #$00
+        bne do_search_next_entry
++       lda ptr1+1
+end_ptr_high = *+1
+        cmp #$00
+        beq nothing_to_search
+        !ifdef VIC20 {
+        lda #%11110111  ; Select Column 0 (pull Bit 0 low)
+        sta $9120       ; VIA #2 Port B (Keyboard Column Select)
+        lda $9121       ; VIA #2 Port A (Keyboard Row Read)
+        lsr             ; Mask Bit 1 (Row 3 = RUN/STOP)
+        bcc nothing_to_search; Active-low: 0 means the key is pressed
+        } else {
+        !ifdef C16 {
+        lda #$7f        ; Bit 7 auf 0 setzen, um Tastaturzeile 7 auszuwählen
+        sta KB_LATCH    ; In Tastatur-Latch schreiben
+        sta TED_JOY
+        lda TED_JOY     ; TED-Tastaturport auslesen
+        bpl nothing_to_search
+        } else {
+        lda $dc01
+        bpl nothing_to_search
+        }
+        }
+do_search_next_entry:
+        jmp search_next_entry
+
+nothing_to_search:
+        !ifdef C16 {
+        ; 4. Re-enable standard system keyboard scanning (optional, but good practice)
+        lda #$00
+        sta KB_LATCH
+        }
+
+        clc
+        !byte $24
+        ;nothing found
+found_entry:
+        sec
+        pla
+        sta D020
+        php
+        jsr paint_top_line
+        !ifdef VIC20 {
+        } else {
+        !ifdef C16 {
+        lda #$81
+        sta VIC_IRQ_STATUS
+        } else {
+        inc VIC_IRQ_STATUS
+        }
+        }
+        plp
+        cli
+        rts
+
+
+menu_line:
+        !ct scr {
+        !byte 'S'+$80
+        !byte 'e'+$80
+        !byte 'a'+$80
+        !byte 'r'+$80
+        !byte 'c'+$80
+        !byte 'h'+$80
+        !byte ' '+$80
+        !byte ':'+$80
+        !byte ' '+$80
+        }
+menu_line_lenght = * - menu_line
 
 load_menu_file:
         !ifdef VIC20 {
@@ -1378,7 +1639,7 @@ drive_number:
 loadtextlen = * - loadtext
 
         
-buttomline:
+bottomline:
         !ifdef VIC20 {
         !scr "<SPC>=mnt <RET/F3>=run"
         } else { ; VIC20
@@ -1495,8 +1756,20 @@ number_of_pages:
         !ifdef CLEANUP_BLOCK_WRITTEN {
         !text "MENU"
         }
+
 sector_len = * - sector_address
 
+len_search:
+        !byte 0
+
+
+search_buffer_len = MAX_X - menu_line_lenght
+
+search_buffer:
+        !byte $a0
+        !for i,2, search_buffer_len {
+            !byte $20
+        }
 
 directory_start = (*+$ff) & $ff00
 
