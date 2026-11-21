@@ -288,12 +288,9 @@ block_41  ; dest=$f857 len=148 (@ $0ca6)
         !byte $b0,$07,$ca,$10,$e8,$84,$b6,$d0,$dd,$4c,$fd,$f7,$a5,$5a,$8d,$00
         !byte $dd,$ad,$11,$d0,$09,$10,$8d,$11,$d0,$60,$2c,$00,$dd,$70,$fb,$a0
         !byte $03,$ea,$a6,$01,$ad,$00,$dd,$4a,$4a
-        
-        !ifdef NTSC {
-        !byte $c1
-        } else {
-        !byte $ea
-        }
+
+exos_ntsc_pal_switch:
+        !byte $ea       ; $c1 for NTSC        
         !byte $ea,$0d,$00,$dd,$4a,$4a	; $c1 -> $ea : PAL
         !byte $ea,$ea,$0d,$00,$dd,$4a,$4a,$ea,$ea,$0d,$00,$dd,$99,$5d,$00,$88
         !byte $10,$e2,$60,$57,$2d,$4d,$4d,$2d,$45,$00,$04,$20,$0f,$01,$1c,$07
