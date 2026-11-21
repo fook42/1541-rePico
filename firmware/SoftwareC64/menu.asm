@@ -1,6 +1,10 @@
         ;!to "menu.prg",cbm
 
+        !ifdef DTV {
+        !cpu c64dtv2
+        } else {
         !cpu 6510
+        } 
 
 ;   Typ [8bit, 1 =file, 2=dir], 
 ;   Filename[chars],stopbyte[8bit, =0] .. jeweils pro eintrag hintereinander
@@ -22,8 +26,8 @@
 
     VIDEORAM = $1000
     COLORRAM = $9400
-    E518 = $E55F
-    BORDER_COLOR = $06 
+    CLR_SCREEN = $E55F
+    BORDER_COLOR = $02 
     SEARCH_COLOR_XOR = 4
     LOAD = $ffd5
     BA = $ba
@@ -49,11 +53,11 @@
     VIC_IRQ_ENA = $ff0a
     VIC_IRQ_STATUS = $ff09
     EA31 = $ce0e
-    E518 = 55435
+    CLR_SCREEN = 55435
     D020 = $ff19
     D021 = $ff15
     BORDER_COLOR = $31
-    SELECTOR_COLOR = $18
+    SELECTOR_COLOR = $16
     SEARCH_COLOR_XOR = $40
 
     LOAD = $ffd5
@@ -71,7 +75,7 @@
     TED_JOY    = $ff08        ; TED joystick/keyboard register
     KB_LATCH   = $fd30        ; Keyboard latch
 
-} else { ; C16
+} else { ; C64
 
     VIDEORAM = $0400
     COLORRAM = $d800
@@ -80,7 +84,7 @@
     VIC_IRQ_ENA = $d01a
     VIC_IRQ_STATUS = $d019
     EA31 = $ea31
-    E518 = $e518
+    CLR_SCREEN = $e51b
     D020 = $d020
     D021 = $d021
     BORDER_COLOR = $0b
@@ -151,7 +155,13 @@ LINE_SIZES = $033c  ;"MAX_LINE"-bytes to line lengths
         } else {
         !ifndef C16 {
         * = $0808
-        !ifndef DTV {
+        !ifdef DTV {
+        ldx #$01    ;set kernal bank to default
+        stx $d03f
+        dex
+        stx $d100
+        stx $d03f
+        } else {
         lda $02A6
         bne +
         lda #$c1
@@ -185,7 +195,7 @@ restart:
         lda #$02
         sta current_cursor_last_position
         }        
-        jsr E518
+        jsr CLR_SCREEN
         ldy #MAX_X
 -       lda bottomline-1,y
         ora #$80
@@ -650,13 +660,16 @@ c16reset:
         ;jmp ($0302)
         jmp 32778   ;basic warm start
         } else {
-        ;lda #$37
         inc $01
-        ;jsr $E422
-        ;cli
-        ;jmp $a474
         jsr $fda3
+        !ifdef DTV {
+        jsr $ff5b
+        jsr $fd15
+        jsr $e422
+        jmp $a474
+        } else {
         jmp $fcf8   ;part of reset, jumps to ($a000)
+        }
         }
         } ; VIC20
 
@@ -1209,6 +1222,11 @@ do_search:
         jmp nothing_to_search        
 +
         sei
+        !ifdef DTV {
+        sac #$99
+        lda #$03
+        sac #$00
+        }
         lda #$2c
         sta found_jump
         lda search_buffer
@@ -1351,10 +1369,20 @@ found_entry:
         lda #$81
         sta VIC_IRQ_STATUS
         } else {
+        !ifdef DTV {
+        lda VIC_IRQ_STATUS
+        sta VIC_IRQ_STATUS
+        } else {
         inc VIC_IRQ_STATUS
         }
         }
+        }
         plp
+        !ifdef DTV {
+        sac #$99
+        lda #$00
+        sac #$00
+        }
         cli
         rts
 
@@ -2021,6 +2049,8 @@ fastload_stack:
         tay           ; $01 means: load to origin address
         jsr $ffba     ; call SETLFS
 FASTLOAD_EXOS:
+        lda #$0b
+        sta $d011
         lda $01
         pha
         lda #$35
