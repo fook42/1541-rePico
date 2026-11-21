@@ -12,8 +12,8 @@
 #include "ctype.h"
 #include "c64_intro.h"
 #include "boot_selector.h"
-#include "c64_menu_pal.h"
-#include "c64_menu_ntsc.h"
+#include "c64_menu.h"
+#include "c64_menu_dtv.h"
 #include "c16_menu.h"
 #include "p4_menu.h"
 #include "vic20_menu.h"
@@ -240,11 +240,11 @@ void create_menu_image(const char* menu_path, DIR* dir_obj, uint8_t* id1_p, uint
 
         T19  v/ start SELECTOR                  - start: SELECTOR_TRACK     fixed
         ..   ====
-        Txx  v/ start MENU_C64_PAL              - start: C64 Pal MenuPRG    variable
+        Txx  v/ start MENU_C64                  - start: C64 MenuPRG        variable
         ..   ====
         Txx  v/ start MENU_P4                   - start: P4 MenuPRG         variable
         ..   ====
-        Txx  v/ start MENU_C64_NTSC             - start: C64 Ntsc MenuPRG   variable
+        Txx  v/ start MENU_C64_DTV              - start: C64 DTV MenuPRG    variable
         ..   ====
         Txx  v/ start MENU_VIC20                - start: VIC20 MenuPRG      variable
         ..   ====
@@ -282,14 +282,14 @@ void create_menu_image(const char* menu_path, DIR* dir_obj, uint8_t* id1_p, uint
     int8_t last_track;
     last_track = fill_tracks_with_file(SELECTOR_TRACK,  (uint8_t*) &selector_prg[0],     selector_prg_len,     FILL_DOWN, num_max_tracks, my_id1, my_id2);
 
-    uint8_t menu_pal_track = last_track+1;
-    last_track = fill_tracks_with_file(menu_pal_track,  (uint8_t*) &menu_c64_pal_prg[0], menu_c64_pal_prg_len, FILL_DOWN, num_max_tracks, my_id1, my_id2);
+    uint8_t menu_track = last_track+1;
+    last_track = fill_tracks_with_file(menu_track,  (uint8_t*) &menu_c64_prg[0],         menu_c64_prg_len,     FILL_DOWN, num_max_tracks, my_id1, my_id2);
 
     uint8_t menu_p4_track = last_track+1;
     last_track = fill_tracks_with_file(menu_p4_track,   (uint8_t*) &menu_p4_prg[0],      menu_p4_prg_len,      FILL_DOWN, num_max_tracks, my_id1, my_id2);
 
-    uint8_t menu_ntsc_track = last_track+1;
-    last_track = fill_tracks_with_file(menu_ntsc_track, (uint8_t*) &menu_c64_ntsc_prg[0],menu_c64_ntsc_prg_len,FILL_DOWN, num_max_tracks, my_id1, my_id2);
+    uint8_t menu_dtv_track = last_track+1;
+    last_track = fill_tracks_with_file(menu_dtv_track,  (uint8_t*) &menu_c64_dtv_prg[0], menu_c64_dtv_prg_len,FILL_DOWN, num_max_tracks, my_id1, my_id2);
 
     uint8_t menu_vic20_track = last_track+1;
     last_track = fill_tracks_with_file(menu_vic20_track,(uint8_t*) &menu_vic20_prg[0],   menu_vic20_prg_len,   FILL_DOWN, num_max_tracks, my_id1, my_id2);
@@ -307,11 +307,11 @@ void create_menu_image(const char* menu_path, DIR* dir_obj, uint8_t* id1_p, uint
     generate_bam("- 1541 REPICO -", id_buffer);
     // create a file-entry in the directory...
     generate_directory_entry("SELECTOR", CBMDOS_TYPE_PRG, SELECTOR_TRACK  ,0,((uint16_t) (selector_prg_len/254))+1);
-    generate_directory_entry("P",        CBMDOS_TYPE_PRG, menu_pal_track  ,0,((uint16_t) (menu_c64_pal_prg_len/254))+1);
+    generate_directory_entry("6",        CBMDOS_TYPE_PRG, menu_track      ,0,((uint16_t) (menu_c64_prg_len/254))+1);
     generate_directory_entry("+",        CBMDOS_TYPE_PRG, menu_p4_track   ,0,((uint16_t) (menu_p4_prg_len/254))+1);
-    generate_directory_entry("N",        CBMDOS_TYPE_PRG, menu_ntsc_track ,0,((uint16_t) (menu_c64_ntsc_prg_len/254))+1);
+    generate_directory_entry("D",        CBMDOS_TYPE_PRG, menu_track      ,0,((uint16_t) (menu_c64_dtv_prg_len/254))+1);
     generate_directory_entry("V",        CBMDOS_TYPE_PRG, menu_vic20_track,0,((uint16_t) (menu_vic20_prg_len/254))+1);
-    generate_directory_entry("C",        CBMDOS_TYPE_PRG, menu_c16_track  ,0,((uint16_t) (menu_c16_prg_len/254))+1);
+    generate_directory_entry("1",        CBMDOS_TYPE_PRG, menu_c16_track  ,0,((uint16_t) (menu_c16_prg_len/254))+1);
     generate_directory_entry("DATAFILE", CBMDOS_TYPE_PRG, MENU_DATA_TRACK ,0,((uint16_t) (menu_file_len/254))+1);
     generate_directory_entry("LOADER",   CBMDOS_TYPE_PRG, fe3loader_track ,0,((uint16_t) (fe3loader_prg_len/254))+1);
     generate_directory_entry("INTRO",    CBMDOS_TYPE_PRG, intro_track     ,0,((uint16_t) (intro_prg_len/254))+1);
@@ -431,11 +431,11 @@ void create_textmenu_image(const char* menu_path, FIL* file_obj, FILINFO* file_i
 
         T19  v/ start SELECTOR                  - start: SELECTOR_TRACK     fixed
         ..   ====
-        Txx  v/ start MENU_C64_PAL              - start: C64 Pal MenuPRG    variable
+        Txx  v/ start MENU_C64                  - start: C64 MenuPRG    variable
         ..   ====
         Txx  v/ start MENU_P4                   - start: P4 MenuPRG         variable
         ..   ====
-        Txx  v/ start MENU_C64_NTSC             - start: C64 Ntsc MenuPRG   variable
+        Txx  v/ start MENU_C64_DTV              - start: C64 DTV MenuPRG    variable
         ..   ====
         Txx  v/ start MENU_VIC20                - start: VIC20 MenuPRG      variable
         ..   ====
@@ -473,14 +473,14 @@ void create_textmenu_image(const char* menu_path, FIL* file_obj, FILINFO* file_i
     int8_t last_track;
     last_track = fill_tracks_with_file(SELECTOR_TRACK,  (uint8_t*) &selector_prg[0],     selector_prg_len,     FILL_DOWN, num_max_tracks, my_id1, my_id2);
 
-    uint8_t menu_pal_track = last_track+1;
-    last_track = fill_tracks_with_file(menu_pal_track,  (uint8_t*) &menu_c64_pal_prg[0], menu_c64_pal_prg_len, FILL_DOWN, num_max_tracks, my_id1, my_id2);
+    uint8_t menu_track = last_track+1;
+    last_track = fill_tracks_with_file(menu_track,      (uint8_t*) &menu_c64_prg[0],     menu_c64_prg_len, FILL_DOWN, num_max_tracks, my_id1, my_id2);
 
     uint8_t menu_p4_track = last_track+1;
     last_track = fill_tracks_with_file(menu_p4_track,   (uint8_t*) &menu_p4_prg[0],      menu_p4_prg_len,      FILL_DOWN, num_max_tracks, my_id1, my_id2);
 
-    uint8_t menu_ntsc_track = last_track+1;
-    last_track = fill_tracks_with_file(menu_ntsc_track, (uint8_t*) &menu_c64_ntsc_prg[0],menu_c64_ntsc_prg_len,FILL_DOWN, num_max_tracks, my_id1, my_id2);
+    uint8_t menu_dtv_track = last_track+1;
+    last_track = fill_tracks_with_file(menu_dtv_track,  (uint8_t*) &menu_c64_dtv_prg[0],menu_c64_dtv_prg_len,FILL_DOWN, num_max_tracks, my_id1, my_id2);
 
     uint8_t menu_vic20_track = last_track+1;
     last_track = fill_tracks_with_file(menu_vic20_track,(uint8_t*) &menu_vic20_prg[0],   menu_vic20_prg_len,   FILL_DOWN, num_max_tracks, my_id1, my_id2);
@@ -498,11 +498,11 @@ void create_textmenu_image(const char* menu_path, FIL* file_obj, FILINFO* file_i
     generate_bam("- 1541 REPICO -", id_buffer);
     // create a file-entry in the directory...
     generate_directory_entry("SELECTOR", CBMDOS_TYPE_PRG, SELECTOR_TRACK  ,0,((uint16_t) (selector_prg_len/254))+1);
-    generate_directory_entry("P",        CBMDOS_TYPE_PRG, menu_pal_track  ,0,((uint16_t) (menu_c64_pal_prg_len/254))+1);
+    generate_directory_entry("6",        CBMDOS_TYPE_PRG, menu_track      ,0,((uint16_t) (menu_c64_prg_len/254))+1);
     generate_directory_entry("+",        CBMDOS_TYPE_PRG, menu_p4_track   ,0,((uint16_t) (menu_p4_prg_len/254))+1);
-    generate_directory_entry("N",        CBMDOS_TYPE_PRG, menu_ntsc_track ,0,((uint16_t) (menu_c64_ntsc_prg_len/254))+1);
+    generate_directory_entry("D",        CBMDOS_TYPE_PRG, menu_dtv_track  ,0,((uint16_t) (menu_c64_dtv_prg_len/254))+1);
     generate_directory_entry("V",        CBMDOS_TYPE_PRG, menu_vic20_track,0,((uint16_t) (menu_vic20_prg_len/254))+1);
-    generate_directory_entry("C",        CBMDOS_TYPE_PRG, menu_c16_track  ,0,((uint16_t) (menu_c16_prg_len/254))+1);
+    generate_directory_entry("1",        CBMDOS_TYPE_PRG, menu_c16_track  ,0,((uint16_t) (menu_c16_prg_len/254))+1);
     generate_directory_entry("DATAFILE", CBMDOS_TYPE_PRG, MENU_DATA_TRACK ,0,((uint16_t) (menu_file_len/254))+1);
     generate_directory_entry("LOADER",   CBMDOS_TYPE_PRG, fe3loader_track ,0,((uint16_t) (fe3loader_prg_len/254))+1);
     generate_directory_entry("INTRO",    CBMDOS_TYPE_PRG, intro_track     ,0,((uint16_t) (intro_prg_len/254))+1);

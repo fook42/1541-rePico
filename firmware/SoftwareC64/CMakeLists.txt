@@ -15,22 +15,22 @@ set(MENU_PRG_SOURCE          "menu.asm")
 
 set(INTRO_PRG_BINARY         "${CMAKE_CURRENT_SOURCE_DIR}/intro.prg")
 set(SELECTOR_PRG_BINARY      "${CMAKE_CURRENT_SOURCE_DIR}/selector.prg")
-set(MENU_C64_PAL_PRG_BINARY  "${CMAKE_CURRENT_SOURCE_DIR}/menu.prg")
-set(MENU_C64_NTSC_PRG_BINARY "${CMAKE_CURRENT_SOURCE_DIR}/menu_ntsc.prg")
+set(MENU_C64_PRG_BINARY      "${CMAKE_CURRENT_SOURCE_DIR}/menu.prg")
+set(MENU_C64_DTV_PRG_BINARY  "${CMAKE_CURRENT_SOURCE_DIR}/menu_dtv.prg")
 set(MENU_C16_PRG_BINARY      "${CMAKE_CURRENT_SOURCE_DIR}/menu_16.prg")
 set(MENU_P4_PRG_BINARY       "${CMAKE_CURRENT_SOURCE_DIR}/menu_p4.prg")
 set(MENU_VIC20_PRG_BINARY    "${CMAKE_CURRENT_SOURCE_DIR}/menu_20.prg")
 set(FE3LOADER_PRG_BINARY     "${CMAKE_CURRENT_SOURCE_DIR}/fe3loader.prg")
 
-set(TMP_MENU_C64_PAL_PRG     "${CMAKE_CURRENT_SOURCE_DIR}/tmp_pal.prg")
-set(TMP_MENU_C64_NTSC_PRG    "${CMAKE_CURRENT_SOURCE_DIR}/tmp_ntsc.prg")
+set(TMP_MENU_C64_PRG         "${CMAKE_CURRENT_SOURCE_DIR}/tmp.prg")
+set(TMP_MENU_C64_DTV_PRG     "${CMAKE_CURRENT_SOURCE_DIR}/tmp_dtv.prg")
 set(TMP_MENU_C16_PRG         "${CMAKE_CURRENT_SOURCE_DIR}/tmp_c16.prg")
 set(TMP_MENU_P4_PRG          "${CMAKE_CURRENT_SOURCE_DIR}/tmp_p4.prg")
 
 set(INTRO_HEADER         "${PROJECT_INCLUDE}/c64_intro.h")
 set(SELECTOR_HEADER      "${PROJECT_INCLUDE}/boot_selector.h")
-set(MENU_C64_PAL_HEADER  "${PROJECT_INCLUDE}/c64_menu_pal.h")
-set(MENU_C64_NTSC_HEADER "${PROJECT_INCLUDE}/c64_menu_ntsc.h")
+set(MENU_C64_HEADER      "${PROJECT_INCLUDE}/c64_menu.h")
+set(MENU_C64_DTV_HEADER  "${PROJECT_INCLUDE}/c64_menu_dtv.h")
 set(MENU_C16_HEADER      "${PROJECT_INCLUDE}/c16_menu.h")
 set(MENU_P4_HEADER       "${PROJECT_INCLUDE}/p4_menu.h")
 set(MENU_VIC20_HEADER    "${PROJECT_INCLUDE}/vic20_menu.h")
@@ -53,31 +53,31 @@ endif()
 
 if(BUILD_MENUPRG)
   if(ACME_TOOL)
-    ## Menu_pal - build
+    ## Menu C64 - build
     add_custom_command(
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
       DEPENDS ${MENU_PRG_SOURCE} exos.asm
-      OUTPUT ${TMP_MENU_C64_PAL_PRG}
-      COMMAND ${ACME_TOOL} ${ACME_OPTIONS} -o ${TMP_MENU_C64_PAL_PRG} ${MENU_PRG_SOURCE}
+      OUTPUT ${TMP_MENU_C64_PRG}
+      COMMAND ${ACME_TOOL} ${ACME_OPTIONS} -o ${TMP_MENU_C64_PRG} ${MENU_PRG_SOURCE}
     )
     add_custom_command(
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-      DEPENDS ${TMP_MENU_C64_PAL_PRG}
-      OUTPUT ${MENU_C64_PAL_PRG_BINARY}
-      COMMAND dali_tool ${DALI_OPTIONS_C64} -o ${MENU_C64_PAL_PRG_BINARY} ${TMP_MENU_C64_PAL_PRG}
+      DEPENDS ${TMP_MENU_C64_PRG}
+      OUTPUT ${MENU_C64_PRG_BINARY}
+      COMMAND dali_tool ${DALI_OPTIONS_C64} -o ${MENU_C64_PRG_BINARY} ${TMP_MENU_C64_PRG}
     )
 
     add_custom_command(
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
       DEPENDS ${MENU_PRG_SOURCE} fastload_0140.bin fastload_e000.bin
-      OUTPUT ${TMP_MENU_C64_NTSC_PRG}
-      COMMAND ${ACME_TOOL} ${ACME_OPTIONS} -DDTV=1 -o ${TMP_MENU_C64_NTSC_PRG} ${MENU_PRG_SOURCE}
+      OUTPUT ${TMP_MENU_C64_DTV_PRG}
+      COMMAND ${ACME_TOOL} ${ACME_OPTIONS} -DDTV=1 -o ${TMP_MENU_C64_DTV_PRG} ${MENU_PRG_SOURCE}
     )
     add_custom_command(
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-      DEPENDS ${TMP_MENU_C64_NTSC_PRG}
-      OUTPUT ${MENU_C64_NTSC_PRG_BINARY}
-      COMMAND dali_tool ${DALI_OPTIONS_C64} -o ${MENU_C64_NTSC_PRG_BINARY} ${TMP_MENU_C64_NTSC_PRG}
+      DEPENDS ${TMP_MENU_C64_DTV_PRG}
+      OUTPUT ${MENU_C64_DTV_PRG_BINARY}
+      COMMAND dali_tool ${DALI_OPTIONS_C64} -o ${MENU_C64_DTV_PRG_BINARY} ${TMP_MENU_C64_DTV_PRG}
     )
 
     add_custom_command(
@@ -128,22 +128,22 @@ add_custom_target(GenSelector
   COMMAND echo \"\#endif\" >> ${SELECTOR_HEADER}
 )
 
-add_custom_target(GenMenuC64Pal
+add_custom_target(GenMenuC64
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-  DEPENDS ${MENU_C64_PAL_PRG_BINARY}
-  COMMAND echo \"\#ifndef _MENU_C64_PAL_PRG_H_\\n\#define _MENU_C64_PAL_PRG_H_\" > ${MENU_C64_PAL_HEADER}
-  COMMAND xxd -i -n \"menu_c64_pal_prg\" ${MENU_C64_PAL_PRG_BINARY} >> ${MENU_C64_PAL_HEADER}
-  COMMAND sed -i \"s!unsigned!const unsigned!g\" ${MENU_C64_PAL_HEADER}
-  COMMAND echo \"\#endif\" >> ${MENU_C64_PAL_HEADER}
+  DEPENDS ${MENU_C64_PRG_BINARY}
+  COMMAND echo \"\#ifndef _MENU_C64_PRG_H_\\n\#define _MENU_C64_PRG_H_\" > ${MENU_C64_HEADER}
+  COMMAND xxd -i -n \"menu_c64_prg\" ${MENU_C64_PRG_BINARY} >> ${MENU_C64_HEADER}
+  COMMAND sed -i \"s!unsigned!const unsigned!g\" ${MENU_C64_HEADER}
+  COMMAND echo \"\#endif\" >> ${MENU_C64_HEADER}
 )
 
-add_custom_target(GenMenuC64Ntsc
+add_custom_target(GenMenuC64Dtv
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-  DEPENDS ${MENU_C64_NTSC_PRG_BINARY}
-  COMMAND echo \"\#ifndef _MENU_C64_NTSC_PRG_H_\\n\#define _MENU_C64_NTSC_PRG_H_\" > ${MENU_C64_NTSC_HEADER}
-  COMMAND xxd -i -n \"menu_c64_ntsc_prg\" ${MENU_C64_NTSC_PRG_BINARY} >> ${MENU_C64_NTSC_HEADER}
-  COMMAND sed -i \"s!unsigned!const unsigned!g\" ${MENU_C64_NTSC_HEADER}
-  COMMAND echo \"\#endif\" >> ${MENU_C64_NTSC_HEADER}
+  DEPENDS ${MENU_C64_DTV_PRG_BINARY}
+  COMMAND echo \"\#ifndef _MENU_C64_DTV_PRG_H_\\n\#define _MENU_C64_DTV_PRG_H_\" > ${MENU_C64_DTV_HEADER}
+  COMMAND xxd -i -n \"menu_c64_dtv_prg\" ${MENU_C64_DTV_PRG_BINARY} >> ${MENU_C64_DTV_HEADER}
+  COMMAND sed -i \"s!unsigned!const unsigned!g\" ${MENU_C64_DTV_HEADER}
+  COMMAND echo \"\#endif\" >> ${MENU_C64_DTV_HEADER}
 )
 
 add_custom_target(GenMenuC16
@@ -174,8 +174,8 @@ add_custom_target(GenMenuVIC20
 )
 
 add_dependencies(GenSelector    GenTok64)
-add_dependencies(GenMenuC64Pal  GenDali)
-add_dependencies(GenMenuC64Ntsc GenDali)
+add_dependencies(GenMenuC64     GenDali)
+add_dependencies(GenMenuC64Dtv  GenDali)
 add_dependencies(GenMenuC16     GenDali)
 add_dependencies(GenMenuP4      GenDali)
 
