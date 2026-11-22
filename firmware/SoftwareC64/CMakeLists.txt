@@ -11,6 +11,7 @@ option(BUILD_SELECTORPRG "Enable creation of selector.prg" ON)
 ### TODO: COMPRESS_MENUPRG is not considered .. dali prg compression is done always for now
 
 set(SELECTOR_PRG_SOURCE      "selector.bas")
+set(FE3LOADER_PRG_SOURCE     "fe3loader.bas")
 set(MENU_PRG_SOURCE          "menu.asm")
 
 set(INTRO_PRG_BINARY         "${CMAKE_CURRENT_SOURCE_DIR}/intro.prg")
@@ -49,6 +50,17 @@ if(BUILD_SELECTORPRG)
   )
 else()
   MESSAGE("### using precompiled selector prg ###")
+endif()
+
+if(BUILD_SELECTORPRG)
+  add_custom_command(
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    DEPENDS ${FE3LOADER_PRG_SOURCE}
+    OUTPUT ${FE3LOADER_PRG_BINARY}
+    COMMAND tok64_tool /toprg /stomp ${FE3LOADER_PRG_SOURCE}
+  )
+else()
+  MESSAGE("### using precompiled fe3loader prg ###")
 endif()
 
 if(BUILD_MENUPRG)

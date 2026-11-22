@@ -310,7 +310,7 @@ void create_menu_image(const char* menu_path, DIR* dir_obj, uint8_t* id1_p, uint
     generate_directory_entry("C64",      CBMDOS_TYPE_PRG, menu_track      ,0,((uint16_t) (menu_c64_prg_len/254))+1);
     generate_directory_entry("+4",       CBMDOS_TYPE_PRG, menu_p4_track   ,0,((uint16_t) (menu_p4_prg_len/254))+1);
     generate_directory_entry("DTV",      CBMDOS_TYPE_PRG, menu_dtv_track  ,0,((uint16_t) (menu_c64_dtv_prg_len/254))+1);
-    generate_directory_entry("V",        CBMDOS_TYPE_PRG, menu_vic20_track,0,((uint16_t) (menu_vic20_prg_len/254))+1);
+    generate_directory_entry("VIC",      CBMDOS_TYPE_PRG, menu_vic20_track,0,((uint16_t) (menu_vic20_prg_len/254))+1);
     generate_directory_entry("C16",      CBMDOS_TYPE_PRG, menu_c16_track  ,0,((uint16_t) (menu_c16_prg_len/254))+1);
     generate_directory_entry("DATAFILE", CBMDOS_TYPE_PRG, MENU_DATA_TRACK ,0,((uint16_t) (menu_file_len/254))+1);
     generate_directory_entry("LOADER",   CBMDOS_TYPE_PRG, fe3loader_track ,0,((uint16_t) (fe3loader_prg_len/254))+1);
@@ -501,7 +501,7 @@ void create_textmenu_image(const char* menu_path, FIL* file_obj, FILINFO* file_i
     generate_directory_entry("C64",      CBMDOS_TYPE_PRG, menu_track      ,0,((uint16_t) (menu_c64_prg_len/254))+1);
     generate_directory_entry("+4",       CBMDOS_TYPE_PRG, menu_p4_track   ,0,((uint16_t) (menu_p4_prg_len/254))+1);
     generate_directory_entry("DTV",      CBMDOS_TYPE_PRG, menu_dtv_track  ,0,((uint16_t) (menu_c64_dtv_prg_len/254))+1);
-    generate_directory_entry("V",        CBMDOS_TYPE_PRG, menu_vic20_track,0,((uint16_t) (menu_vic20_prg_len/254))+1);
+    generate_directory_entry("VIC",      CBMDOS_TYPE_PRG, menu_vic20_track,0,((uint16_t) (menu_vic20_prg_len/254))+1);
     generate_directory_entry("C16",      CBMDOS_TYPE_PRG, menu_c16_track  ,0,((uint16_t) (menu_c16_prg_len/254))+1);
     generate_directory_entry("DATAFILE", CBMDOS_TYPE_PRG, MENU_DATA_TRACK ,0,((uint16_t) (menu_file_len/254))+1);
     generate_directory_entry("LOADER",   CBMDOS_TYPE_PRG, fe3loader_track ,0,((uint16_t) (fe3loader_prg_len/254))+1);
