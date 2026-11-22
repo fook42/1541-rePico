@@ -90,19 +90,19 @@ void send_disk_change(void)
     if(floppy_wp)
     {                   // WP enabled = wps set to 0
         set_wps();
-        sleep_ms(1);
+        sleep_ms(10);
         clear_wps();
-        sleep_ms(1);
+        sleep_ms(10);
         set_wps();
-        sleep_ms(1);
+        sleep_ms(10);
         clear_wps();
     } else {            // WP disabled = wps set to 1
         clear_wps();
-        sleep_ms(1);
+        sleep_ms(10);
         set_wps();
-        sleep_ms(1);
+        sleep_ms(10);
         clear_wps();
-        sleep_ms(1);
+        sleep_ms(10);
         set_wps();
     }
 }
