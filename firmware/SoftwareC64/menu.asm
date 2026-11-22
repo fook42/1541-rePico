@@ -526,10 +526,23 @@ no_f5:
         beq do_space
         !ifdef C16 {
         cmp #$1b
-        bne +
-        jmp 65526   :;reset
-+
+        } else {
+        cmp #$5f
         }
+        bne +
+        !ifdef VIC20 {
+        lda #$ff
+        jsr vicload
+        jmp 64802
+        } else {
+        !ifdef C16 {
+        jmp 65526   ;reset
+        } else {
+        jmp $fce2
+        }
+        }
++
+
         cmp #$0d    ;return
         beq do_space
         jsr enter_search
