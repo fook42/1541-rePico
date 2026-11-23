@@ -27,6 +27,7 @@ set(TMP_MENU_C64_PRG         "${CMAKE_CURRENT_SOURCE_DIR}/tmp.prg")
 set(TMP_MENU_C64_DTV_PRG     "${CMAKE_CURRENT_SOURCE_DIR}/tmp_dtv.prg")
 set(TMP_MENU_C16_PRG         "${CMAKE_CURRENT_SOURCE_DIR}/tmp_c16.prg")
 set(TMP_MENU_P4_PRG          "${CMAKE_CURRENT_SOURCE_DIR}/tmp_p4.prg")
+set(TMP_MENU_VIC_PRG         "${CMAKE_CURRENT_SOURCE_DIR}/tmp_vic.prg")
 
 set(INTRO_HEADER         "${PROJECT_INCLUDE}/c64_intro.h")
 set(SELECTOR_HEADER      "${PROJECT_INCLUDE}/boot_selector.h")
@@ -40,6 +41,7 @@ set(FE3LOADER_HEADER     "${PROJECT_INCLUDE}/fe3loader.h")
 set(ACME_OPTIONS --format cbm --cpu 6510 -DNO_BASIC_HEADER=1)
 set(DALI_OPTIONS_C64 --sfx 0x0808)
 set(DALI_OPTIONS_C16 --sfx_plus4 0x1008)
+set(DALI_OPTIONS_VIC --sfx_vc20 0x1208)
 
 if(BUILD_SELECTORPRG)
   add_custom_command(
@@ -121,8 +123,14 @@ if(BUILD_MENUPRG)
     add_custom_command(
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
       DEPENDS ${MENU_PRG_SOURCE} vic20loader.asm
+      OUTPUT ${TMP_MENU_VIC_PRG}
+      COMMAND ${ACME_TOOL} ${ACME_OPTIONS} -DVIC20=1 -o ${TMP_MENU_VIC_PRG} ${MENU_PRG_SOURCE}
+    )
+    add_custom_command(
+      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+      DEPENDS ${TMP_MENU_VIC_PRG}
       OUTPUT ${MENU_VIC20_PRG_BINARY}
-      COMMAND ${ACME_TOOL} ${ACME_OPTIONS} -DVIC20=1 -o ${MENU_VIC20_PRG_BINARY} ${MENU_PRG_SOURCE}
+      COMMAND dali_tool ${DALI_OPTIONS_VIC} -o ${MENU_VIC20_PRG_BINARY} ${TMP_MENU_VIC_PRG}
     )
   else()
     MESSAGE("### ACME not found - using precompiled prgs ###")
@@ -190,6 +198,7 @@ add_dependencies(GenMenuC64     GenDali)
 add_dependencies(GenMenuC64Dtv  GenDali)
 add_dependencies(GenMenuC16     GenDali)
 add_dependencies(GenMenuP4      GenDali)
+add_dependencies(GenMenuVIC20   GenDali)
 
 add_custom_target(GenIntro
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
