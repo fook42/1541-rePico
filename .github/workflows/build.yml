@@ -7,15 +7,8 @@ on:
 
 jobs:
   build:
-    name: Build (${{ matrix.variant }})
+    name: Build
     runs-on: ubuntu-24.04
-    strategy:
-      fail-fast: false
-      matrix:
-        variant:
-          - default
-          - pcb16-legacy
-
     permissions:
       contents: read
       packages: write
@@ -43,27 +36,20 @@ jobs:
           cacheFrom: ghcr.io/${{ github.repository_owner }}/repico_devcontainer
           push: always
 
-      - name: Build rePico (${{ matrix.variant }})
+      - name: Build rePico
         uses: devcontainers/ci@v0.3
         with:
           configFile: .devcontainer/.devcontainer.json
           imageName: ghcr.io/${{ github.repository_owner }}/repico_devcontainer
           runCmd: |
             cd /workspaces/1541-rePico/firmware
-            if [ "${{ matrix.variant }}" = "pcb16-legacy" ]; then
-              cmake --preset pcb16-legacy
-              cmake --build --preset pcb16-legacy --config Release
-            else
-              cmake --preset default
-              cmake --build --preset default --config Release
-            fi
+            cmake --preset default
+            cmake --build --preset default --config Release
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: rePico-binaries-${{ matrix.variant }}
+          name: rePico-binaries
           path: |
             firmware/build/1541-rePico.uf2
             firmware/build/1541-rePico.elf
-            firmware/build-pcb16/1541-rePico.uf2
-            firmware/build-pcb16/1541-rePico.elf
