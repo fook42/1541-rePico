@@ -218,3 +218,5 @@ add_custom_target(GenFe3loader
   COMMAND echo \"\#endif\" >> ${FE3LOADER_HEADER}
 )
 
+add_dependencies(GenFe3loader GenTok64)
+
