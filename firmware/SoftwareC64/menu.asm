@@ -168,7 +168,12 @@ LINE_SIZES = $033c  ;"MAX_LINE"-bytes to line lengths
         sta exos_ntsc_pal_switch
 +       }
         } else {
+        !ifdef C16_64K {
         * = $1008
+        } else {
+        * = $1001
+        !by $0b,$10,$00,$00,$9e,$34,$31,$30,$39,$00,$00,$00
+        }
         }
         }
         !ifdef VIC20 {
@@ -1474,6 +1479,8 @@ print_load:
         bne -
         dex
         bpl --
+        lxa #$00    ;sys should return with 0 value
+        tay
         rts        
 
 .error
@@ -1875,8 +1882,10 @@ do_vic_fastload:
         lda #$f0
         sta $9005
         jsr $e518
-+       jmp $c474
-        
++       jsr $c474
+        lxa #$00    ;sys should return with 0 value
+        tay
+        rts        
 }
 fastload_stack_len = * - fastload_stack 
         
@@ -1951,7 +1960,6 @@ fastload_stack:
 !pseudopc STACK_START {
         jmp print_load
         !ifdef C16_64K {
-load_fast:
         lda #load_star_name_len
         ldx #<load_star_name
         ldy #>load_star_name
@@ -1969,7 +1977,8 @@ load_fast:
         sty $2e
 +
         jsr 62158       ;restore vectors
-        anc #0
+        lxa #$00    ;sys should return with 0 value
+        tay
         rts
 load_star_name:
         !text ":*"
@@ -2029,7 +2038,10 @@ load_star_name_len = * - load_star_name
         ldy $af
         stx $2d
         sty $2e
-        jmp $f5a9
+        jsr $f5a9
+        lxa #$00    ;sys should return with 0 value
+        tay
+        rts
         }
 fastload_stack_len = * - fastload_stack      
 
@@ -2077,6 +2089,8 @@ FASTLOAD_EXOS:
         pla
         sta $01
         cli
+        lxa #$00        ;sys should return with 0 value
+        tay
         rts        
 load_star_name:
         !text ":*"
