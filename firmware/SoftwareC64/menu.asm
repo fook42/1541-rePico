@@ -77,6 +77,9 @@
 
 } else { ; C64
 
+    !ifndef DTV {
+    C64 = 1
+    }
     VIDEORAM = $0400
     COLORRAM = $d800
     RASTER_LINE = $d012
@@ -150,10 +153,12 @@ LINE_SIZES = $033c  ;"MAX_LINE"-bytes to line lengths
 }
 
         !ifdef VIC20 {
-        *= $1201
-        !by $0b,$12,$00,$00,$9e,$34,$36,$32,$31,$00,$00,$00
+        *= $1208
+        ;!by $0b,$12,$00,$00,$9e,$34,$36,$32,$31,$00,$00,$00
         } else {
-        !ifndef C16 {
+        !ifdef C16 {
+        * = $1008
+        } else {
         * = $0808
         !ifdef DTV {
         ldx #$01    ;set kernal bank to default
@@ -167,13 +172,6 @@ LINE_SIZES = $033c  ;"MAX_LINE"-bytes to line lengths
         lda #$c1
         sta exos_ntsc_pal_switch
 +       }
-        } else {
-        !ifdef C16_64K {
-        * = $1008
-        } else {
-        * = $1001
-        !by $0b,$10,$00,$00,$9e,$34,$31,$30,$39,$00,$00,$00
-        }
         }
         }
         !ifdef VIC20 {
@@ -550,6 +548,12 @@ no_f5:
 
         cmp #$0d    ;return
         beq do_space
+        !ifdef C64 {
+        cmp #$5C
+        bne +
+        jmp switch_devices
++
+        }
         jsr enter_search
         bcc do_keyloop
         jmp repaint
@@ -850,14 +854,41 @@ get_current_type_loop:
 
 
 paint_top_line:
+        lax BA
+        cmp #$0a
+        bcc +
+        sbx #$0a
+        lda #$31+$80
+        !byte $2c
++       lda #$20+$80
+        sta VIDEORAM
+        txa
+        sbx #$100-($30+$80)
+        stx VIDEORAM+1
+        lda #':'+$80
+        sta VIDEORAM+2
+        
+        ;get line length
+        ldy #$ff
+-       iny
+        lda directory_start,y
+        bne -
+        tya
+        sec
+        sbc #MAX_X-3
+        bcs +
+        lda #$00
++       sta directory_start_offset   
         ldy #$00
--       lda directory_start,y
+-       
+directory_start_offset = *+1
+        lda directory_start,y
         beq end_of_top_line_string
         jsr conv_to_screen
         ora #$80
-        sta VIDEORAM,y
+        sta VIDEORAM+3,y
         iny
-        cpy #MAX_X
+        cpy #MAX_X-3
         bne -
         dey
 -       iny
@@ -866,10 +897,10 @@ paint_top_line:
 end_of_top_line_string:
         tya
         tax
--       cpx #MAX_X
+-       cpx #MAX_X-3
         bcs end_top_line
         lda #$a0
-        sta VIDEORAM,x
+        sta VIDEORAM+3,x
         inx
         bne -
 end_top_line:
@@ -1171,6 +1202,100 @@ conv_to_screen:
 store_code:
         rts
 
+!ifdef C64 {
+switch_devices:
+        lda BA
+        cmp #$08
+        beq no_switch_need
+        lda #$00
+        sta irq+1
+        lda #$60
+        sta drive_reset     ;disable drive reset
+        lda BA
+        sta tmp1
+        ldx #8
+        jsr kill_device
+        ldx tmp1
+        lda #8
+        jsr switch_device        
+no_second_drive:
+        lda #$08
+        sta BA
+        lda #drive_init_end-drive_init
+        ldx #<drive_init
+        ldy #>drive_init
+        jsr execute_code_cont ;unconditional 
+        lda #SELECTOR_COLOR
+        sta irq+1
+        jsr paint_top_line
+no_switch_need:
+        jmp keyloop
+
+kill_device:
+        stx $ba
+        lxa #$00
+        tay
+        jsr execute_code_cont
+        lda $90
+        bmi no_device_to_kill
+
+        LDA #mw_killcode_end-mw_killcode_comm
+        LDX #<mw_killcode_comm
+        LDY #>mw_killcode_comm
+        jsr execute_code_cont
+
+        ldx #<DRIVECODE_START
+        ldy #>DRIVECODE_START
+        jmp execute_code
+no_device_to_kill:
+        rts
+
+switch_device:
+        ;in x source device number, in a destination
+        stx BA
+        clc
+        adc #32
+        sta dest_device_number
+        adc #32
+        sta dest_device_number+1
+        LDA #mw_change_command_end-mw_change_command
+        LDX #<mw_change_command
+        LDY #>mw_change_command
+        jmp execute_code_cont
+
+mw_change_command:
+         !text "M-W"
+         !word 119
+         !byte 2
+dest_device_number:
+         !byte 8+32
+         !byte 8+64
+mw_change_command_end:
+
+mw_killcode_comm:
+        !text "M-W"
+        !word DRIVECODE_START
+        !byte killcode_len
+killcode_start:
+        !pseudopc DRIVECODE_START {
+        sei
+        lda     #$20
+        sta     $1801
+        lda     #$00
+        ldx     #$10
+L1191:  bit     $1800
+        bpl     L1191
+        stx     $1800
+L1199:  bit     $1800
+        bmi     L1199
+        sta     $1800
+        bpl     L1191
+        }
+killcode_len = * - killcode_start
+mw_killcode_end:
+
+}
+
 clear_search_buffer:
         ldx #search_buffer_len-1
 -       lda #$20
@@ -1181,7 +1306,11 @@ clear_search_buffer:
 
 enter_search:
         cmp #$03
+        !ifdef C64 {
+        beq no_device_to_kill
+        } else {
         beq store_code
+        }
         tax
         lda D020
         pha
@@ -1628,11 +1757,16 @@ execute_code_cont:
         JSR $FFBA     ; call SETLFS
 
         jsr $FFC0     ; call OPEN (open command channel and send B-P command)
-        BCS error     ; if carry set, the file could not be opened
+        BCS command_error   ; if carry set, the file could not be opened
 reset_activated:
         LDA #$0F      ; filenumber 15
         jsr $FFC3     ; call CLOSE
-        JMP $FFCC     ; call CLRCHN
+        jmp $FFCC     ; call CLRCHN
+
+command_error:
+        LDA #$0F      ; filenumber 15
+        jmp $FFC3     ; call CLOSE
+
 
 me_comm:
          !text "M-E"
@@ -1712,9 +1846,9 @@ bottomline:
         } ; VIC20
 
 mw_comm:
-         !text "M-W"
-mw_dest: !word DRIVECODE_START
-         !byte diskdrive_code_len
+        !text "M-W"
+        !word DRIVECODE_START
+        !byte diskdrive_code_len
 diskdrive_code:
         !pseudopc DRIVECODE_START {
         !ifdef CLEANUP_BLOCK_WRITTEN {
