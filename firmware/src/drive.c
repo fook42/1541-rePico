@@ -10,6 +10,12 @@
 #include "files.h"
 #include "sound.h"
 
+// ----------------
+
+alarm_id_t stepper_alarm = 0;
+alarm_id_t writeback_alarm = 0;
+uint8_t stepper_signal_r_pos;
+
 /////////////////////////////////////////////////////////////////////
 
 int64_t steppertimer_callback(alarm_id_t id, void *user_data)
@@ -79,6 +85,67 @@ void check_stepper_signals(void)
 
             default:
                 break;
+        }
+    }
+}
+
+/////////////////////////////////////////////////////////////////////
+
+int64_t writeback_callback(alarm_id_t id, void *user_data)
+{
+    (void) id;
+    (void) user_data;
+
+    is_image_mount = false; // we block all image-access until the writeback is finished
+
+    writeback_alarm = 0;
+
+    FRESULT fr;
+
+    fr = f_open(&fd, image_filename, FA_CREATE_ALWAYS|FA_WRITE);
+    if (FR_OK == fr)
+    {
+        int8_t file_op_status;
+        if (D64_IMAGE == akt_image_type)
+        {
+            file_op_status = write_disk(&fd, D64_IMAGE, NUM_TRACKS_MAX);
+        } else if (G64_IMAGE == akt_image_type)
+        {
+            file_op_status = write_disk(&fd, G64_IMAGE, NUM_TRACKS_MAX);
+        }
+        f_close(&fd);
+        if (0 < file_op_status)
+        {
+            image_dirty = false; // mark the image as not dirty, so we know it has been written back
+            // display message: "writeback successful"
+        } else {
+            // display message: "writeback failed"
+        }
+    }
+
+    is_image_mount = false; // we block all image-access until the writeback is finished
+
+    return 0;
+}
+
+/////////////////////////////////////////////////////////////////////
+
+void check_write_access(void)
+{
+    if(track_is_written)
+    {
+        if (SELECTOR_IMAGE != akt_image_type)   // we don't writeback if in selector mode
+        {
+            image_dirty = true; // mark the image as dirty, so we know we need to write it back
+            track_is_written = false;
+            // create a timer with some delay to trigger the write-back to the SD-Card
+            if(writeback_alarm)
+            {
+                // if the writeback_alarm is already running, cancel it and restart it
+                // to make sure that the writeback is only triggered after a certain time of inactivity
+                cancel_alarm(writeback_alarm);
+            }
+            writeback_alarm = add_alarm_in_ms(WRITEBACK_DELAY_TIME, writeback_callback, NULL, false);
         }
     }
 }
@@ -379,7 +446,7 @@ void stop_bytetimer(void)
 //ISR (TIMER0_COMPA_vect)
 bool repeating_timer_callback(__unused struct repeating_timer *t)
 {
-    // ISR wird alle 26,28,30 oder 32µs ausfgrufen
+    // ISR wird alle 26,28,30 oder 32µs aufgerufen
     // Je nach dem welche Spur gerade aktiv ist
 
     uint8_t akt_gcr_byte;

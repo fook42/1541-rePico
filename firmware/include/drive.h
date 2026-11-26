@@ -21,6 +21,8 @@
 #include "pinout.h"
 #include "globals.h"
 
+#define WRITEBACK_DELAY_TIME    (3000)  // ms after last write to trigger writeback to SD-Card
+
 extern void (*display_clear)(void);
 extern void (*display_home)(void);
 extern void (*display_setcursor)(const uint8_t column, const uint8_t row);
@@ -33,6 +35,10 @@ extern MENU_STRUCT image_menu;
 int64_t steppertimer_callback(alarm_id_t id, void *user_data);
 void start_stepper_timer(void);
 void check_stepper_signals(void);
+
+int64_t writeback_callback(alarm_id_t id, void *user_data);
+void check_write_access(void);
+
 void send_disk_change(void);
 void init_writeprot(void);
 void unmount_image(void);

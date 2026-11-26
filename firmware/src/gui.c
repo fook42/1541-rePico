@@ -41,9 +41,11 @@ void update_gui(void)
 {
     static uint8_t shown_half_track = 255;
     static bool shown_motor_status = false;
+    static bool shown_image_dirty_status = false;
     static bool key2_pressed = false;
     static uint32_t wait_counter0 = 0;
     bool new_motor_status;
+    bool new_image_dirty_status;
     uint8_t key_code = get_key_from_buffer();
     char byte_str[8];
     FILINFO next_dir_entry;
@@ -103,6 +105,17 @@ void update_gui(void)
                 display_string(disp_motor_on_s);
             else
                 display_string(disp_motor_off_s);
+        }
+
+        new_image_dirty_status = image_dirty;
+        if(shown_image_dirty_status != new_image_dirty_status)
+        {
+            shown_image_dirty_status = new_image_dirty_status;
+            display_setcursor(disp_modifiedtxt_p);
+            if(shown_image_dirty_status)
+                display_string(disp_modified_on_s);
+            else
+                display_string(disp_modified_off_s);
         }
 
         if((is_image_mount) && (gui_current_line_offset > 0))
@@ -446,6 +459,12 @@ void infomode_update(void)
     {
         display_setcursor(disp_writeprottxt_p);
         display_string(disp_writeprot_on_s);
+    }
+
+    if(image_dirty)
+    {
+        display_setcursor(disp_modifiedtxt_p);
+        display_string(disp_modified_on_s);
     }
 
     display_setcursor(disp_scrollfilename_p);

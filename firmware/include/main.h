@@ -105,13 +105,12 @@ extern bool floppy_wp;  // Hier wird der aktuelle WriteProtection Zustand gespei
 #define STEP_MIN_TIME (2000)    // us between 2 step changes.
 
 extern uint8_t stepper_signal_puffer[256]; // Ringpuffer für Stepper Signale (256 Bytes)
-extern volatile uint8_t stepper_signal_r_pos;
 extern volatile uint8_t stepper_signal_w_pos;
-
-extern alarm_id_t stepper_alarm;
 
 extern volatile bool track_is_written;
 extern volatile bool send_byte_ready;
 
 extern volatile uint8_t  track_write_nr;
 extern volatile uint16_t track_write_pos;
+
+extern bool image_dirty; // Flag to indicate if the image has been modified and needs to be written back

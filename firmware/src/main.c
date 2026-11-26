@@ -105,9 +105,8 @@ uint8_t akt_image_type = UNDEF_IMAGE;     // 0=kein Image, 1=G64, 2=D64, 3=Selec
 bool is_image_mount = false;
 bool floppy_wp = true;  // Hier wird der aktuelle WriteProtection Zustand gespeichert
 uint8_t stepper_signal_puffer[256]; // Ringpuffer für Stepper Signale (256 Bytes)
-volatile uint8_t stepper_signal_r_pos = 0;
+bool image_dirty = false; // Flag to indicate if the image has been modified and needs to be written back
 volatile uint8_t stepper_signal_w_pos = 0;
-alarm_id_t stepper_alarm = 0;
 volatile bool track_is_written   = false;
 volatile bool send_byte_ready    = true;
 volatile uint8_t  track_write_nr = 0;
@@ -255,7 +254,7 @@ int main()
     multicore_launch_core1( start_gui_core );
     while (true) {
         check_stepper_signals();
-        
+        check_write_access();
     }
 }
 /////////////////////////////////////////////////////////////////////
