@@ -113,4 +113,4 @@ extern volatile bool send_byte_ready;
 extern volatile uint8_t  track_write_nr;
 extern volatile uint16_t track_write_pos;
 
-extern bool image_dirty; // Flag to indicate if the image has been modified and needs to be written back
+extern volatile bool image_dirty; // Flag to indicate if the image has been modified and needs to be written back
