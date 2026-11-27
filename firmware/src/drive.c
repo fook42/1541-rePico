@@ -123,7 +123,7 @@ int64_t writeback_callback(alarm_id_t id, void *user_data)
         }
     }
 
-    is_image_mount = false; // we block all image-access until the writeback is finished
+    is_image_mount = true; // we unblock the image-access
 
     return 0;
 }
@@ -132,7 +132,7 @@ int64_t writeback_callback(alarm_id_t id, void *user_data)
 
 void check_write_access(void)
 {
-    if(track_is_written)
+    if((track_is_written) && (is_image_mount))
     {
         if (SELECTOR_IMAGE != akt_image_type)   // we don't writeback if in selector mode
         {
